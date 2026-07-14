@@ -42,10 +42,10 @@ export const CreditOrdersFilters: React.FC<CreditOrdersFiltersProps> = ({
           />
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 justify-between">
           {/* Storefront Filter */}
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               <select
                 className="border border-gray-200 rounded-lg px-2 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none text-xs sm:text-base max-w-[110px] sm:max-w-none"
                 value={selectedStorefrontId}

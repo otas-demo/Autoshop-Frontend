@@ -826,6 +826,7 @@ export const Inventory: React.FC = () => {
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Search by product name, barcode, or product code..."
+
           />
         </div>
       </div>
@@ -843,15 +844,14 @@ export const Inventory: React.FC = () => {
           <button
             key={status}
             onClick={() => setSelectedStatus(status)}
-            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-              selectedStatus === status
-                ? status === "all"
-                  ? "bg-slate-800 text-white border-slate-800"
-                  : status === "active"
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-red-500 text-white border-red-500"
-                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
-            }`}
+            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${selectedStatus === status
+              ? status === "all"
+                ? "bg-slate-800 text-white border-slate-800"
+                : status === "active"
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-red-500 text-white border-red-500"
+              : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
+              }`}
           >
             {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
           </button>

@@ -32,6 +32,7 @@ export const SaleStatisticsTab: React.FC<SaleStatisticsTabProps> = ({
   loading,
   startDate,
   endDate,
+  selectedStorefront,
 }) => {
   const [selectedProduct, setSelectedProduct] =
     React.useState<ProductSalesData | null>(null);
@@ -108,7 +109,6 @@ export const SaleStatisticsTab: React.FC<SaleStatisticsTabProps> = ({
 
   const { data } = productSalesStatistics;
   const { totals, products } = data;
-  console.log("data", data);
   const totalBuyPrice = totals.totalBuyingPrice ?? 0;
   const totalProfit = totals.totalProfit ?? 0;
   // const totalRetailQuantity = totals.totalRetailQuantity ?? 0;

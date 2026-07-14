@@ -45,7 +45,7 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
   paperSize,
   formatDate,
 }) => {
-  const isThermal = paperSize === "thermal-72mm";
+  const isThermal = paperSize.startsWith("thermal");
 
   if (isThermal) {
     return (
@@ -210,9 +210,7 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
   return (
     <div className="voucher-container" data-paper={paperSize}>
       <div className="text-center mb-4 sm:mb-8">
-        <img src={logo} alt="MMAH" className="mx-auto w-48" />
-        <img src={address} alt="Address" className="mx-auto w-48" />
-        {/* {shopBranding.logo ? (
+        {shopBranding.logo ? (
           <img
             src={shopBranding.logo}
             alt={shopBranding.shopName}
@@ -222,54 +220,47 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
           <div className="voucher-logo mx-auto flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 font-bold">
             {shopBranding.shopName.charAt(0)}
           </div>
-        )} */}
-        {/* <h2 className="voucher-shop-name font-bold text-slate-800 mt-3">
+        )}
+        <h2 className="voucher-shop-name font-bold text-slate-800 mt-3">
           {shopBranding.shopName}
-        </h2> */}
-        {/* {shopBranding.address && (
+        </h2>
+        {shopBranding.address && (
           <p className="voucher-address text-slate-600 mt-1">
             {shopBranding.address}
           </p>
-        )} */}
-      </div>
-
-      <div className="flex justify-between items-start mb-4 sm:mb-6 voucher-invoice-row">
-        {/* Customer Info */}
-        {(receiptData.customerName ||
-          receiptData.customerPhone ||
-          receiptData.customerAddress) && (
-          <div className="mb-4 sm:mb-6">
-            <p className="font-bold mb-1">Customer Info:</p>
-            <div className="flex flex-col gap-1">
-              {receiptData.customerName && (
-                <p>Name: {receiptData.customerName}</p>
-              )}
-              {receiptData.customerPhone && (
-                <p>Phone: {receiptData.customerPhone}</p>
-              )}
-              {receiptData.customerAddress && (
-                <p>Address: {receiptData.customerAddress}</p>
-              )}
-            </div>
-          </div>
         )}
-
-        <div className="text-right">
-          <p className="font-bold mb-0.5">
-            INVOICE NO : {receiptData.invoiceNumber}
-          </p>
-          <p className="font-bold">DATE: {formatDate(receiptData.date)}</p>
-        </div>
       </div>
+
+      <div className="text-right mb-4 sm:mb-6 voucher-invoice-row">
+        <p className="font-bold mb-0.5">
+          INVOICE NO : {receiptData.invoiceNumber}
+        </p>
+        <p className="font-bold">DATE: {formatDate(receiptData.date)}</p>
+      </div>
+
+      {(receiptData.customerName ||
+        receiptData.customerPhone ||
+        receiptData.customerAddress) && (
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <p className="font-bold mb-1 text-sm">Customer Info:</p>
+          {receiptData.customerName && (
+            <p className="text-sm">Name: {receiptData.customerName}</p>
+          )}
+          {receiptData.customerPhone && (
+            <p className="text-sm">Phone: {receiptData.customerPhone}</p>
+          )}
+          {receiptData.customerAddress && (
+            <p className="text-sm">Address: {receiptData.customerAddress}</p>
+          )}
+        </div>
+      )}
 
       <div className="mb-6 sm:mb-8">
         <table className="voucher-table">
           <thead>
             <tr>
               <th style={{ width: "10%" }}>NO</th>
-              <th style={{ width: "45%", textAlign: "left" }}>
-                <span>ITEM DESCRIPTION</span>
-              </th>
+              <th style={{ width: "45%" }}>ITEM DESCRIPTION</th>
               <th style={{ width: "15%" }}>PRICE</th>
               <th style={{ width: "15%" }}>QTY.</th>
               <th style={{ width: "15%" }}>TOTAL</th>
@@ -279,7 +270,7 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
             {receiptData.items.map((item, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
-                <td style={{ textAlign: "left" }}>{item.name}</td>
+                <td>{item.name}</td>
                 <td>{item.price.toLocaleString()}</td>
                 <td>{item.qty}</td>
                 <td>{(item.price * item.qty).toLocaleString()}</td>
@@ -338,6 +329,14 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
               {receiptData.total.toLocaleString()} {shopBranding.currency}
             </span>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-8 sm:mt-16 text-center">
+        <div className="voucher-sign border-t border-gray-300 mt-6 sm:mt-8 pt-4">
+          <p className="text-xs text-right">
+            Authorised Sign: _________________
+          </p>
         </div>
       </div>
 

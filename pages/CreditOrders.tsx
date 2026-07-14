@@ -245,11 +245,11 @@ export const CreditOrders: React.FC = () => {
     }
   };
 
-  // const handleOpenPaidAmountModal = (order: Order) => {
-  //   setSelectedOrderForPaidAmount(order);
-  //   setNewPaidAmount(order.paidAmount);
-  //   setShowPaidAmountModal(true);
-  // };
+  const handleOpenPaidAmountModal = (order: Order) => {
+    setSelectedOrderForPaidAmount(order);
+    setNewPaidAmount(order.paidAmount);
+    setShowPaidAmountModal(true);
+  };
 
   const handleUpdatePaidAmount = async () => {
     if (!selectedOrderForPaidAmount || !newPaidAmount) return;

@@ -65,7 +65,7 @@ const PrintReceipt: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const hasTriggeredPrint = useRef(false);
-  const shouldAutoPrint = true;
+  const shouldAutoPrint = searchParams.get("autoprint") === "1";
 
   const handleBack = useCallback(() => {
     navigate(-1);

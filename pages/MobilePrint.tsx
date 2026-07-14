@@ -10,6 +10,9 @@ import {
 import {
   getPrintPaperStyles,
   getSharedTableStyles,
+  getSavedPrintPaperSize,
+  parsePrintPaperSize,
+  PrintPaperSize,
 } from "../utils/printPaperSize";
 import {
   VoucherContent,
@@ -54,6 +57,7 @@ const MobilePrint: React.FC = () => {
   const [loadingMessage, setLoadingMessage] = useState("Loading receipt...");
   const [isReady, setIsReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [paperSize, setPaperSize] = useState<PrintPaperSize>("thermal-72mm");
 
   const handleBack = useCallback(() => {
     navigate(-1);
@@ -71,6 +75,12 @@ const MobilePrint: React.FC = () => {
       setLoadingMessage("Loading receipt...");
       setIsReady(false);
       setLoadError(null);
+
+      // Read paper size from URL param or localStorage
+      const urlSize = new URLSearchParams(window.location.search).get("size");
+      const parsedSize = parsePrintPaperSize(urlSize);
+      const selectedSize = parsedSize || getSavedPrintPaperSize();
+      if (!cancelled) setPaperSize(selectedSize);
 
       const receipt = loadReceiptData(orderId);
       if (!receipt) {
@@ -162,7 +172,7 @@ const MobilePrint: React.FC = () => {
   return (
     <div className="min-h-screen bg-white print:bg-white">
       <style>{`
-        ${getPrintPaperStyles("thermal-72mm")}
+        ${getPrintPaperStyles(paperSize)}
         ${getSharedTableStyles()}
         @media screen {
           .no-print { display: block !important; }
@@ -197,7 +207,7 @@ const MobilePrint: React.FC = () => {
         <VoucherContent
           receiptData={receiptData}
           shopBranding={shopBranding}
-          paperSize="thermal-72mm"
+          paperSize={paperSize}
           formatDate={formatDate}
         />
       </div>

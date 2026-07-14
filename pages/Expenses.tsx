@@ -202,9 +202,9 @@ export const Expenses: React.FC = () => {
       );
       toast.error(
         error.message ||
-          (editingId
-            ? t("expenses.failedToUpdate")
-            : t("expenses.failedToCreate")),
+        (editingId
+          ? t("expenses.failedToUpdate")
+          : t("expenses.failedToCreate")),
       );
     } finally {
       setIsSubmitting(false);
@@ -232,24 +232,24 @@ export const Expenses: React.FC = () => {
       if (response.success) {
         toast.success(
           response.message ||
-            t("expenses.expenseDeleted") ||
-            "Expense deleted successfully",
+          t("expenses.expenseDeleted") ||
+          "Expense deleted successfully",
         );
         setExpenseToDelete(null);
         loadExpenses();
       } else {
         toast.error(
           response.message ||
-            t("expenses.failedToDelete") ||
-            "Failed to delete expense",
+          t("expenses.failedToDelete") ||
+          "Failed to delete expense",
         );
       }
     } catch (error: any) {
       console.error("Error deleting expense:", error);
       toast.error(
         error.message ||
-          t("expenses.failedToDelete") ||
-          "Failed to delete expense",
+        t("expenses.failedToDelete") ||
+        "Failed to delete expense",
       );
     } finally {
       setIsDeleting(false);
@@ -291,10 +291,10 @@ export const Expenses: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 rounded-lg transition-colors text-sm sm:text-base"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-2 py-2 lg:px-2 lg:py-2 sm:px-4 sm:py-3 rounded-lg transition-colors text-sm sm:text-base"
             >
               <Plus className="w-4 h-4" />{" "}
-              <span className="hidden sm:inline">
+              <span className="hidden lg:inline">
                 {t("expenses.addExpense")}
               </span>
             </button>
@@ -677,12 +677,12 @@ export const Expenses: React.FC = () => {
         message={
           expenseToDelete
             ? t("expenses.confirmDeleteMessage")?.replace(
-                "{amount}",
-                expenseToDelete.amount.toLocaleString(),
-              ) ||
-              `Are you sure you want to delete this expense of ${expenseToDelete.amount.toLocaleString()} MMK? This action cannot be undone.`
+              "{amount}",
+              expenseToDelete.amount.toLocaleString(),
+            ) ||
+            `Are you sure you want to delete this expense of ${expenseToDelete.amount.toLocaleString()} MMK? This action cannot be undone.`
             : t("expenses.confirmDelete") ||
-              "Are you sure you want to delete this expense?"
+            "Are you sure you want to delete this expense?"
         }
         confirmText={t("common.delete") || "Delete"}
         cancelText={t("common.cancel") || "Cancel"}

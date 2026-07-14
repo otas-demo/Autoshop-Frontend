@@ -20,6 +20,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   singleDate = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const [isMobile, setIsMobile] = useState(false);
+
   const [dateRange, setDateRange] = useState<{
     startDate: Date;
     endDate: Date;
@@ -31,6 +34,17 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   });
 
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,7 +73,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         key: "selection",
       });
     } else if (startDate && singleDate) {
-      // In single date mode, if only startDate is provided (or both equal)
       setDateRange({
         startDate,
         endDate: startDate,
@@ -80,7 +93,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   const handleFixedStartSelect = (date: Date) => {
-    // Only update end date, keep start date from props
     if (startDate) {
       setDateRange({
         startDate: startDate,
@@ -160,7 +172,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border z-50 p-4">
+        <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border z-50 p-3 sm:p-4 w-[calc(100vw-2rem)] sm:w-auto max-w-[360px] md:max-w-none flex items-center justify-center flex-col">
           {singleDate ? (
             <Calendar
               date={dateRange.startDate}
@@ -182,16 +194,17 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             </div>
           ) : (
             <DateRange
+              key={isMobile ? "mobile-calendar" : "desktop-calendar"}
               ranges={[dateRange]}
               onChange={handleRangeSelect}
               moveRangeOnFirstSelection={false}
-              months={2}
-              direction="horizontal"
+              months={isMobile ? 1 : 2}
+              direction={isMobile ? "vertical" : "horizontal"}
               rangeColors={["#3b82f6"]}
             />
           )}
 
-          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+          <div className="flex w-full justify-end gap-2 mt-4 pt-4 border-t">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
@@ -212,4 +225,3 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     </div>
   );
 };
-

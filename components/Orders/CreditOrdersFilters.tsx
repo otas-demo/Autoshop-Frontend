@@ -2,7 +2,6 @@ import React from "react";
 import { Search } from "lucide-react";
 import { StorefrontProfile } from "../../services/Storefront/fetchStorefrontProfiles";
 import { useLanguage } from "@/context/LanguageContext";
-import { PaymentMethod } from "@/types";
 
 interface CreditOrdersFiltersProps {
   search: string;
@@ -15,19 +14,6 @@ interface CreditOrdersFiltersProps {
   orders: any[];
   filteredOrders: any[];
 }
-
-// enum PaymentMethod {
-//   CASH = "Cash",
-//   KBZ_PAY = "KBZPay",
-//   WAVE_PAY = "WavePay",
-//   AYA_PAY = "AYA Pay",
-//   UAB_PAY = "UAB Pay",
-//   MMQR = "MMQR",
-//   BANK_TRANSFER = "Bank Transfer",
-//   NORMAL = "Normal",
-//   HOT = "Hot",
-//   FOC = "FOC",
-// }
 
 export const CreditOrdersFilters: React.FC<CreditOrdersFiltersProps> = ({
   search,
@@ -56,54 +42,52 @@ export const CreditOrdersFilters: React.FC<CreditOrdersFiltersProps> = ({
           />
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 justify-between">
           {/* Storefront Filter */}
-          <div className="flex items-center gap-2">
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-2.5 sm:px-4 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
-              value={selectedStorefrontId}
-              onChange={(e) => onStorefrontChange(e.target.value)}
-            >
-              <option value="all">{t("creditOrders.allstorefront")}</option>
-              {storefronts.map((sf) => (
-                <option key={sf._id} value={sf._id}>
-                  {sf.locationName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              <select
+                className="border border-gray-200 rounded-lg px-2 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none text-xs sm:text-base max-w-[110px] sm:max-w-none"
+                value={selectedStorefrontId}
+                onChange={(e) => onStorefrontChange(e.target.value)}
+              >
+                <option value="all">{t("creditOrders.allstorefront")}</option>
+                {storefronts.map((sf) => (
+                  <option key={sf._id} value={sf._id}>
+                    {sf.locationName || sf.storefrontName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Payment Method Filter - Hot and Normal only */}
-          <div className="flex items-center gap-2">
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-2.5 sm:px-4 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
-              value={paymentMethodFilter}
-              onChange={(e) => onPaymentMethodChange(e.target.value)}
-            >
-              <option value="all">{t("creditOrders.allmethod")}</option>
-              <option value={PaymentMethod.CASH}>{t("pos.cash")}</option>
-              <option value={PaymentMethod.KBZ_PAY}>{t("pos.kbzPay")}</option>
-              <option value={PaymentMethod.WAVE_PAY}>{t("pos.wavePay")}</option>
-              <option value={PaymentMethod.AYA_PAY}>{t("pos.ayaPay")}</option>
-              <option value={PaymentMethod.UAB_PAY}>{t("pos.uabPay")}</option>
-              <option value={PaymentMethod.BANK_TRANSFER}>
-                {t("pos.bankTransfer")}
-              </option>
-              <option value={PaymentMethod.MMQR}>
-                <span>MMQR</span>
-              </option>
-              <option value={PaymentMethod.FOC}>
-                <span>FOC</span>
-              </option>
-            </select>
+            {/* Payment Method Filter - Hot and Normal only */}
+            <div className="flex items-center gap-2">
+              <select
+                className="border border-gray-200 rounded-lg px-2 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none text-xs sm:text-base max-w-[100px] sm:max-w-none"
+                value={paymentMethodFilter}
+                onChange={(e) => onPaymentMethodChange(e.target.value)}
+              >
+                <option value="all">{t("creditOrders.allmethod")}</option>
+                <option value="cash">Cash</option>
+                <option value="kpay">KBZ Pay</option>
+                <option value="wavepay">Wave Pay</option>
+                <option value="ayapay">AYA Pay</option>
+                <option value="uabpay">UAB Pay</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="MMQR">MMQR</option>
+                <option value="normal">Normal</option>
+                <option value="hot">Hot</option>
+                <option value="foc">FOC</option>
+              </select>
+            </div>
           </div>
 
           {/* Results count */}
           <div className="text-sm text-slate-500 whitespace-nowrap">
-            <span className="hidden sm:inline">
+            <span className="hidden lg:inline">
               Showing {filteredOrders.length} of {orders.length} orders
             </span>
-            <span className="sm:hidden">
+            <span className="lg:hidden">
               {filteredOrders.length}/{orders.length}
             </span>
           </div>

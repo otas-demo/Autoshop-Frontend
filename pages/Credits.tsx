@@ -132,9 +132,9 @@ export const Credits: React.FC = () => {
       );
       toast.error(
         error.message ||
-          (editingId
-            ? t("credits.failedToUpdate")
-            : t("credits.failedToCreate")),
+        (editingId
+          ? t("credits.failedToUpdate")
+          : t("credits.failedToCreate")),
       );
     } finally {
       setIsSubmitting(false);
@@ -179,7 +179,7 @@ export const Credits: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="hidden sm:flex items-center gap-2 px-3 py-2 sm:px-4 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
+            className="hidden sm:flex items-center gap-2 px-3 py-2 sm:px-4 bg-slate-600 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">{t("common.refresh")}</span>

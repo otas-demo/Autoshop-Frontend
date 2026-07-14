@@ -32,12 +32,12 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   if (products.length === 0) return null;
 
   return (
-    <div className="mb-4 flex items-center gap-4">
-      <label className="text-sm font-medium text-slate-700">
+    <div className="flex flex-col gap-2 justify-between xs:items-center md:flex-row md:items-center md:justify-between md:mb-2">
+      <label className="lg:text-sm text-slate-700">
         {t("inventory.filterByCategory")}:
       </label>
       <select
-        className="border rounded-lg px-4 py-2 bg-white text-sm focus:ring-2 focus:ring-primary outline-none"
+        className="border rounded-lg px-4 py-2 bg-white text-sm focus:ring-2 focus:ring-primary outline-none h-fit"
         value={selectedCategory}
         onChange={(e) => onCategoryChange(e.target.value)}
       >
@@ -48,7 +48,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           </option>
         ))}
       </select>
-      <span className="text-sm text-slate-500">
+      <span className="lg:text-sm text-slate-500 md:text-sm">
         {t("inventory.showing")
           .replace("{count}", filteredCount.toString())
           .replace("{total}", totalCount.toString())}

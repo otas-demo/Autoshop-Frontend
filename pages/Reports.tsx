@@ -564,7 +564,7 @@ export const Reports: React.FC = () => {
       selectedStorefront === "all"
         ? "All Storefronts"
         : storefronts.find((sf) => sf._id === selectedStorefront)
-            ?.locationName || "Unknown";
+          ?.locationName || "Unknown";
 
     const effectivePaidReport =
       selectedStorefront === "all"
@@ -630,8 +630,8 @@ export const Reports: React.FC = () => {
     selectedStorefront === "all"
       ? saleReports
       : saleReports.filter(
-          (report) => report.data.storefront._id === selectedStorefront,
-        );
+        (report) => report.data.storefront._id === selectedStorefront,
+      );
 
   // Use the appropriate report based on selection
   const displayReport =
@@ -662,7 +662,7 @@ export const Reports: React.FC = () => {
         endDate={endDate}
         onDateRangeChange={handleDateRangeChange}
         onGeneratePDF={handleGeneratePDF}
-        // singleDate={activeTab === "overall"}
+      // singleDate={activeTab === "overall"}
       />
 
       <ReportTabs activeTab={activeTab} onTabChange={handleTabChange} />
@@ -764,22 +764,22 @@ export const Reports: React.FC = () => {
           ((selectedStorefront === "all" && allStorefrontsStock.length === 0) ||
             (selectedStorefront !== "all" &&
               storefrontStock.length === 0)))) && (
-        <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
-          <Store className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600">
-            Loading{" "}
-            {activeTab === "statistics"
-              ? "sale statistics"
-              : activeTab === "revenue"
-                ? "revenue data"
-                : `${activeTab} orders`}{" "}
-            report for{" "}
-            {selectedStorefront === "all"
-              ? "all storefronts"
-              : "selected storefront"}
-          </p>
-        </div>
-      )}
+          <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
+            <Store className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600">
+              Loading{" "}
+              {activeTab === "statistics"
+                ? "sale statistics"
+                : activeTab === "revenue"
+                  ? "revenue data"
+                  : `${activeTab} orders`}{" "}
+              report for{" "}
+              {selectedStorefront === "all"
+                ? "all storefronts"
+                : "selected storefront"}
+            </p>
+          </div>
+        )}
     </div>
   );
 };

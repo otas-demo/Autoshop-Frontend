@@ -44,40 +44,42 @@ export const CreditOrdersFilters: React.FC<CreditOrdersFiltersProps> = ({
 
         <div className="flex items-center gap-4">
           {/* Storefront Filter */}
-          <div className="flex items-center gap-2">
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-2.5 sm:px-4 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
-              value={selectedStorefrontId}
-              onChange={(e) => onStorefrontChange(e.target.value)}
-            >
-              <option value="all">{t("creditOrders.allstorefront")}</option>
-              {storefronts.map((sf) => (
-                <option key={sf._id} value={sf._id}>
-                  {sf.locationName || sf.storefrontName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center">
+              <select
+                className="border border-gray-200 rounded-lg px-2 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none text-xs sm:text-base max-w-[110px] sm:max-w-none"
+                value={selectedStorefrontId}
+                onChange={(e) => onStorefrontChange(e.target.value)}
+              >
+                <option value="all">{t("creditOrders.allstorefront")}</option>
+                {storefronts.map((sf) => (
+                  <option key={sf._id} value={sf._id}>
+                    {sf.locationName || sf.storefrontName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Payment Method Filter - Hot and Normal only */}
-          <div className="flex items-center gap-2">
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-2.5 sm:px-4 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
-              value={paymentMethodFilter}
-              onChange={(e) => onPaymentMethodChange(e.target.value)}
-            >
-              <option value="all">{t("creditOrders.allmethod")}</option>
-              <option value="normal">Normal</option>
-              <option value="hot">Hot</option>
-            </select>
+            {/* Payment Method Filter - Hot and Normal only */}
+            <div className="flex items-center gap-2">
+              <select
+                className="border border-gray-200 rounded-lg px-2 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none text-xs sm:text-base max-w-[100px] sm:max-w-none"
+                value={paymentMethodFilter}
+                onChange={(e) => onPaymentMethodChange(e.target.value)}
+              >
+                <option value="all">{t("creditOrders.allmethod")}</option>
+                <option value="normal">Normal</option>
+                <option value="hot">Hot</option>
+              </select>
+            </div>
           </div>
 
           {/* Results count */}
           <div className="text-sm text-slate-500 whitespace-nowrap">
-            <span className="hidden sm:inline">
+            <span className="hidden lg:inline">
               Showing {filteredOrders.length} of {orders.length} orders
             </span>
-            <span className="sm:hidden">
+            <span className="lg:hidden">
               {filteredOrders.length}/{orders.length}
             </span>
           </div>

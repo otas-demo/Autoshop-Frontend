@@ -223,9 +223,9 @@ export const Warehouse: React.FC = () => {
     } catch (error: any) {
       toast.error(
         error.message ||
-          (editingId
-            ? t("warehouse.failedToUpdate")
-            : t("warehouse.failedToCreate")),
+        (editingId
+          ? t("warehouse.failedToUpdate")
+          : t("warehouse.failedToCreate")),
       );
     } finally {
       setIsSubmitting(false);
@@ -585,7 +585,7 @@ export const Warehouse: React.FC = () => {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2 group-hover:text-primary transition-colors text-sm sm:text-base">
                       <span className="truncate">{profile.locationName}</span>
-                      <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary-700 rounded-full flex-shrink-0">
+                      <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary-700 rounded-full flex-shrink-0 mt-1">
                         {profile.locationCode}
                       </span>
                     </h3>
@@ -596,13 +596,12 @@ export const Warehouse: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-2">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        profile.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded-full ${profile.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                        }`}
                     >
                       {profile.status}
                     </span>

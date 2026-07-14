@@ -225,9 +225,9 @@ export const Storefront: React.FC = () => {
     } catch (error: any) {
       toast.error(
         error.message ||
-          (editingId
-            ? t("storefront.failedToUpdate")
-            : t("storefront.failedToCreate")),
+        (editingId
+          ? t("storefront.failedToUpdate")
+          : t("storefront.failedToCreate")),
       );
     } finally {
       setIsSubmitting(false);
@@ -582,27 +582,26 @@ export const Storefront: React.FC = () => {
                 className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-all cursor-pointer hover:border-primary group"
               >
                 <div className="flex justify-between items-start mb-2">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 mt-1">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2 group-hover:text-primary transition-colors text-sm sm:text-base">
                       <span className="truncate">{profile.locationName}</span>
                       <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary-700 rounded-full flex-shrink-0">
                         {profile.locationCode}
                       </span>
                     </h3>
-                    <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                    <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       <span className="truncate">
                         {profile.locationAddress}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-2">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        profile.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded-full ${profile.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                        }`}
                     >
                       {profile.status}
                     </span>

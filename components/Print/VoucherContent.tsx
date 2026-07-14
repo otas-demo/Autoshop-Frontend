@@ -45,7 +45,7 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
   paperSize,
   formatDate,
 }) => {
-  const isThermal = paperSize === "thermal-72mm";
+  const isThermal = paperSize.startsWith("thermal");
 
   if (isThermal) {
     return (

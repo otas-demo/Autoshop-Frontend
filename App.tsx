@@ -25,7 +25,7 @@ import { AccountManagement } from "./pages/AccountManagement";
 import { Login } from "./pages/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import PrintReceipt from "./pages/PrintReceipt";
-import { AIChat } from "./pages/AIChat";
+import { AIChat } from "./components/AIChat";
 import MobilePrint from "./pages/MobilePrint";
 
 const AppLayout: React.FC = () => {

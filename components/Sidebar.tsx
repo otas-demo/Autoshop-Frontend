@@ -13,6 +13,7 @@ import {
   Receipt,
   Shield,
   LogOut,
+  Bot,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { removeAuthToken } from "../services/axios";
@@ -67,6 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
     { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
     { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
+    { path: "/ai-chat", label: "AI Chat", icon: Bot },
   ];
 
   return (

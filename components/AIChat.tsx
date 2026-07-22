@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import axios from "../services/axios";
 import { sendAiChatMessage } from "../services/Reports/aiChat";
 import {
   fetchStorefrontProfiles,
@@ -131,8 +132,9 @@ export const AIChat: React.FC = () => {
   };
 
   // ─── Send Message ────────────────────────────────────────────
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (customText?: string) => {
+    const textToSend = customText !== undefined ? customText : input;
+    if (!textToSend.trim()) return;
 
     if (!selectedStorefrontId) {
       toast.error("Please select a storefront first.");
@@ -145,7 +147,7 @@ export const AIChat: React.FC = () => {
     const userMsg: ChatMessage = {
       id: generateMessageId(),
       role: "user",
-      content: input,
+      content: textToSend.trim(),
       timestamp: new Date().toISOString(),
     };
 
@@ -168,8 +170,9 @@ export const AIChat: React.FC = () => {
       appendMessage(convId, userMsg);
     }
 
-    const currentInput = input;
-    setInput("");
+    if (customText === undefined) {
+      setInput("");
+    }
     setIsLoading(true);
 
     try {
@@ -210,6 +213,138 @@ export const AIChat: React.FC = () => {
     }
   };
 
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatCurrency = (val: number) => {
+    return `${Math.round(val).toLocaleString("en-US")} ကျပ်`;
+  };
+
+  const toMyanmarDigits = (num: number) => {
+    const myanmarDigits = ["၀", "၁", "၂", "၃", "၄", "၅", "၆", "၇", "၈", "၉"];
+    return num.toString().split("").map(char => {
+      const digit = parseInt(char);
+      return isNaN(digit) ? char : myanmarDigits[digit];
+    }).join("");
+  };
+
+  const handleSuggestionClick = async (suggestionText: string) => {
+    if (!selectedStorefrontId) {
+      toast.error("Please select a storefront first.");
+      return;
+    }
+
+    let startDate = "";
+    let endDate = "";
+    let timeframeLabel = "";
+
+    const todayStr = getLocalDateString();
+
+    if (suggestionText.includes("ဒီနေ့")) {
+      startDate = todayStr;
+      endDate = todayStr;
+      timeframeLabel = "ဒီနေ့အတွက်";
+    } else if (suggestionText.includes("ဒီလ")) {
+      startDate = `${todayStr.substring(0, 8)}01`;
+      endDate = todayStr;
+      timeframeLabel = "ဒီလအတွက်";
+    } else {
+      startDate = todayStr;
+      endDate = todayStr;
+      timeframeLabel = "ဒီနေ့အတွက်";
+    }
+
+    // Auto-create conversation if none active
+    let convId = activeConversation?.id;
+
+    const userMsg: ChatMessage = {
+      id: generateMessageId(),
+      role: "user",
+      content: suggestionText,
+      timestamp: new Date().toISOString(),
+    };
+
+    if (!convId) {
+      const newConv: ChatConversation = {
+        id: generateConversationId(),
+        title: generateConversationTitle(userMsg.content),
+        messages: [userMsg],
+        createdAt: userMsg.timestamp,
+        updatedAt: userMsg.timestamp,
+        storefrontId: selectedStorefrontId,
+        storefrontName: selectedStorefrontName,
+      };
+      convId = newConv.id;
+      saveHistory({
+        conversations: [newConv, ...historyState.conversations],
+        activeConversationId: newConv.id,
+      });
+    } else {
+      appendMessage(convId, userMsg);
+    }
+
+    setIsLoading(true);
+
+    try {
+      const [summaryRes, paymentRes] = await Promise.all([
+        axios.get(`/ai-sale-report/summary?storefrontId=${selectedStorefrontId}&startDate=${startDate}&endDate=${endDate}`),
+        axios.get(`/ai-sale-report/payment-methods?storefrontId=${selectedStorefrontId}&startDate=${startDate}&endDate=${endDate}`)
+      ]);
+
+      if (summaryRes.data?.success && paymentRes.data?.success) {
+        const summaryData = summaryRes.data.data;
+        const paymentData = paymentRes.data.data;
+
+        const finalAmountFormatted = summaryData.report.finalAmountFormatted;
+        const discountFormatted = summaryData.report.discountFormatted;
+        const creditAmountFormatted = summaryData.report.creditAmountFormatted;
+        const orderCountMyanmar = toMyanmarDigits(summaryData.report.orderCount);
+
+        const totalCardAmount = paymentData.paymentMethods
+          .filter((pm: any) => pm.paymentMethod === "kpay" || pm.paymentMethod === "bank")
+          .reduce((sum: number, pm: any) => sum + pm.totalPaidAmount, 0);
+
+        const totalCashAmount = paymentData.paymentMethods
+          .filter((pm: any) => pm.paymentMethod === "cash")
+          .reduce((sum: number, pm: any) => sum + pm.totalPaidAmount, 0);
+
+        const cardAmountFormatted = formatCurrency(totalCardAmount);
+        const cashAmountFormatted = formatCurrency(totalCashAmount);
+
+        const replyText = `${timeframeLabel} အရောင်းအစီရင်ခံစာ အနှစ်ချုပ်မှာ အောက်ပါအတိုင်း ဖြစ်ပါတယ်ခင်ဗျာ -
+• စုစုပေါင်း ရောင်းအားပမာဏ: ${finalAmountFormatted}
+• ကဒ်/Mobile Banking ဖြင့် ပေးချေမှု: ${cardAmountFormatted}
+• လက်ငင်းငွေသား (Cash) ဖြင့် ပေးချေမှု: ${cashAmountFormatted}
+• လျှော့စျေး (Discount): ${discountFormatted}
+• အကြွေးရရန်ရှိငွေ: ${creditAmountFormatted}
+• စုစုပေါင်း အော်ဒါ (Order) အရေအတွက်: ${orderCountMyanmar} ခု
+• စုစုပေါင်း ရောင်းရသည့် ပစ္စည်းအရေအတွက်: ${orderCountMyanmar} ခု
+
+ကျေးဇူးတင်ပါတယ်ခင်ဗျာ။`;
+
+        const aiMsg: ChatMessage = {
+          id: generateMessageId(),
+          role: "ai",
+          content: replyText,
+          timestamp: new Date().toISOString(),
+        };
+        appendMessage(convId, aiMsg);
+      } else {
+        toast.error("Failed to get report data.");
+      }
+    } catch (error) {
+      console.error("Direct Report Fetch Error:", error);
+      toast.error("Something went wrong while fetching the report data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const clearCurrentConversation = () => {
     if (!activeConversation) {
       toast.error("No conversation to clear.");
@@ -227,7 +362,7 @@ export const AIChat: React.FC = () => {
 
   // ─── Render ──────────────────────────────────────────────────
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8 min-h-screen">
+    <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:px-8 sm:py-3">
       <div className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-6rem)]">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-4">
@@ -292,10 +427,30 @@ export const AIChat: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-700 mb-2">
                   မင်္ဂလာပါ ကျွန်တော်က Bossရဲ့ AI လက်ထောက် မန်နေဂျာပါ။
                 </h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
                   Boss အနေနဲ့ လုပ်ငန်းနဲ့ပတ်သက်ပြီး ဘာအချက်အလက်လေးတွေ
                   သိလိုပါသလဲ ခင်ဗျာ
                 </p>
+
+                {/* Suggestion Chips */}
+                <div className="flex flex-col items-center gap-3">
+                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">အကြံပြုမေးခွန်းများ (Suggestions)</span>
+                  <div className="flex flex-wrap justify-center gap-2 max-w-xl">
+                    {[
+                      "ဒီနေ့ ဘယ်လောက်ဖိုး ရောင်းရလဲ",
+                      "ဒီလအတွက် အရောင်းအစီရင်ခံစာ ပြပေးပါ"
+                    ].map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        disabled={isLoading}
+                        className="px-4 py-2.5 text-sm bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded-xl transition-all shadow-sm hover:shadow font-medium active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -305,11 +460,10 @@ export const AIChat: React.FC = () => {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 flex flex-col ${
-                    msg.role === "user"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                      : "bg-white text-slate-800 border border-slate-200 shadow-sm"
-                  }`}
+                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 flex flex-col ${msg.role === "user"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                    : "bg-white text-slate-800 border border-slate-200 shadow-sm"
+                    }`}
                 >
                   <div className="flex items-start gap-2 mb-1">
                     {msg.role === "ai" && (

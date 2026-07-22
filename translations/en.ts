@@ -85,6 +85,11 @@ export const en = {
     settings: "Settings",
     logout: "Logout",
     loggedOut: "Logged out successfully",
+    salesGroup: "Sales & Shop",
+    creditsGroup: "Credits & Accounts",
+    inventoryGroup: "Inventory & Logistics",
+    financeGroup: "Finance & Reports",
+    systemGroup: "System & AI",
   },
   pos: {
     title: "Point of Sale",

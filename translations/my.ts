@@ -86,6 +86,11 @@ export const my = {
     settings: "ဆက်တင်များ",
     logout: "အကောင့်ကနေ ထွက်မယ်",
     loggedOut: "အောင်မြင်စွာ ထွက်လိုက်ပါသည်",
+    salesGroup: "ရောင်းချမှုနှင့် ဆိုင်ခန်း",
+    creditsGroup: "အကြွေးနှင့် ငွေစာရင်း",
+    inventoryGroup: "ကုန်ပစ္စည်းနှင့် သိုလှောင်မှု",
+    financeGroup: "ဘဏ္ဍာရေးနှင့် အစီရင်ခံစာ",
+    systemGroup: "စနစ်နှင့် AI",
   },
   pos: {
     title: "ရောင်းချမှုအမှတ်",

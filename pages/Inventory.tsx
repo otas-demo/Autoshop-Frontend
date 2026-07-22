@@ -697,7 +697,7 @@ export const Inventory: React.FC = () => {
             </button>
             {selectedProductIds.length === 0 && !showSelectBoxes && (
               <>
-                <button
+                {/* <button
                   onClick={() => {
                     setShowSelectBoxes(true);
                     setTransferMode("warehouse");
@@ -711,7 +711,7 @@ export const Inventory: React.FC = () => {
                   <span className="sm:hidden">
                     {t("inventory.transferWarehouse")}
                   </span>
-                </button>
+                </button> */}
                 <button
                   onClick={() => {
                     setShowSelectBoxes(true);

@@ -26,6 +26,7 @@ import { Login } from "./pages/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import PrintReceipt from "./pages/PrintReceipt";
 import { AIChat } from "./components/AIChat";
+import { DailyReports } from "./pages/DailyReports";
 import MobilePrint from "./pages/MobilePrint";
 
 const AppLayout: React.FC = () => {
@@ -222,6 +223,14 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <AIChat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/daily-reports"
+            element={
+              <ProtectedRoute>
+                <DailyReports />
               </ProtectedRoute>
             }
           />

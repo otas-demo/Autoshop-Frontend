@@ -43,6 +43,8 @@ export interface ShopSettings {
   isActive: boolean;
   businessHours: BusinessHours;
   socialMedia: SocialMedia;
+  dailyReportTime: string;
+  dailyReportEnabled: boolean;
   updatedBy?: ShopSettingsUpdatedBy;
   createdAt: string;
   updatedAt: string;

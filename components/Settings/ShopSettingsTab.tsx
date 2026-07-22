@@ -11,6 +11,7 @@ import { SocialMediaCard } from "./SocialMediaCard";
 import { ShopSettingsForm } from "./ShopSettingsForm";
 import { ShopLogoUpload } from "./ShopLogoUpload";
 import { PrintPaperSizeSettingsCard } from "./PrintPaperSizeSettingsCard";
+import { DailyReportScheduleCard } from "./DailyReportScheduleCard";
 
 export const ShopSettingsTab: React.FC = () => {
   const [settings, setSettings] = useState<ShopSettings | null>(null);
@@ -114,6 +115,16 @@ export const ShopSettingsTab: React.FC = () => {
             <BusinessHoursCard businessHours={settings.businessHours} />
             <SocialMediaCard socialMedia={settings.socialMedia} />
           </div> */}
+        </div>
+      )}
+
+      {settings && !isEditing && (
+        <div className="mt-6">
+          <DailyReportScheduleCard
+            currentTime={settings.dailyReportTime || "21:00"}
+            currentEnabled={settings.dailyReportEnabled !== false}
+            onSuccess={loadShopSettings}
+          />
         </div>
       )}
 

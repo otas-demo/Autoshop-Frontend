@@ -205,3 +205,22 @@ export interface AppState {
     role: Role;
   };
 }
+
+// ─── AI Chat Types ─────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "ai";
+  content: string;
+  timestamp: string; // ISO 8601
+}
+
+export interface ChatConversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  storefrontId: string;
+  storefrontName: string;
+}

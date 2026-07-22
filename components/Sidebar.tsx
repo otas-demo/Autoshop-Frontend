@@ -14,6 +14,7 @@ import {
   Shield,
   LogOut,
   Bot,
+  Bell,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { removeAuthToken } from "../services/axios";
@@ -69,6 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
     { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
     { path: "/ai-chat", label: "AI Chat", icon: Bot },
+    { path: "/daily-reports", label: "Daily Reports", icon: Bell },
   ];
 
   return (

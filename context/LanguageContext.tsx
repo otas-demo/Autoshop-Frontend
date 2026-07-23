@@ -22,6 +22,16 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   useEffect(() => {
     localStorage.setItem("language", language);
+    // Set HTML lang attribute
+    document.documentElement.lang = language;
+    // Set classes for styling
+    if (language === "my") {
+      document.documentElement.classList.add("lang-my");
+      document.documentElement.classList.remove("lang-en");
+    } else {
+      document.documentElement.classList.add("lang-en");
+      document.documentElement.classList.remove("lang-my");
+    }
   }, [language]);
 
   const setLanguage = (lang: Language) => {

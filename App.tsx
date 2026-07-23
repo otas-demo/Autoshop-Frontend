@@ -31,56 +31,38 @@ import MobilePrint from "./pages/MobilePrint";
 
 const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem("sidebarCollapsed") === "true";
+  });
   const token = localStorage.getItem("authToken");
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Only show header and sidebar if authenticated */}
+    <div className="min-h-screen flex flex-col bg-[#f5f5f3]">
+      {/* Floating Hamburger Menu Button (Mobile/Tablet Only) */}
       {token && (
-        <>
-          {/* Header */}
-          <header className="bg-primary border-b border-white/10 sticky top-0 z-30 print:hidden shadow-lg">
-            <div className="flex items-center justify-between h-14 px-4">
-              <div className="flex items-center">
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors mr-3"
-                  aria-label="Open menu"
-                >
-                  <Menu className="w-6 h-6 text-white" />
-                </button>
-                <img
-                  src="/autologo.jpg"
-                  alt="AutoShop Logo"
-                  className="w-8 h-8 object-contain rounded-lg mr-2"
-                />
-                <h1 className="text-lg font-bold text-white tracking-wide">
-                  AutoShop
-                </h1>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* <button
-                  onClick={() => setRunTutorial(true)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white flex items-center gap-2"
-                  title="Start Tutorial"
-                >
-                  <HelpCircle className="w-5 h-5" />
-                  <span className="text-xs font-medium hidden sm:inline">
-                    ဆော့ဝဲ လမ်းညွှန်
-                  </span>
-                </button> */}
-                <LanguageSwitcher />
-              </div>
-            </div>
-          </header>
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-40 p-2.5 bg-white border border-gray-200 shadow-md rounded-xl text-[#2216a8] hover:bg-gray-50 transition-all cursor-pointer"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      )}
 
-          {/* Sidebar */}
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        </>
+      {/* Sidebar */}
+      {token && (
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onClose={() => setSidebarOpen(false)} 
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+        />
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden">
+      <main className={`flex-1 overflow-x-hidden transition-all duration-500 ease-in-out p-4 lg:pr-4 lg:py-4 lg:pl-0 ${
+        token ? (isCollapsed ? "lg:pl-[5.5rem]" : "lg:pl-[18.5rem]") : ""
+      }`}>
         <Routes>
           <Route
             path="/"

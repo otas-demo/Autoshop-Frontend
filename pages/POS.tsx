@@ -637,9 +637,15 @@ export const POS: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-60px)] overflow-hidden bg-gray-100">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-2rem)] overflow-hidden gap-4 bg-transparent">
       {/* Product Grid */}
-      <div className="flex-1 flex flex-col px-3 py-3 lg:px-6 lg:py-4 overflow-hidden">
+      <div className="flex-1 bg-white border border-gray-200/50 rounded-3xl p-4 lg:p-6 shadow-sm flex flex-col overflow-hidden">
+        {/* Title and Subtitle */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-[#1f2937] tracking-tight">{t("pos.title")}</h1>
+          <p className="text-xs text-gray-400 mt-1">{t("pos.subtitle")}</p>
+        </div>
+
         {/* Search Bar with Storefront Badge */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -972,23 +978,26 @@ export const POS: React.FC = () => {
       </div>
 
       {/* Cart Sidebar - Desktop only */}
-      <div className="hidden lg:flex lg:w-96 bg-white flex-col border-l border-gray-200 shadow-xl h-[calc(100vh-60px)] sticky top-0">
-        <div className="p-4 border-b">
-          <h2 className="font-bold text-lg">{t("pos.currentSale")}</h2>
+      <div className="hidden lg:flex lg:w-96 bg-white flex-col border border-gray-200/50 rounded-3xl shadow-sm h-full overflow-hidden p-6 justify-between">
+        <div className="mb-4">
+          <h2 className="font-bold text-xl text-gray-800 tracking-tight">{t("pos.currentSale")}</h2>
           {selectedStorefrontId && (
-            <p className="text-xs text-gray-400 mt-1">
+            <span className="inline-block mt-2 bg-[#fdf2e9] text-[#b06f2e] border border-[#f5d7bc] px-2.5 py-0.5 rounded-full text-xs font-semibold">
               {
                 storefronts.find((sf) => sf._id === selectedStorefrontId)
                   ?.locationName
               }
-            </p>
+            </span>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${cart.length === 0 ? "flex flex-col justify-center" : ""}`}>
           {cart.length === 0 ? (
-            <div className="text-center text-gray-400 mt-10">
-              {t("pos.emptyCart")}
+            <div className="flex flex-col items-center justify-center bg-indigo-50/60 border border-indigo-100/40 rounded-3xl p-8 my-auto text-center shadow-sm">
+              <ShoppingCart className="w-10 h-10 text-[#2216a8] mb-4 flex-shrink-0" />
+              <p className="text-sm font-semibold text-[#2216a8] whitespace-pre-line leading-relaxed">
+                {t("pos.emptyCart")}
+              </p>
             </div>
           ) : (
             cart.map((item) => (
@@ -1057,18 +1066,18 @@ export const POS: React.FC = () => {
         </div>
 
         {/* Cart Summary & Checkout Button */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">{t("pos.items")}</span>
+        <div className="mt-auto pt-4 border-t border-gray-100 bg-white space-y-4">
+          <div className="border border-gray-200/80 rounded-2xl p-4 bg-white space-y-2.5">
+            <div className="flex justify-between text-sm text-gray-500 font-medium">
+              <span>{t("pos.items")}</span>
               <span>
                 {cart.reduce((sum, item) => sum + getSafeQty(item.qty), 0)}{" "}
                 {t("pos.itemsLower")}
               </span>
             </div>
-            <div className="flex justify-between text-xl font-bold text-gray-900">
-              <span>{t("common.total")}</span>
-              <span>{subtotal.toLocaleString()} MMK</span>
+            <div className="flex justify-between items-baseline">
+              <span className="text-base font-bold text-gray-700">{t("common.total")}</span>
+              <span className="text-lg font-black text-[#2216a8]">{subtotal.toLocaleString()} MMK</span>
             </div>
           </div>
 
@@ -1084,9 +1093,10 @@ export const POS: React.FC = () => {
               setShowCheckoutModal(true);
             }}
             disabled={cart.length === 0}
-            className="start-btn w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-bold transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-[#2216a8] hover:bg-indigo-900 text-white py-3.5 rounded-2xl font-bold transition-all shadow-md hover:shadow-lg hover:shadow-indigo-600/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
-            {t("pos.proceedToCheckout")}
+            <ShoppingCart className="w-5 h-5" />
+            <span>{t("pos.proceedToCheckout")}</span>
           </button>
         </div>
       </div>

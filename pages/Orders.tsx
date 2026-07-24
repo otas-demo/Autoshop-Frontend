@@ -233,98 +233,103 @@ export const Orders: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Receipt className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
-            {t("orders.title")}
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">{t("orders.subtitle")}</p>
+    <div className="w-full">
+      <div className="bg-white h-[calc(100vh-2rem)] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("orders.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("orders.subtitle")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={loadOrders}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>{t("storefront.refresh")}</span>
+            </button>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(newStartDate, newEndDate) => {
+                if (!newStartDate || !newEndDate) return;
+                setDateRange({
+                  startDate: newStartDate,
+                  endDate: newEndDate,
+                });
+                saveStoredDateRange(
+                  DATE_RANGE_STORAGE_KEYS.orders,
+                  newStartDate,
+                  newEndDate,
+                );
+              }}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+            />
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(newStartDate, newEndDate) => {
-              if (!newStartDate || !newEndDate) return;
-              setDateRange({
-                startDate: newStartDate,
-                endDate: newEndDate,
-              });
-              saveStoredDateRange(
-                DATE_RANGE_STORAGE_KEYS.orders,
-                newStartDate,
-                newEndDate,
-              );
-            }}
-          />
-          <button
-            onClick={loadOrders}
-            disabled={loading}
-            className="hidden sm:flex items-center gap-2 bg-slate-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors text-sm sm:text-base"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">{t("common.refresh")}</span>
-            <span className="sm:hidden">↻</span>
-          </button>
-        </div>
+
+        {/* Filters */}
+        <OrdersFilters
+          search={search}
+          onSearchChange={setSearch}
+          storefronts={storefronts}
+          selectedStorefrontId={selectedStorefrontId}
+          onStorefrontChange={setSelectedStorefrontId}
+          paymentTypeFilter={paymentTypeFilter}
+          onPaymentTypeChange={setPaymentTypeFilter}
+          paymentMethodFilter={paymentMethodFilter}
+          onPaymentMethodChange={setPaymentMethodFilter}
+          orders={orders}
+          filteredOrders={filteredOrders}
+        />
+
+        {/* Orders Table */}
+        <OrdersTable
+          loading={loading}
+          orders={filteredOrders}
+          onViewOrder={handleViewOrder}
+          onOpenCreditPersonModal={handleOpenCreditPersonModal}
+          onOrderDeleted={async () => {
+            await loadOrders();
+          }}
+        />
+
+        {/* Order Detail Modal */}
+        <OrderDetailModal
+          isOpen={!!(selectedOrder || loadingDetail)}
+          loading={loadingDetail}
+          order={selectedOrder}
+          onClose={() => {
+            setSelectedOrder(null);
+            setLoadingDetail(false);
+          }}
+          onOrderUpdate={async () => {
+            await loadOrders();
+            await handleRefreshOrderDetails();
+          }}
+        />
+
+        {/* Credit Person Selection Modal */}
+        <CreditPersonModal
+          isOpen={showCreditPersonModal}
+          order={selectedOrderForCredit}
+          creditPersonas={creditPersonas}
+          assigning={assigningCreditPerson}
+          onClose={() => {
+            setShowCreditPersonModal(false);
+            setSelectedOrderForCredit(null);
+          }}
+          onAssign={handleAssignCreditPerson}
+        />
       </div>
-
-      {/* Filters */}
-      <OrdersFilters
-        search={search}
-        onSearchChange={setSearch}
-        storefronts={storefronts}
-        selectedStorefrontId={selectedStorefrontId}
-        onStorefrontChange={setSelectedStorefrontId}
-        paymentTypeFilter={paymentTypeFilter}
-        onPaymentTypeChange={setPaymentTypeFilter}
-        paymentMethodFilter={paymentMethodFilter}
-        onPaymentMethodChange={setPaymentMethodFilter}
-        orders={orders}
-        filteredOrders={filteredOrders}
-      />
-
-      {/* Orders Table */}
-      <OrdersTable
-        loading={loading}
-        orders={filteredOrders}
-        onViewOrder={handleViewOrder}
-        onOpenCreditPersonModal={handleOpenCreditPersonModal}
-        onOrderDeleted={async () => {
-          await loadOrders();
-        }}
-      />
-
-      {/* Order Detail Modal */}
-      <OrderDetailModal
-        isOpen={!!(selectedOrder || loadingDetail)}
-        loading={loadingDetail}
-        order={selectedOrder}
-        onClose={() => {
-          setSelectedOrder(null);
-          setLoadingDetail(false);
-        }}
-        onOrderUpdate={async () => {
-          await loadOrders();
-          await handleRefreshOrderDetails();
-        }}
-      />
-
-      {/* Credit Person Selection Modal */}
-      <CreditPersonModal
-        isOpen={showCreditPersonModal}
-        order={selectedOrderForCredit}
-        creditPersonas={creditPersonas}
-        assigning={assigningCreditPerson}
-        onClose={() => {
-          setShowCreditPersonModal(false);
-          setSelectedOrderForCredit(null);
-        }}
-        onAssign={handleAssignCreditPerson}
-      />
     </div>
   );
 };

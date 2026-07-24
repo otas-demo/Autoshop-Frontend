@@ -10,6 +10,7 @@ interface DateRangePickerProps {
   onChange: (startDate: Date | null, endDate: Date | null) => void;
   fixedStartDate?: boolean;
   singleDate?: boolean;
+  className?: string;
 }
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -18,6 +19,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   onChange,
   fixedStartDate = false,
   singleDate = false,
+  className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -141,15 +143,17 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     });
   };
 
+  const isDark = className?.includes("text-white") || className?.includes("bg-[#2216a8]") || className?.includes("bg-indigo");
+
   return (
     <div className="relative" ref={pickerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-slate-50 transition-colors focus:ring-2 focus:ring-primary outline-none"
+        className={className || "flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-slate-50 transition-colors focus:ring-2 focus:ring-primary outline-none"}
       >
-        <CalendarIcon className="w-4 h-4 text-slate-600" />
-        <span className="text-sm text-slate-700">
+        <CalendarIcon className={`w-4 h-4 ${isDark ? "text-white" : "text-slate-600"}`} />
+        <span className={`text-sm ${isDark ? "text-white" : "text-slate-700"}`}>
           {singleDate
             ? (startDate ? formatDate(startDate) : "Select date")
             : (startDate && endDate
@@ -162,7 +166,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         )}
         {(startDate || endDate) && !fixedStartDate && (
           <X
-            className="w-4 h-4 text-slate-400 hover:text-slate-600"
+            className={`w-4 h-4 hover:text-opacity-80 ${isDark ? "text-white/70" : "text-slate-400 hover:text-slate-600"}`}
             onClick={(e) => {
               e.stopPropagation();
               handleClear();

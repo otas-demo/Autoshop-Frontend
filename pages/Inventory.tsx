@@ -26,8 +26,7 @@ import {
   ProductDetail,
 } from "../services/Inventory/fetchProductById";
 import { WarehouseProfile } from "../types";
-import { Building2, X, Loader2, Store, FileUp } from "lucide-react";
-import { SearchInput } from "../components/Inventory/SearchInput";
+import { Building2, X, Loader2, Store, FileUp, RefreshCw, Plus, Search, ChevronDown } from "lucide-react";
 import {
   importExcel,
   ImportExcelResponse,
@@ -681,108 +680,32 @@ export const Inventory: React.FC = () => {
   // console.log("filteredProducts", filteredProducts);
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
-            {t("inventory.title")}
-          </h1>
-          <div className="flex flex-wrap gap-2">
+    <div className="w-full lg:h-[calc(100vh-2rem)]">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
+        
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("inventory.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("inventory.subtitle")}
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Refresh Button */}
             <button
               onClick={loadProducts}
               disabled={isFetching}
-              className="inventory-refresh-btn bg-slate-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-slate-700 disabled:opacity-50 text-sm sm:text-base"
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              {isFetching ? t("common.loading") : t("inventory.refresh")}
+              <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+              <span>{t("inventory.refresh")}</span>
             </button>
-            {selectedProductIds.length === 0 && !showSelectBoxes && (
-              <>
-                {/* <button
-                  onClick={() => {
-                    setShowSelectBoxes(true);
-                    setTransferMode("warehouse");
-                  }}
-                  className="inventory-transfer-warehouse-btn bg-blue-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base"
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {t("inventory.transferWarehouse")}
-                  </span>
-                  <span className="sm:hidden">
-                    {t("inventory.transferWarehouse")}
-                  </span>
-                </button> */}
-                <button
-                  onClick={() => {
-                    setShowSelectBoxes(true);
-                    setTransferMode("storefront");
-                  }}
-                  className="inventory-transfer-storefront-btn bg-purple-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-purple-700 flex items-center gap-2 text-sm sm:text-base"
-                >
-                  <Store className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {t("inventory.transferStoreFront")}
-                  </span>
-                  <span className="sm:hidden">
-                    {t("inventory.transferStoreFront")}
-                  </span>
-                </button>
-              </>
-            )}
 
-            {showSelectBoxes && (
-              <>
-                {transferMode === "warehouse" && (
-                  <button
-                    onClick={handleOpenTransferModal}
-                    className="bg-green-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-green-700 flex items-center gap-2 text-sm sm:text-base"
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {t("inventory.confirmWarehouse")} (
-                      {selectedProductIds.length})
-                    </span>
-                    <span className="sm:hidden">
-                      {t("inventory.confirmWarehouse")} (
-                      {selectedProductIds.length})
-                    </span>
-                  </button>
-                )}
-                {transferMode === "storefront" && (
-                  <button
-                    onClick={handleOpenTransferStorefrontModal}
-                    className="bg-orange-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-orange-700 flex items-center gap-2 text-sm sm:text-base"
-                  >
-                    <Store className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {t("inventory.confirmStoreFront")} (
-                      {selectedProductIds.length})
-                    </span>
-                    <span className="sm:hidden">
-                      {t("inventory.confirmStoreFront")} (
-                      {selectedProductIds.length})
-                    </span>
-                  </button>
-                )}
-              </>
-            )}
-            {showSelectBoxes && (
-              <button
-                onClick={() => {
-                  setShowSelectBoxes(false);
-                  setSelectedProductIds([]);
-                  setTransferMode(null);
-                }}
-                className="bg-red-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-red-700 text-sm sm:text-base"
-              >
-                <span className="hidden sm:inline">
-                  {t("inventory.cancelSelection")}
-                </span>
-                <span className="sm:hidden">
-                  {t("inventory.cancelSelection")}
-                </span>
-              </button>
-            )}
+            {/* Import Excel */}
             <input
               type="file"
               ref={fileInputRef}
@@ -793,112 +716,172 @@ export const Inventory: React.FC = () => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isImporting}
-              className="inventory-import-excel-btn bg-emerald-600 text-white px-3 py-2 sm:px-4 rounded hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2 text-sm sm:text-base"
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isImporting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileUp className="w-4 h-4" />
               )}
-              <span className="hidden sm:inline">Import Excel</span>
-              <span className="sm:hidden">Import</span>
+              <span>Import Excel</span>
             </button>
+
+            {/* Transfer Storefront */}
+            {selectedProductIds.length === 0 && !showSelectBoxes && (
+              <button
+                onClick={() => {
+                  setShowSelectBoxes(true);
+                  setTransferMode("storefront");
+                }}
+                className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+              >
+                <Store className="w-4 h-4" />
+                <span>{t("inventory.transferStoreFront")}</span>
+              </button>
+            )}
+
+            {showSelectBoxes && (
+              <>
+                {transferMode === "storefront" && (
+                  <button
+                    onClick={handleOpenTransferStorefrontModal}
+                    className="px-5 py-2 text-sm font-semibold rounded-full bg-orange-600 text-white hover:bg-orange-700 transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                  >
+                    <Store className="w-4 h-4" />
+                    <span>
+                      {t("inventory.confirmStoreFront")} ({selectedProductIds.length})
+                    </span>
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowSelectBoxes(false);
+                    setSelectedProductIds([]);
+                    setTransferMode(null);
+                  }}
+                  className="px-4 py-2 text-sm font-semibold rounded-full bg-red-500 text-white hover:bg-red-600 transition-all cursor-pointer"
+                >
+                  {t("inventory.cancelSelection")}
+                </button>
+              </>
+            )}
+
+            {/* Add Product Button */}
             <button
               onClick={() => {
                 resetForm();
                 setIsModalOpen(true);
               }}
-              className="inventory-add-product-btn bg-primary text-white px-3 py-2 sm:px-4 rounded hover:bg-primary/90 text-sm sm:text-base"
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
             >
-              +{" "}
-              <span className="hidden sm:inline">
-                {" "}
-                {t("inventory.addProduct")}
-              </span>
-              <span className="sm:hidden"> Add</span>
+              <Plus className="w-4 h-4" />
+              <span>{t("inventory.addProduct")}</span>
             </button>
           </div>
         </div>
 
-        {/* Search Input */}
-        <div className="inventory-search-input w-full sm:max-w-md">
-          <SearchInput
+        {/* Search Input Row */}
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
             value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by product name, barcode, or product code..."
-
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("inventory.searchbar")}
+            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
         </div>
+
+        {/* Filters Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-1 border-b border-gray-50 pb-4">
+          
+          {/* Status Pills */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-slate-500">
+              {t("inventory.statusLabel")}
+            </span>
+            <div className="flex items-center gap-2 bg-gray-50/50 p-1 border border-gray-100 rounded-full">
+              {(["all", "active", "inactive"] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setSelectedStatus(status)}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
+                    selectedStatus === status
+                      ? "bg-[#2216a8] text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100/50"
+                  }`}
+                >
+                  {status === "all"
+                    ? "All"
+                    : status === "active"
+                    ? "Active"
+                    : "Inactive"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category Dropdown Select */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-slate-500">
+              {t("inventory.filterByCategoryLabel")}
+            </span>
+            <div className="relative min-w-[220px]">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+              >
+                <option value="All">{t("inventory.allCategories")}</option>
+                {Array.from(new Set(products.map((p) => p.category))).map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        {error && !isFetching && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Inventory Content (Table / Loading) */}
+        {isFetching && products.length === 0 ? (
+          <div className="bg-slate-50 border border-slate-100 rounded-3xl p-12 text-center">
+            <Loader2 className="w-8 h-8 text-[#2216a8] animate-spin mx-auto mb-3" />
+            <p className="text-slate-400 text-sm font-medium">{t("inventory.loadingProducts")}</p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="bg-slate-50 border border-slate-100 rounded-3xl p-12 text-center">
+            <p className="text-slate-400 text-sm font-medium">
+              {products.length === 0
+                ? t("inventory.noProductsFound")
+                : t("inventory.noProductsInCategory").replace(
+                    "{category}",
+                    selectedCategory,
+                  )}
+            </p>
+          </div>
+        ) : (
+          <div className="inventory-table lg:flex-1 flex flex-col min-h-0">
+            <InventoryTable
+              products={filteredProducts}
+              onEdit={openEdit}
+              onViewDetails={handleViewDetails}
+              onStatusToggle={handleStatusToggle}
+              selectedProductIds={selectedProductIds}
+              onSelectionChange={handleSelectionChange}
+              onSelectAll={handleSelectAll}
+              showSelectBoxes={showSelectBoxes}
+            />
+          </div>
+        )}
       </div>
-
-      {error && !isFetching && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {/* Status Filter */}
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm font-medium text-slate-700">Status:</span>
-        {(["all", "active", "inactive"] as const).map((status) => (
-          <button
-            key={status}
-            onClick={() => setSelectedStatus(status)}
-            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${selectedStatus === status
-              ? status === "all"
-                ? "bg-slate-800 text-white border-slate-800"
-                : status === "active"
-                  ? "bg-green-600 text-white border-green-600"
-                  : "bg-red-500 text-white border-red-500"
-              : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
-              }`}
-          >
-            {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* Category Filter */}
-      <div className="inventory-category-filter">
-        <CategoryFilter
-          products={products}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          filteredCount={filteredProducts.length}
-          totalCount={products.length}
-        />
-      </div>
-
-      {isFetching && products.length === 0 ? (
-        <div className="bg-white shadow-sm border rounded-xl p-8 text-center">
-          <p className="text-slate-500">{t("inventory.loadingProducts")}</p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="bg-white shadow-sm border rounded-xl p-8 text-center">
-          <p className="text-slate-500">
-            {products.length === 0
-              ? t("inventory.noProductsFound")
-              : t("inventory.noProductsInCategory").replace(
-                "{category}",
-                selectedCategory,
-              )}
-          </p>
-        </div>
-      ) : (
-        <div className="inventory-table">
-          <InventoryTable
-            products={filteredProducts}
-            onEdit={openEdit}
-            onViewDetails={handleViewDetails}
-            onStatusToggle={handleStatusToggle}
-            selectedProductIds={selectedProductIds}
-            onSelectionChange={handleSelectionChange}
-            onSelectAll={handleSelectAll}
-            showSelectBoxes={showSelectBoxes}
-          />
-        </div>
-      )}
-
       {/* Product Modal */}
       <ProductModal
         isOpen={isModalOpen}

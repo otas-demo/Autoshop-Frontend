@@ -48,19 +48,19 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col lg:h-full min-h-0">
       {/* Mobile scroll indicator */}
       <div className="sm:hidden px-4 py-2 bg-slate-50 border-b text-xs text-slate-500 text-center">
-        ← Swipe to see more →
+        {t("common.swipeScroll")}
       </div>
 
       {/* Table container with horizontal scroll on mobile */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0">
         <table className="w-full text-sm text-left min-w-[800px]">
-          <thead className="bg-slate-50 text-slate-600 border-b">
-            <tr>
+          <thead className="text-slate-500">
+            <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
               {showSelectBoxes && onSelectionChange && (
-                <th className="px-2 sm:px-4 py-3 text-center w-12">
+                <th className="px-3 py-4 text-center w-12 bg-slate-50">
                   <input
                     type="checkbox"
                     checked={allSelected}
@@ -72,23 +72,23 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   />
                 </th>
               )}
-              <th className="px-2 sm:px-4 py-3 text-center">No</th>
-              <th className="px-2 sm:px-4 py-3">Code</th>
-              <th className="px-2 sm:px-4 py-3">Name</th>
-              <th className="px-2 sm:px-4 py-3">Category</th>
-              <th className="px-2 sm:px-4 py-3 text-right">Cost</th>
-              <th className="px-2 sm:px-4 py-3 text-right">Price</th>
-              <th className="px-2 sm:px-4 py-3 text-center">Status</th>
-              <th className="px-2 sm:px-4 py-3 text-center">Actions</th>
+              <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+              <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Code</th>
+              <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Name</th>
+              <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
+              <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Cost</th>
+              <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Price</th>
+              <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Status</th>
+              <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-gray-100">
             {products.map((p, index) => {
               const isSelected = selectedProductIds.includes(p.id);
               return (
-                <tr key={p.id} className="hover:bg-slate-50">
+                <tr key={p.id} className="hover:bg-slate-50/40 transition-colors">
                   {showSelectBoxes && onSelectionChange && (
-                    <td className="px-2 sm:px-4 py-3 text-center">
+                    <td className="px-3 py-4 text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -99,77 +99,71 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                       />
                     </td>
                   )}
-                  <td className="px-2 sm:px-4 py-3 text-center text-slate-600">
+                  <td className="px-3 py-4 text-center text-slate-500 font-medium text-xs sm:text-sm">
                     {String(index + 1).padStart(2, "0")}
                   </td>
-                  <td className="px-2 sm:px-4 py-3 font-medium text-xs sm:text-sm">
+                  <td className="px-3 py-4 text-slate-600 font-semibold text-xs sm:text-sm">
                     {p.productCode}
                   </td>
-                  <td className="px-2 sm:px-4 py-3 font-medium">
+                  <td className="px-3 py-4 text-slate-700 font-medium text-xs sm:text-sm">
                     <div
-                      className="max-w-[120px] sm:max-w-none truncate"
+                      className="max-w-[150px] sm:max-w-none truncate"
                       title={p.name}
                     >
                       {p.name}
                     </div>
                   </td>
-                  <td className="px-2 sm:px-4 py-3 text-slate-500 text-xs sm:text-sm">
+                  <td className="px-3 py-4 text-slate-500 text-xs sm:text-sm">
                     {p.category}
                   </td>
-                  <td className="px-2 sm:px-4 py-3 text-right text-slate-400 text-xs sm:text-sm">
-                    {p.costPrice.toLocaleString()} MMK
+                  <td className="px-3 py-4 text-slate-800 font-bold text-xs sm:text-sm">
+                    {p.costPrice.toLocaleString()} <span className="text-[10px] text-slate-500 font-bold ml-1">MMK</span>
                   </td>
-                  <td className="px-2 sm:px-4 py-3 text-right font-bold text-slate-800 text-xs sm:text-sm">
-                    {p.sellingPrice.toLocaleString()} MMK
+                  <td className="px-3 py-4 text-slate-800 font-bold text-xs sm:text-sm">
+                    {p.sellingPrice.toLocaleString()} <span className="text-[10px] text-slate-500 font-bold ml-1">MMK</span>
                   </td>
-                  <td className="px-2 sm:px-4 py-3 text-center">
+                  <td className="px-3 py-4 text-center">
                     {onStatusToggle && userRole === "owner" ? (
                       <button
                         onClick={() =>
                           onStatusToggle(p.id, p.status || "active")
                         }
-                        className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                        className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all cursor-pointer ${
                           p.status === "active"
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-red-100 text-red-700 hover:bg-red-200"
+                            ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100/50"
+                            : "bg-red-50 border-red-200 text-red-600 hover:bg-red-100/50"
                         }`}
                       >
                         {p.status === "active" ? "Active" : "Inactive"}
                       </button>
                     ) : (
                       <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        className={`px-3 py-1 text-xs font-semibold rounded-full border ${
                           p.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-green-50 border-green-200 text-green-700"
+                            : "bg-red-50 border-red-200 text-red-600"
                         }`}
                       >
                         {p.status === "active" ? "Active" : "Inactive"}
                       </span>
                     )}
                   </td>
-                  <td className="px-2 sm:px-4 py-3">
+                  <td className="px-3 py-4">
                     <div className="flex items-center justify-center gap-1 sm:gap-2">
-                      <button
-                        onClick={() => onViewDetails(p.id)}
-                        className="inventory-view-btn px-2 py-1 sm:px-3 sm:py-1.5 text-xs rounded-2xl border border-[#000] hover:bg-gray-200 transition-colors whitespace-nowrap"
-                      >
-                        <span className="hidden sm:inline">
-                          {t("inventory.checkItem")}
-                        </span>
-                        <span className="sm:hidden">View</span>
-                      </button>
                       {userRole === "owner" && (
                         <button
                           onClick={() => onEdit(p)}
-                          className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs rounded-2xl border border-[#000] hover:bg-gray-200 transition-colors whitespace-nowrap"
+                          className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm shadow-indigo-600/5 transition-all cursor-pointer whitespace-nowrap"
                         >
-                          <span className="hidden sm:inline">
-                            {t("inventory.editItem")}
-                          </span>
-                          <span className="sm:hidden">Edit</span>
+                          {t("inventory.editItem")}
                         </button>
                       )}
+                      <button
+                        onClick={() => onViewDetails(p.id)}
+                        className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm shadow-indigo-600/5 transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        {t("inventory.checkItem")}
+                      </button>
                     </div>
                   </td>
                 </tr>

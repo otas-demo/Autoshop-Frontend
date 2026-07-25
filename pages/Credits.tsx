@@ -165,101 +165,83 @@ export const Credits: React.FC = () => {
   const userRole = adminData.role;
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            {t("credits.title")}
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">{t("credits.subtitle")}</p>
+    <div className="w-full">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+        
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("credits.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("credits.subtitle")}
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>{t("storefront.refresh")}</span>
+            </button>
+            <button
+              onClick={handleOpenAddModal}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>{t("credits.addProfile")}</span>
+            </button>
+          </div>
         </div>
-        <div className=" flex flex-col sm:flex-row sm:items-center gap-3">
-          <button
-            onClick={handleRefresh}
-            disabled={loading}
-            className="hidden sm:flex items-center gap-2 px-3 py-2 sm:px-4 bg-slate-600 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">{t("common.refresh")}</span>
-            <span className="sm:hidden">↻</span>
-          </button>
-          <button
-            onClick={handleOpenAddModal}
-            className="bg-primary text-white px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 hover:bg-primary/90 transition-colors font-medium text-sm sm:text-base"
-          >
-            <UserPlus className="w-4 h-4" />{" "}
-            <span className="hidden sm:inline">{t("credits.addProfile")}</span>
-            <span className="sm:hidden">Add</span>
-          </button>
-        </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
-              <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Total Customers */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+            <div className="p-3 bg-indigo-50 rounded-xl">
+              <User className="w-5 h-5 text-[#2216a8]" />
             </div>
             <div>
-              <p className="text-xs sm:text-sm text-slate-500">
+              <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
                 {t("credits.totalProfiles")}
               </p>
-              <p className="text-lg sm:text-2xl font-bold text-slate-800">
-                {totalPersonas}
+              <p className="text-lg font-black text-slate-800 mt-1">
+                {totalPersonas} <span className="text-xs font-semibold text-slate-400">ယောက်</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Active Customers */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+            <div className="p-3 bg-green-50 rounded-xl">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                Active ဖြစ်နေတဲ့ Customer
+              </p>
+              <p className="text-lg font-black text-slate-800 mt-1">
+                {activeCount} <span className="text-xs font-semibold text-slate-400">ယောက်</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm text-slate-500">
-                {t("credits.active")}
-              </p>
-              <p className="text-lg sm:text-2xl font-bold text-slate-800">
-                {activeCount}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* <div className="bg-white p-4 rounded-xl shadow-sm border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Ban className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">
-                {t("credits.blacklisted")}
-              </p>
-              <p className="text-2xl font-bold text-slate-800">
-                {blacklistedCount}
-              </p>
-            </div>
-          </div>
-        </div> */}
-      </div>
-
-      {/* Search Bar */}
-      <div className="mb-4">
-        <div className="relative max-w-full sm:max-w-md">
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+        {/* Search Bar */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder={t("credits.searchPlaceholder")}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white shadow-sm"
+            className="w-full pl-11 pr-4 py-2.5 border border-gray-200/80 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-700 bg-white"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-      </div>
 
       {/* Credit Personas Table */}
       <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
@@ -280,150 +262,80 @@ export const Credits: React.FC = () => {
           </div>
         ) : (
           <div>
-            {/* Mobile scroll indicator */}
-            {/* <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
-              ← Swipe to see more →
-            </div> */}
-
             {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
               <table className="w-full text-sm text-left min-w-[800px]">
-                <thead className="bg-slate-50 text-slate-600 border-b">
-                  <tr>
-                    <th className="px-2 sm:px-4 py-3 font-medium">
-                      <span className="hidden sm:inline">
-                        {t("credits.name")}
-                      </span>
-                      <span className="sm:hidden">Name</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium">
-                      <span className="hidden sm:inline">
-                        {t("credits.phone")}
-                      </span>
-                      <span className="sm:hidden">Phone</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium">
-                      <span className="hidden sm:inline">
-                        {t("credits.address")}
-                      </span>
-                      <span className="sm:hidden">Address</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium">
-                      <span className="hidden sm:inline">
-                        {t("credits.status")}
-                      </span>
-                      <span className="sm:hidden">Status</span>
-                    </th>
-                    {/* <th className="px-4 py-3 font-medium">
-                  {t("credits.blacklistReason")}
-                </th> */}
-                    <th className="px-2 sm:px-4 py-3 font-medium">
-                      <span className="hidden sm:inline">
-                        {t("credits.createdAt")}
-                      </span>
-                      <span className="sm:hidden">Created</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-right">
-                      <span className="hidden sm:inline">
-                        {t("credits.actions")}
-                      </span>
-                      <span className="sm:hidden">A</span>
-                    </th>
+                <thead className="text-slate-500">
+                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Phone Number</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Address</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Status</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Create Date</th>
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {filteredPersonas.map((persona) => (
-                    <tr key={persona._id} className="hover:bg-slate-50">
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
-                          </div>
-                          <span className="font-medium text-slate-800 text-xs sm:text-sm truncate">
-                            {persona.name}
-                          </span>
-                        </div>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {filteredPersonas.map((persona, index) => (
+                    <tr key={persona._id} className="hover:bg-slate-50/40 transition-colors">
+                      {/* No */}
+                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                        {String(index + 1).padStart(2, "0")}
                       </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-slate-600 text-xs sm:text-sm">
-                          <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span className="truncate">{persona.phone}</span>
-                        </div>
+
+                      {/* Customer */}
+                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                        {persona.name}
                       </td>
-                      <td className="px-2 sm:px-4 py-3 text-slate-600 text-xs sm:text-sm">
-                        <span className="truncate">{persona.address || "-"}</span>
+
+                      {/* Phone Number */}
+                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                        {persona.phone}
                       </td>
-                      <td className="px-2 sm:px-4 py-3">
+
+                      {/* Address */}
+                      <td className="px-4 py-4 text-slate-500 text-xs font-medium max-w-xs truncate" title={persona.address || ""}>
+                        {persona.address || "-"}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-4">
                         {persona.blacklist ? (
-                          <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
-                            <Ban className="w-3 h-3" />{" "}
-                            <span className="hidden sm:inline">
-                              {t("credits.blacklisted")}
-                            </span>
-                            <span className="sm:hidden">Blacklisted</span>
+                          <span className="border border-red-200 text-red-600 bg-red-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            Blacklisted
                           </span>
                         ) : (
-                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
-                            <CheckCircle className="w-3 h-3" />{" "}
-                            <span className="hidden sm:inline">
-                              {t("credits.active")}
-                            </span>
-                            <span className="sm:hidden">Active</span>
+                          <span className="border border-green-200 text-green-600 bg-green-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            Active
                           </span>
                         )}
                       </td>
-                      {/* <td className="px-4 py-3 text-slate-500">
-                    {persona.blacklistReason ? (
-                      <div className="flex items-center gap-1.5 text-red-600">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        {persona.blacklistReason}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
-                  </td> */}
-                      <td className="px-2 sm:px-4 py-3 text-slate-500 text-xs">
-                        <span className="hidden sm:inline">
-                          {new Date(persona.createdAt).toLocaleDateString()}{" "}
-                          {new Date(persona.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <span className="sm:hidden">
-                          {new Date(persona.createdAt).toLocaleDateString()}
-                        </span>
+
+                      {/* Create Date */}
+                      <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
+                        {new Date(persona.createdAt).toLocaleDateString("en-US")}{" "}
+                        {new Date(persona.createdAt).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </td>
-                      <td className="px-2 sm:px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1 sm:gap-2">
+
+                      {/* Actions */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenEditModal(persona)}
+                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                          >
+                            {t("common.edit")}
+                          </button>
                           <button
                             onClick={() => handleViewPersona(persona)}
-                            className="text-xs bg-primary/20 text-yellow-800 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded hover:bg-primary/30 border border-primary/30 font-medium transition-colors flex items-center gap-1"
+                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
                           >
-                            <Eye className="w-3 h-3" />{" "}
-                            <span className="hidden sm:inline">
-                              {t("common.view")}
-                            </span>
-                            <span className="sm:hidden">V</span>
+                            {t("common.checkItem")}
                           </button>
-                          {userRole === "owner" && (
-                            <button
-                              onClick={() => handleOpenEditModal(persona)}
-                              className="text-xs bg-blue/20 text-blue-800 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded hover:bg-primary/30 border border-primary/30 font-medium transition-colors flex items-center gap-1"
-                              title={t("common.edit")}
-                            >
-                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />{" "}
-                              <span className="hidden sm:inline">
-                                {t("common.edit")}
-                              </span>
-                              <span className="sm:hidden">E</span>
-                            </button>
-                          )}
-                          {/* {!persona.blacklist && (
-                        <button className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 border border-red-200 font-medium transition-colors">
-                          {t("credits.blacklist")}
-                        </button>
-                      )} */}
                         </div>
                       </td>
                     </tr>
@@ -533,5 +445,6 @@ export const Credits: React.FC = () => {
         </div>
       )}
     </div>
+  </div>
   );
 };

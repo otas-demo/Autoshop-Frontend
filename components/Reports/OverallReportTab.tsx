@@ -1,6 +1,7 @@
 import React from "react";
-import { Store } from "lucide-react";
+import { Store, DollarSign, Wallet, FileText, CheckCircle } from "lucide-react";
 import { SaleReportResponse } from "../../services/Reports/fetchSaleReport";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface OverallReportTabProps {
   displayReport: {
@@ -24,9 +25,8 @@ export const OverallReportTab: React.FC<OverallReportTabProps> = ({
   allStorefrontsReport,
   selectedStorefront,
 }) => {
-  // console.log(saleReports);
-  // console.log(allStorefrontsReport);
-
+  const { t } = useLanguage();
+  
   // Determine which reports to show in the breakdown table
   const reportsToShow =
     selectedStorefront === "all"
@@ -35,161 +35,163 @@ export const OverallReportTab: React.FC<OverallReportTabProps> = ({
           (report) =>
             report.success && report.data.storefront._id === selectedStorefront,
         );
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow border border-primary/20">
-          <p className="text-slate-500 text-xs uppercase font-bold">
-            Total Sales
-          </p>
-          <p className="text-lg sm:text-2xl font-bold text-slate-900">
-            {displayReport.finalAmount.toLocaleString()}{" "}
-            <span className="hidden sm:inline">MMK</span>
-          </p>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Sales */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <DollarSign className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+              {t("reports.totalSales")}
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {displayReport.finalAmount.toLocaleString()}{" "}
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
+            </p>
+          </div>
         </div>
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow border border-green-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">
-            Paid Amount
-          </p>
-          <p className="text-lg sm:text-2xl font-bold text-green-600">
-            {displayReport.paidAmount.toLocaleString()}{" "}
-            <span className="hidden sm:inline">MMK</span>
-          </p>
+
+        {/* Total Profit (Paid Amount) */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <Wallet className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-[#2216a8] uppercase tracking-wider">
+              {t("reports.totalProfit")}
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {displayReport.paidAmount.toLocaleString()}{" "}
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
+            </p>
+          </div>
         </div>
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow border border-purple-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">
-            Credit Amount
-          </p>
-          <p className="text-lg sm:text-2xl font-bold text-purple-600">
-            {(
-              displayReport.finalAmount - displayReport.paidAmount
-            ).toLocaleString()}{" "}
-            <span className="hidden sm:inline">MMK</span>
-          </p>
+
+        {/* Outstanding Credits */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <CheckCircle className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-[#2216a8] uppercase tracking-wider">
+              {t("reports.outstandingCredits")}
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {(displayReport.finalAmount - displayReport.paidAmount).toLocaleString()}{" "}
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
+            </p>
+          </div>
         </div>
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow border border-blue-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">
-            Total Orders
-          </p>
-          <p className="text-lg sm:text-2xl font-bold text-blue-600">
-            {displayReport.orderCount}
-          </p>
+
+        {/* Total Orders */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <FileText className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-[#2216a8] uppercase tracking-wider">
+              {t("reports.totalOrders")}
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {displayReport.orderCount}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow border border-amber-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">Discount</p>
-          <p className="text-2xl font-bold text-amber-600">
-            {displayReport.discount.toLocaleString()} MMK
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow border border-red-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">
-            Credit Orders
-          </p>
-          <p className="text-2xl font-bold text-red-500">
-            {displayReport.creditOrderCount}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow border border-green-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">
-            Paid Orders
-          </p>
-          <p className="text-2xl font-bold text-green-600">
-            {displayReport.paidOrderCount}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow border border-slate-100">
-          <p className="text-slate-500 text-xs uppercase font-bold">Tax</p>
-          <p className="text-2xl font-bold text-slate-600">
-            {displayReport.tax.toLocaleString()} MMK
-          </p>
-        </div>
-      </div> */}
-
       {/* Storefront Breakdown Table */}
       {reportsToShow.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="p-3 sm:p-4 border-b bg-slate-50">
-            <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
-              <Store className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              {selectedStorefront === "all"
-                ? "All Storefronts Breakdown"
-                : "Storefront Details"}
-            </h3>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 text-[#2216a8] font-bold text-sm sm:text-base">
+            <Store className="w-5 h-5" />
+            <span>{t("reports.storefrontStatus")}</span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left min-w-[800px]">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-slate-600">
-                    Storefront
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Final Amount
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Paid Amount
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Sub Total
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Discount
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Total Orders
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Paid Orders
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Credit Orders
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {reportsToShow.map((report) => (
-                  <tr
-                    key={report.data.storefront._id}
-                    className="hover:bg-slate-50"
-                  >
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-slate-800">
-                          {report.data.storefront.locationName}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {report.data.storefront.locationCode}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-800">
-                      {report.data.report.finalAmount.toLocaleString()} MMK
-                    </td>
-                    <td className="px-4 py-3 text-right text-green-600">
-                      {report.data.report.paidAmount.toLocaleString()} MMK
-                    </td>
-                    <td className="px-4 py-3 text-right text-slate-600">
-                      {report.data.report.subTotal.toLocaleString()} MMK
-                    </td>
-                    <td className="px-4 py-3 text-right text-amber-600">
-                      {report.data.report.discount.toLocaleString()} MMK
-                    </td>
-                    <td className="px-4 py-3 text-right text-blue-600">
-                      {report.data.report.orderCount}
-                    </td>
-                    <td className="px-4 py-3 text-right text-green-600">
-                      {report.data.report.paidOrderCount}
-                    </td>
-                    <td className="px-4 py-3 text-right text-red-600">
-                      {report.data.report.creditOrderCount}
-                    </td>
+
+          <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+              <table className="w-full text-sm text-left min-w-[900px]">
+                <thead className="text-slate-500">
+                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Store Front</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Final Amount</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid Amount</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Sub Total</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Discount</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Total Orders</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid Orders</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Credit Orders</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {reportsToShow.map((report, index) => (
+                    <tr key={report.data.storefront._id} className="hover:bg-slate-50/40 transition-colors">
+                      {/* No */}
+                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+
+                      {/* Storefront */}
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                          {report.data.storefront.locationName || report.data.storefront.storefrontName}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {report.data.storefront.locationCode || report.data.storefront.storefrontCode || "Main Store"}
+                        </div>
+                      </td>
+
+                      {/* Final Amount */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.finalAmount.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Paid Amount */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.paidAmount.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Sub Total */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.subTotal.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Discount */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.discount.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Total Orders */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.orderCount.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Paid Orders */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.paidOrderCount.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Credit Orders */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {report.data.report.creditOrderCount.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

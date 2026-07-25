@@ -10,6 +10,7 @@ import {
   X,
   Edit,
   Trash2,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchExpenses, Expense } from "../services/Expense/fetchExpenses";
@@ -34,6 +35,7 @@ export const Expenses: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState<LocationProfile[]>([]);
+  const [search, setSearch] = useState("");
 
   // Date filter — restored from sessionStorage on mount
   const [dateRange, setDateRange] = useState(
@@ -256,250 +258,214 @@ export const Expenses: React.FC = () => {
     }
   };
 
-  const totalExpenses = expenses.reduce(
+  const filteredExpenses = expenses.filter((exp) => {
+    const searchLower = search.toLowerCase();
+    const locName = exp.locationId?.locationName || exp.locationId?.storefrontName || "";
+    return (
+      exp.category.toLowerCase().includes(searchLower) ||
+      (exp.notes && exp.notes.toLowerCase().includes(searchLower)) ||
+      locName.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const totalExpenses = filteredExpenses.reduce(
     (sum, expense) => sum + expense.amount,
     0,
   );
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <PieChart className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
-            {t("expenses.title")}
-          </h1>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(newStartDate, newEndDate) => {
-              if (!newStartDate || !newEndDate) return;
-              setDateRange({
-                startDate: newStartDate,
-                endDate: newEndDate,
-              });
-              saveStoredDateRange(
-                DATE_RANGE_STORAGE_KEYS.expenses,
-                newStartDate,
-                newEndDate,
-              );
-            }}
-          />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-2 py-2 lg:px-2 lg:py-2 sm:px-4 sm:py-3 rounded-lg transition-colors text-sm sm:text-base"
-            >
-              <Plus className="w-4 h-4" />{" "}
-              <span className="hidden lg:inline">
-                {t("expenses.addExpense")}
-              </span>
-            </button>
+    <div className="w-full">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+        
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("expenses.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("expenses.subtitle")}
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={loadExpenses}
               disabled={loading}
-              className="hidden sm:flex items-center gap-2 bg-slate-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors text-sm sm:text-base"
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-              <span className="hidden sm:inline">{t("common.refresh")}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>{t("storefront.refresh")}</span>
+            </button>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(newStartDate, newEndDate) => {
+                if (!newStartDate || !newEndDate) return;
+                setDateRange({
+                  startDate: newStartDate,
+                  endDate: newEndDate,
+                });
+                saveStoredDateRange(
+                  DATE_RANGE_STORAGE_KEYS.expenses,
+                  newStartDate,
+                  newEndDate,
+                );
+              }}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+            />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t("expenses.addExpense")}</span>
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Stats Card */}
-      <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border mb-6">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-2 bg-red-100 rounded-lg">
-            <PieChart className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+        {/* Search Bar */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder={t("credits.searchPlaceholder")}
+            className="w-full pl-11 pr-4 py-2.5 border border-gray-200/80 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-700 bg-white"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Stats Card */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-red-50 rounded-xl">
+            <PieChart className="w-5 h-5 text-red-600" />
           </div>
           <div>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
               {t("expenses.totalExpenses")}
             </p>
-            <p className="text-lg sm:text-2xl font-bold text-slate-800">
+            <p className="text-lg font-black text-slate-800 mt-1">
               {totalExpenses.toLocaleString()}{" "}
-              <span className="hidden sm:inline">MMK</span>
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
             </p>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
         {loading ? (
           <div className="p-8 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
             <p>{t("expenses.loading")}</p>
           </div>
-        ) : expenses.length === 0 ? (
+        ) : filteredExpenses.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
             <PieChart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p>{t("expenses.noExpenses")}</p>
           </div>
         ) : (
           <div>
-            {/* Mobile scroll indicator */}
-            <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
-              ← Swipe to see more →
-            </div>
-
             {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
               <table className="w-full text-sm text-left min-w-[900px]">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("expenses.date")}
-                      </span>
-                      <span className="sm:hidden">Date</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("expenses.category")}
-                      </span>
-                      <span className="sm:hidden">Category</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("expenses.location")}
-                      </span>
-                      <span className="sm:hidden">Location</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("expenses.notes")}
-                      </span>
-                      <span className="sm:hidden">Notes</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("expenses.recordedBy")}
-                      </span>
-                      <span className="sm:hidden">Recorded By</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600 text-right">
-                      <span className="hidden sm:inline">
-                        {t("expenses.amount")}
-                      </span>
-                      <span className="sm:hidden">Amount</span>
-                    </th>
-                    {userRole === "owner" && (
-                      <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600 text-center">
-                        <span className="hidden sm:inline">
-                          {t("common.actions")}
-                        </span>
-                        <span className="sm:hidden">A</span>
-                      </th>
-                    )}
+                <thead className="text-slate-500">
+                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Date</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Location</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Notes</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Recorded By</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Amount</th>
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {expenses.map((expense) => (
-                    <tr key={expense._id} className="hover:bg-slate-50">
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="flex items-center gap-1 text-slate-600 text-xs sm:text-sm">
-                          <Calendar className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">
-                            {formatDate(expense.date)}
-                          </span>
-                        </div>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {filteredExpenses.map((expense, index) => (
+                    <tr key={expense._id} className="hover:bg-slate-50/40 transition-colors">
+                      {/* No */}
+                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                        {String(index + 1).padStart(2, "0")}
                       </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium capitalize">
+
+                      {/* Date */}
+                      <td className="px-4 py-4 text-slate-600 text-xs font-medium whitespace-nowrap">
+                        {new Date(expense.date).toLocaleDateString("en-US")}{" "}
+                        {new Date(expense.date).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+
+                      {/* Category */}
+                      <td className="px-4 py-4">
+                        <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full font-bold capitalize">
                           {expense.category}
                         </span>
                       </td>
-                      <td className="px-2 sm:px-4 py-3">
+
+                      {/* Location */}
+                      <td className="px-4 py-4">
                         {expense.locationId ? (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p
-                                className="text-xs font-medium text-slate-800 truncate"
-                                title={expense.locationId.locationName}
-                              >
-                                {expense.locationId.locationName}
-                              </p>
-                              <p
-                                className="text-xs text-slate-500 truncate"
-                                title={expense.locationId.locationCode}
-                              >
-                                {expense.locationId.locationCode}
-                              </p>
+                          <>
+                            <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                              {expense.locationId.locationName}
                             </div>
-                          </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              {expense.locationId.locationCode}
+                            </div>
+                          </>
                         ) : (
-                          <span className="text-slate-400 italic text-xs">
-                            <span className="hidden sm:inline">
-                              {t("expenses.noLocation")}
-                            </span>
-                            <span className="sm:hidden">No location</span>
+                          <span className="text-slate-400 font-medium text-xs">
+                            {t("expenses.noLocation")}
                           </span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        <span
-                          className="text-xs text-slate-600 truncate"
-                          title={expense.notes || "-"}
-                        >
-                          {expense.notes || "-"}
-                        </span>
+
+                      {/* Notes */}
+                      <td className="px-4 py-4 text-slate-500 text-xs font-medium max-w-xs truncate" title={expense.notes || ""}>
+                        {expense.notes || "-"}
                       </td>
-                      <td className="px-2 sm:px-4 py-3">
+
+                      {/* Recorded By */}
+                      <td className="px-4 py-4">
                         {expense.adminId ? (
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p
-                                className="text-xs font-medium text-slate-800 truncate"
-                                title={expense.adminId.name}
-                              >
-                                {expense.adminId.name}
-                              </p>
-                              <p
-                                className="text-xs text-slate-500 capitalize truncate"
-                                title={expense.adminId.role}
-                              >
-                                {expense.adminId.role}
-                              </p>
+                          <>
+                            <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                              {expense.adminId.name}
                             </div>
-                          </div>
+                            <div className="text-[10px] text-slate-400 font-medium capitalize">
+                              {expense.adminId.role}
+                            </div>
+                          </>
                         ) : (
-                          <span className="text-slate-400 italic text-xs">
-                            -
-                          </span>
+                          <span className="text-slate-400 font-medium text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-4 py-3 text-right font-bold text-red-600 text-xs sm:text-sm">
+
+                      {/* Amount */}
+                      <td className="px-4 py-4 text-right font-bold text-red-600 text-xs sm:text-sm whitespace-nowrap">
                         {expense.amount.toLocaleString()}{" "}
-                        <span className="hidden sm:inline">MMK</span>
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
                       </td>
-                      {userRole === "owner" && (
-                        <td className="px-2 sm:px-4 py-3 text-center">
-                          <div className="flex items-center justify-center gap-1 sm:gap-2">
-                            <button
-                              onClick={() => handleOpenEdit(expense)}
-                              className="p-1.5 text-slate-600 hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                              title={t("common.edit")}
-                            >
-                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(expense)}
-                              className="p-1.5 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                              title={t("common.delete") || "Delete"}
-                            >
-                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
+
+                      {/* Actions */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenEdit(expense)}
+                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                          >
+                            {t("common.edit")}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(expense)}
+                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-red-600 hover:bg-red-700 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                          >
+                            {t("common.delete") || "Delete"}
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -692,5 +658,6 @@ export const Expenses: React.FC = () => {
         isLoading={isDeleting}
       />
     </div>
+  </div>
   );
 };

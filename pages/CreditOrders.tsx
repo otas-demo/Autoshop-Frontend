@@ -317,48 +317,48 @@ export const CreditOrders: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <CreditCard className="w-5 h-5 sm:w-7 sm:h-7 text-blue-600" />
-            {t("creditOrders.title")}
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {t("creditOrders.subtitle")}
-          </p>
+    <div className="w-full">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+        
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("creditOrders.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("creditOrders.subtitle")}
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={loadOrders}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>{t("storefront.refresh")}</span>
+            </button>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(newStartDate, newEndDate) => {
+                if (!newStartDate || !newEndDate) return;
+                setDateRange({
+                  startDate: newStartDate,
+                  endDate: newEndDate,
+                });
+                saveStoredDateRange(
+                  DATE_RANGE_STORAGE_KEYS.creditOrders,
+                  newStartDate,
+                  newEndDate,
+                );
+              }}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+            />
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(newStartDate, newEndDate) => {
-              if (!newStartDate || !newEndDate) return;
-              setDateRange({
-                startDate: newStartDate,
-                endDate: newEndDate,
-              });
-              saveStoredDateRange(
-                DATE_RANGE_STORAGE_KEYS.creditOrders,
-                newStartDate,
-                newEndDate,
-              );
-            }}
-          />
-          <button
-            onClick={loadOrders}
-            disabled={loading}
-            className="hidden sm:flex items-center gap-2 bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm sm:text-base"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">
-              {t("creditOrders.refresh")}
-            </span>
-            <span className="sm:hidden">↻</span>
-          </button>
-        </div>
-      </div>
 
       {/* Filters */}
       <CreditOrdersFilters
@@ -374,10 +374,11 @@ export const CreditOrders: React.FC = () => {
       />
 
       {/* Orders Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      {/* Orders Table */}
+      <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
         {loading ? (
           <div className="p-8 text-center text-slate-500">
-            <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+            <RefreshCw className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
             <p>{t("creditOrders.loadingCreditOrders")}</p>
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -387,213 +388,109 @@ export const CreditOrders: React.FC = () => {
           </div>
         ) : (
           <div>
-            {/* Mobile scroll indicator */}
-            <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
-              {t("creditOrders.swipeToSeeMore")}
-            </div>
-
             {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
               <table className="w-full text-sm text-left min-w-[1000px]">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        Credit Order Number
-                      </span>
-                      <span className="sm:hidden">Order #</span>
-                    </th>
-
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.storefront")}
-                      </span>
-                      <span className="sm:hidden">SF</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.customer")}
-                      </span>
-                      <span className="sm:hidden">
-                        {t("creditOrders.customer")}
-                      </span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.items")}
-                      </span>
-                      <span className="sm:hidden">
-                        {t("creditOrders.items")}
-                      </span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.total")}
-                      </span>
-                      <span className="sm:hidden">
-                        {t("creditOrders.total")}
-                      </span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.paid")}
-                      </span>
-                      <span className="sm:hidden">
-                        {t("creditOrders.paid")}
-                      </span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.remaining")}
-                      </span>
-                      <span className="sm:hidden">
-                        {t("creditOrders.balance")}
-                      </span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-semibold text-slate-600">
-                      <span className="hidden sm:inline">
-                        {t("creditOrders.actions")}
-                      </span>
-                      <span className="sm:hidden">A</span>
-                    </th>
+                <thead className="text-slate-500">
+                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Credit Order Num</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Shop</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Items</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Total</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Left</th>
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {filteredOrders.map((order) => (
-                    <tr key={order._id} className="hover:bg-slate-50">
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="font-medium text-slate-800 text-xs sm:text-sm">
-                          {order.orderNumber}
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {filteredOrders.map((order, index) => (
+                    <tr key={order._id} className="hover:bg-slate-50/40 transition-colors">
+                      {/* No */}
+                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+
+                      {/* Credit Order Num */}
+                      <td
+                        onClick={() => handleViewOrder(order._id)}
+                        className="px-4 py-4 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs sm:text-sm whitespace-nowrap"
+                      >
+                        {order.orderNumber}
+                      </td>
+
+                      {/* Shop */}
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                          {order.storefrontId?.locationName || order.storefrontId?.storefrontName || "-"}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {order.storefrontId?.locationCode || order.storefrontId?.storefrontCode || "Main Store"}
                         </div>
                       </td>
 
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="font-medium text-slate-800 text-xs sm:text-sm">
-                          <div
-                            className="truncate"
-                            title={
-                              order.storefrontId?.locationName ||
-                              order.storefrontId?.storefrontName
-                            }
-                          >
-                            {order.storefrontId?.locationName ||
-                              order.storefrontId?.storefrontName}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {order.storefrontId?.locationCode ||
-                              order.storefrontId?.storefrontCode}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        {order.creditPersonId &&
-                        typeof order.creditPersonId === "object" ? (
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <div
-                                className="font-medium text-slate-800 text-xs sm:text-sm truncate"
-                                title={order.creditPersonId.name}
-                              >
-                                {order.creditPersonId.name}
-                              </div>
-                              <div
-                                className="text-xs text-slate-500 truncate"
-                                title={order.creditPersonId.phone}
-                              >
-                                {order.creditPersonId.phone}
-                              </div>
+                      {/* Customer */}
+                      <td className="px-4 py-4">
+                        {order.creditPersonId && typeof order.creditPersonId === "object" ? (
+                          <>
+                            <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                              {order.creditPersonId.name}
                             </div>
-                          </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              Regular
+                            </div>
+                          </>
                         ) : (
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-slate-300 flex-shrink-0" />
-                            <span className="text-slate-400 text-xs sm:text-sm">
-                              <span className="hidden sm:inline">
-                                {t("creditOrders.noCustomerAssigned")}
-                              </span>
-                              <span className="sm:hidden">
-                                {t("creditOrders.noCustomerAssigned")}
-                              </span>
-                            </span>
-                          </div>
+                          <>
+                            <div className="font-semibold text-slate-400 text-xs sm:text-sm">
+                              {t("creditOrders.noCustomerAssigned")}
+                            </div>
+                            <div className="text-[10px] text-slate-300 font-medium">
+                              -
+                            </div>
+                          </>
                         )}
                       </td>
-                      <td className="px-2 sm:px-4 py-3 text-slate-600 text-xs sm:text-sm">
-                        {order.ordersProducts?.length || 0}{" "}
-                        {t("creditOrders.items")}
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 font-medium text-slate-800 text-xs sm:text-sm">
-                        {order.finalAmount.toLocaleString()}{" "}
-                        <span className="hidden sm:inline">MMK</span>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-800 text-xs sm:text-sm">
-                            {order.paidAmount.toLocaleString()}{" "}
-                            <span className="hidden sm:inline">MMK</span>
-                          </span>
-                          {/* <button
-                            onClick={() => handleOpenPaidAmountModal(order)}
-                            className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-blue-600 transition-colors"
-                            title="Edit Paid Amount"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button> */}
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        <span className="font-medium text-orange-600 text-xs sm:text-sm">
-                          {order.remainingBalance.toLocaleString()}{" "}
-                          <span className="hidden sm:inline">MMK</span>
-                        </span>
+
+                      {/* Items */}
+                      <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
+                        {order.ordersProducts?.length || 0} {order.ordersProducts?.length === 1 ? "Item" : "Items"}
                       </td>
 
-                      <td className="px-2 sm:px-4 py-3">
-                        <div className="flex items-center gap-1 sm:gap-2">
+                      {/* Total */}
+                      <td className="px-4 py-4 font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {order.finalAmount?.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Paid */}
+                      <td className="px-4 py-4 font-bold text-green-600 text-xs whitespace-nowrap">
+                        {order.paidAmount?.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Left */}
+                      <td className="px-4 py-4 font-bold text-[#2216a8] text-xs whitespace-nowrap">
+                        {order.remainingBalance?.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenCreditPersonModal(order)}
+                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                          >
+                            {t("common.edit")}
+                          </button>
                           <button
                             onClick={() => handleViewOrder(order._id)}
-                            className="text-xs bg-blue-100 text-blue-700 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded hover:bg-blue-200 border border-blue-200 font-medium transition-colors flex items-center gap-1"
+                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
                           >
-                            <Eye className="w-3 h-3" />{" "}
-                            <span className="hidden xl:block">
-                              {t("creditOrders.view")}
-                            </span>
-                            <span className="xl:hidden sm:hidden">V</span>
+                            {t("common.checkItem")}
                           </button>
-                          {!order.creditPersonId && (
-                            <button
-                              onClick={() => handleOpenCreditPersonModal(order)}
-                              className="text-xs bg-orange-100 text-orange-700 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded hover:bg-orange-200 border border-orange-200 font-medium transition-colors flex items-center gap-1"
-                            >
-                              <UserPlus className="w-3 h-3" />
-                              <span className="hidden xl:block">
-                                <span className="hidden sm:inline">
-                                  {t("creditOrders.addCreditPerson")}
-                                </span>
-                                <span className="sm:hidden">
-                                  {t("creditOrders.addCreditPerson")}
-                                </span>
-                              </span>
-                            </button>
-                          )}
-                          {order.creditPersonId && (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1.5 rounded flex items-center gap-1">
-                              <User className="w-3 h-3" />{" "}
-                              <span className="hidden xl:block">
-                                {t("creditOrders.assigned")}
-                              </span>
-                              <span className="xl:hidden sm:hidden">✓</span>
-                            </span>
-                          )}
-                          {/* <button
-                            onClick={() => handleOpenDeleteConfirm(order)}
-                            className="text-xs bg-red-100 text-red-700 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded hover:bg-red-200 border border-red-200 font-medium transition-colors flex items-center gap-1"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span className="hidden xl:block">Delete</span>
-                            <span className="xl:hidden sm:hidden">Del</span>
-                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -798,5 +695,6 @@ export const CreditOrders: React.FC = () => {
         </div>
       )}
     </div>
+  </div>
   );
 };

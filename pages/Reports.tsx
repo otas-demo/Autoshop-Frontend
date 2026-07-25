@@ -651,8 +651,9 @@ export const Reports: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <ReportsHeader
+    <div className="w-full">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+        <ReportsHeader
         storefronts={storefronts}
         selectedStorefront={selectedStorefront}
         onStorefrontChange={setSelectedStorefront}
@@ -781,5 +782,6 @@ export const Reports: React.FC = () => {
           </div>
         )}
     </div>
+  </div>
   );
 };

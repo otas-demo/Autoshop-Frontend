@@ -10,6 +10,7 @@ import {
   Hash,
   X,
   ExternalLink,
+  DollarSign,
 } from "lucide-react";
 import {
   ProductSalesStatisticsResponse,
@@ -121,251 +122,175 @@ export const SaleStatisticsTab: React.FC<SaleStatisticsTabProps> = ({
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow border border-blue-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ShoppingCart className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                Total Quantity Sold
-              </p>
-              <p className="text-2xl font-bold text-blue-600">
-                {totals.totalQuantity.toLocaleString()}
-              </p>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+        {/* Total Quantity Sold */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <ShoppingCart className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Quantity Sold
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {totals.totalQuantity.toLocaleString()}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow border border-cyan-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-100 rounded-lg">
-              <ShoppingCart className="w-5 h-5 text-cyan-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                Total Cost
-              </p>
-              <p className="text-2xl font-bold text-cyan-600">
-                {totalBuyPrice.toLocaleString()} MMK
-              </p>
-            </div>
+        {/* Total Cost */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <DollarSign className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Total Cost
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {totalBuyPrice.toLocaleString()}{" "}
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
+            </p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow border border-green-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                Total Sales
-              </p>
-              <p className="text-2xl font-bold text-green-600">
-                {totals.totalRevenue.toLocaleString()} MMK
-              </p>
-            </div>
+        {/* Total Sales */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <TrendingUp className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Total Sales
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {totals.totalRevenue.toLocaleString()}{" "}
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
+            </p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow border border-amber-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Package className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                Total Profit
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {totalProfit.toLocaleString()} MMK
-              </p>
-            </div>
+        {/* Total Profit */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <Package className="w-5 h-5 text-[#2216a8]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Total Profit
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {totalProfit.toLocaleString()}{" "}
+              <span className="text-xs font-semibold text-slate-400">MMK</span>
+            </p>
           </div>
         </div>
 
-        {/* <div className="bg-white p-4 rounded-xl shadow border border-orange-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                Wholesale Discount
-              </p>
-              <p className="text-2xl font-bold text-orange-600">
-                {totalWholesaleDiscount.toLocaleString()} MMK
-              </p>
-            </div>
+        {/* Unique Products */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <Package className="w-5 h-5 text-[#2216a8]" />
           </div>
-        </div> */}
-
-        {/* <div className="bg-white p-4 rounded-xl shadow border border-rose-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-rose-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                If Retail Total
-              </p>
-              <p className="text-2xl font-bold text-rose-600">
-                {totalIfRetail.toLocaleString()} MMK
-              </p>
-            </div>
-          </div>
-        </div> */}
-
-        <div className="bg-white p-4 rounded-xl shadow border border-purple-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Package className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs uppercase font-bold">
-                Unique Products
-              </p>
-              <p className="text-2xl font-bold text-purple-600">
-                {totals.totalUniqueProducts}
-              </p>
-            </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Unique Products
+            </p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {totals.totalUniqueProducts}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-4 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-            <Package className="w-5 h-5 text-primary" />
-            Product Sales Breakdown ({products.length})
-          </h3>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 text-[#2216a8] font-bold text-sm sm:text-base">
+          <Package className="w-5 h-5" />
+          <span>Product Sales Breakdown ({products.length})</span>
         </div>
+
         {products.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center text-slate-500">
             <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">No products found in this period</p>
+            <p>No products found in this period</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-slate-600">
-                    Product
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600">
-                    Category
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Quantity Sold
-                  </th>
-                  {/* <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Retail Qty
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Wholesale Qty
-                  </th> */}
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Total Revenue
-                  </th>
-                  {/* <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Wholesale Discount
-                  </th> */}
-                  {/* <th className="px-4 py-3 font-medium text-slate-600 text-center">
-                    Wholesale %
-                  </th> */}
-                  {/* <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Avg. Price
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Min Price
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Max Price
-                  </th> */}
-                  <th className="px-4 py-3 font-medium text-slate-600 text-right">
-                    Orders
-                  </th>
-                  <th className="px-4 py-3 font-medium text-slate-600 text-center">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {products.map((product) => (
-                  <tr
-                    key={product.inventoryId}
-                    className="hover:bg-slate-50 transition-colors group"
-                  >
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-slate-800">
-                          {product.productName}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {product.productCode} • {product.SKU || "-"}
-                        </p>
-                        {product.brand && (
-                          <p className="text-xs text-slate-400 mt-1">
-                            Brand: {product.brand}
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-medium">
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-blue-600">
-                      {product.totalQuantity.toLocaleString()}{" "}
-                      {product.unitOfMeasure}
-                    </td>
-                    {/* <td className="px-4 py-3 text-right text-cyan-600 font-semibold">
-                      {(product.retailQuantity ?? 0).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right text-amber-600 font-semibold">
-                      {(product.wholesaleQuantity ?? 0).toLocaleString()}
-                    </td> */}
-                    <td className="px-4 py-3 text-right font-bold text-green-600">
-                      {product.totalRevenue.toLocaleString()} MMK
-                    </td>
-                    {/* <td className="px-4 py-3 text-right text-orange-600 font-semibold">
-                      {(product.wholesaleDiscount ?? 0).toLocaleString()} MMK
-                    </td> */}
-                    {/* <td className="px-4 py-3 text-center">
-                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                        {product.wholesalePercentage || "0%"}
-                      </span>
-                    </td> */}
-                    {/* <td className="px-4 py-3 text-right text-slate-600">
-                      {product.averageUnitPrice.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right text-slate-500 text-xs">
-                      {product.minUnitPrice.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right text-slate-500 text-xs">
-                      {product.maxUnitPrice.toLocaleString()}
-                    </td> */}
-                    <td className="px-4 py-3 text-right text-slate-600">
-                      {product.orderCount}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => handleOpenOrdersModal(product)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-all font-semibold text-xs border border-primary/20 shadow-sm"
-                      >
-                        Analytics
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
+          <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-slate-500">
+                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 w-16">No</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Product</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Quantity Sold</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Total Revenue</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Orders</th>
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {products.map((product, index) => (
+                    <tr key={product.inventoryId} className="hover:bg-slate-50/40 transition-colors">
+                      {/* No */}
+                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+
+                      {/* Product */}
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                          {product.productName}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {product.productCode} • {product.SKU || "-"}
+                        </div>
+                        {product.brand && (
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            Brand: {product.brand}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Category */}
+                      <td className="px-4 py-4">
+                        <span className="bg-indigo-50/50 text-[#2216a8] border border-indigo-100 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                          {product.category}
+                        </span>
+                      </td>
+
+                      {/* Quantity Sold */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {product.totalQuantity.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">{product.unitOfMeasure || "pcs"}</span>
+                      </td>
+
+                      {/* Total Revenue */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {product.totalRevenue.toLocaleString()}{" "}
+                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                      </td>
+
+                      {/* Orders */}
+                      <td className="px-4 py-4 text-right font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {product.orderCount.toLocaleString()}
+                      </td>
+
+                      {/* Action */}
+                      <td className="px-4 py-4 text-center">
+                        <button
+                          onClick={() => handleOpenOrdersModal(product)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all cursor-pointer shadow-sm shadow-indigo-600/5"
+                        >
+                          <span>Analytics</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

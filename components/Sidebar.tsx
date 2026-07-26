@@ -69,9 +69,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
     { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
     { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
-    { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
-    { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
-    { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
+    // { path: "/ purchasing", label: t("sidebar.purchasing"), icon: Truck },
+    // { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
+    // { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
+    { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
   ];
 
   const userRole = adminData?.role || currentUser?.role;
@@ -107,9 +108,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
 
       {/* Sidebar Wrapper */}
       <div
-        className={`fixed left-0 top-0 h-screen z-50 py-4 pl-4 print:hidden flex flex-col transition-all duration-500 ease-in-out ${isOpen
+        className={`fixed lg:left-0 lg:right-auto max-lg:right-0 max-lg:left-auto top-0 h-screen z-50 py-4 lg:pl-4 max-lg:pr-4 print:hidden flex flex-col transition-all duration-500 ease-in-out ${isOpen
           ? "translate-x-0"
-          : "max-lg:-translate-x-full"
+          : "max-lg:translate-x-full"
           } ${isCollapsed ? "w-20 lg:w-20" : "w-72 lg:w-72"
           }`}
       >
@@ -182,27 +183,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
           </div>
         </div>
 
-        {/* Floating Branding Sub-Card */}
+        {/* User Profile Card at Bottom */}
         <div
-          className={`bg-white border border-gray-200/70 rounded-2xl p-2.5 shadow-md flex items-center mt-3 transition-all duration-300 ${isCollapsed ? "justify-center" : "gap-3 px-3"
+          className={`bg-white border border-gray-200/70 rounded-2xl p-2.5 shadow-md flex items-center mt-3 transition-all duration-300 ${isCollapsed ? "justify-center" : "justify-between gap-3 px-3"
             }`}
         >
-          {/* Circle Logo */}
-          <div className="bg-[#2216a8] rounded-full w-9 h-9 flex-shrink-0 flex flex-col items-center justify-center text-white text-[8px] font-black uppercase text-center leading-none p-1.5 select-none">
-            <span>AUTO</span>
-            <span className="font-black mt-0.5">SHOP</span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Circle Logo / Avatar */}
+            <div className="bg-[#2216a8] rounded-full w-9 h-9 flex-shrink-0 flex items-center justify-center text-white text-sm font-bold uppercase select-none">
+              {(adminData?.name || currentUser?.name || "U").substring(0, 1).toUpperCase()}
+            </div>
+
+            {/* Text (Hidden when collapsed) */}
+            {!isCollapsed && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-slate-800 font-bold text-sm leading-tight truncate">
+                  {adminData?.name || currentUser?.name || "User"}
+                </span>
+                <span className="text-gray-400 font-semibold text-xs leading-none mt-0.5 capitalize">
+                  {userRole || "User"}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Text (Hidden when collapsed) */}
+          {/* Settings Button (Hidden when collapsed) */}
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="text-[#2216a8] font-bold text-sm leading-tight">
-                Auto Shop
-              </span>
-              <span className="text-gray-400 font-semibold text-xs leading-none mt-0.5">
-                Demo
-              </span>
-            </div>
+            <button
+              onClick={() => {
+                navigate("/settings");
+                onClose();
+              }}
+              className="p-1.5 hover:bg-slate-50 text-gray-400 hover:text-[#2216a8] rounded-lg transition-colors cursor-pointer"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>

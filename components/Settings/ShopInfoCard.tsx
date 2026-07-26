@@ -9,6 +9,7 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import { ShopSettings } from "../../services/ShopSettings/fetchShopSettings";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface ShopInfoCardProps {
   settings: ShopSettings;
@@ -24,10 +25,10 @@ const InfoRow: React.FC<{
       {icon}
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
         {label}
       </p>
-      <p className="text-sm font-medium text-slate-800 mt-0.5 break-words">
+      <p className="text-sm font-semibold text-slate-700 mt-0.5 break-words">
         {value}
       </p>
     </div>
@@ -35,23 +36,24 @@ const InfoRow: React.FC<{
 );
 
 export const ShopInfoCard: React.FC<ShopInfoCardProps> = ({ settings }) => {
+  const { t } = useLanguage();
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleString();
   // console.log(settings);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-      <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-slate-50">
+    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-slate-50/50 to-white">
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
           {settings.logo ? (
             <img
               src={settings.logo}
               alt={settings.shopName}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border-2 border-white shadow-md"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white shadow-md"
             />
           ) : (
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-blue-100 flex items-center justify-center">
-              <Store className="w-10 h-10 text-blue-600" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-indigo-50/50 flex items-center justify-center">
+              <Store className="w-10 h-10 text-[#2216a8]" />
             </div>
           )}
           <div className="flex-1 min-w-0">
@@ -62,20 +64,21 @@ export const ShopInfoCard: React.FC<ShopInfoCardProps> = ({ settings }) => {
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                   settings.isActive
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
+                    ? "bg-green-50 text-green-700 border border-green-100"
+                    : "bg-red-50 text-red-700 border border-red-100"
                 }`}
               >
-                {settings.isActive ? "Active" : "Inactive"}
+                {settings.isActive ? t("settings.active") : "Inactive"}
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs font-semibold text-slate-400">
                 Updated {formatDate(settings.updatedAt)}
               </span>
             </div>
             {settings.updatedBy && (
-              <p className="text-xs text-slate-500 mt-1">
-                Last updated by {settings.updatedBy.name} (
-                {settings.updatedBy.role})
+              <p className="text-xs font-semibold text-slate-400 mt-1.5">
+                {t("settings.lastUpdatedBy")
+                  .replace("{role}", settings.updatedBy.role)
+                  .replace("{name}", settings.updatedBy.name)}
               </p>
             )}
           </div>
@@ -84,13 +87,13 @@ export const ShopInfoCard: React.FC<ShopInfoCardProps> = ({ settings }) => {
 
       <div className="p-4 sm:p-6">
         <InfoRow
-          icon={<MapPin className="w-4 h-4" />}
-          label="Address"
+          icon={<MapPin className="w-4 h-4 text-[#2216a8]" />}
+          label={t("settings.address")}
           value={settings.address}
         />
         <InfoRow
-          icon={<Phone className="w-4 h-4" />}
-          label="Phone"
+          icon={<Phone className="w-4 h-4 text-[#2216a8]" />}
+          label={t("settings.phone")}
           value={settings.phoneNumber}
         />
         {/* <InfoRow

@@ -436,39 +436,41 @@ export const AccountManagement: React.FC = () => {
   ).length;
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Users className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
-            Account Management
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage system user accounts and permissions
-          </p>
+    <div className="w-full lg:h-[calc(100vh-2rem)]">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              Account Management
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              Manage system user accounts and permissions
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                loadLocations(); // Reload locations when opening modal
+                setIsCreateModalOpen(true);
+              }}
+              className="px-4 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />{" "}
+              <span>Create Account</span>
+            </button>
+            <button
+              onClick={loadAccounts}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <button
-            onClick={() => {
-              loadLocations(); // Reload locations when opening modal
-              setIsCreateModalOpen(true);
-            }}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-3 py-2 sm:px-4 rounded-lg transition-colors text-sm sm:text-base"
-          >
-            <Plus className="w-4 h-4" />{" "}
-            <span className="hidden sm:inline">Create Account</span>
-          </button>
-          <button
-            onClick={loadAccounts}
-            disabled={loading}
-            className="hidden sm:flex items-center gap-2 bg-slate-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors text-sm sm:text-base"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        </div>
-      </div>
+
+        <div className="flex-1 overflow-y-auto space-y-6 pr-1 no-scrollbar">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -1319,6 +1321,8 @@ export const AccountManagement: React.FC = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -26,8 +26,10 @@ import { toast } from "sonner";
 import { TransferList } from "../components/Purchasing/TransferList";
 import { TransferDetailModal } from "../components/Purchasing/TransferDetailModal";
 import { ShopSettingsTab } from "../components/Settings/ShopSettingsTab";
+import { useLanguage } from "../context/LanguageContext";
 
 export const Settings: React.FC = () => {
+  const { t } = useLanguage();
   const { currentUser, setUserRole, logs } = useApp();
   const [stockAuditLogs, setStockAuditLogs] = useState<StockAuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,71 +99,79 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-full">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-slate-800">
-        System Settings
-      </h1>
+    <div className="w-full lg:h-[calc(100vh-2rem)]">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("settings.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("settings.subtitle")}
+            </p>
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("shop")}
-          className={`px-3 sm:px-4 py-2 sm:py-2 font-semibold flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
-            activeTab === "shop"
-              ? "border-b-2 border-blue-800 text-blue-800"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <Store className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="hidden sm:inline">Shop Settings</span>
-          <span className="sm:hidden">Shop</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("audit")}
-          className={`px-3 sm:px-4 py-2 sm:py-2 font-semibold flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
-            activeTab === "audit"
-              ? "border-b-2 border-blue-800 text-blue-800"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <FileText className="w-3 h-3 sm:w-4 sm:h-4" />{" "}
-          <span className="hidden sm:inline">Stock Audit Logs</span>
-          <span className="sm:hidden">Audit</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("transfer")}
-          className={`px-3 sm:px-4 py-2 sm:py-2 font-semibold flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
-            activeTab === "transfer"
-              ? "border-b-2 border-blue-800 text-blue-800"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <Truck className="w-3 h-3 sm:w-4 sm:h-4" />{" "}
-          <span className="hidden sm:inline">Transfer Management</span>
-          <span className="sm:hidden">Transfers</span>
-        </button>
-      </div>
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-gray-100 pb-1 overflow-x-auto flex-shrink-0">
+          <button
+            onClick={() => setActiveTab("shop")}
+            className={`px-4 py-2 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === "shop"
+                ? "border-[#2216a8] text-[#2216a8]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <Store className="w-4 h-4" />
+            <span>{t("settings.shopSettingsTab")}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("audit")}
+            className={`px-4 py-2 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === "audit"
+                ? "border-[#2216a8] text-[#2216a8]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>{t("settings.stockAuditLogsTab")}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("transfer")}
+            className={`px-4 py-2 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === "transfer"
+                ? "border-[#2216a8] text-[#2216a8]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <Truck className="w-4 h-4" />
+            <span>{t("settings.transferManagementTab")}</span>
+          </button>
+        </div>
 
-      {/* Shop Settings Tab */}
-      {activeTab === "shop" && <ShopSettingsTab />}
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto pr-1 no-scrollbar min-h-0">
+          {/* Shop Settings Tab */}
+          {activeTab === "shop" && <ShopSettingsTab />}
 
       {/* Audit Logs Tab */}
       {activeTab === "audit" && (
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-            <h2 className="text-lg font-semibold flex items-center">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary" />{" "}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2 text-[#2216a8]" />{" "}
               Stock Audit Logs
             </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border">
-                <span className="text-xs font-medium text-slate-600">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-indigo-200 text-[#2216a8]">
+                <span className="text-xs font-semibold text-indigo-400">
                   Show:
                 </span>
                 <select
                   value={limit}
                   onChange={(e) => setLimit(Number(e.target.value))}
-                  className="bg-transparent text-sm font-semibold text-slate-800 outline-none cursor-pointer"
+                  className="bg-transparent text-sm font-bold text-[#2216a8] outline-none cursor-pointer"
                 >
                   <option value={10}>10</option>
                   <option value={25}>25</option>
@@ -172,7 +182,7 @@ export const Settings: React.FC = () => {
               <button
                 onClick={() => loadStockAuditLogs(currentPage)}
                 disabled={loading}
-                className="flex items-center gap-2 bg-slate-600 text-white px-3 py-2 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors text-sm"
+                className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -184,20 +194,20 @@ export const Settings: React.FC = () => {
 
           {loading ? (
             <div className="p-6 sm:p-8 text-center text-slate-500">
-              <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-primary mx-auto mb-2" />
-              <p className="text-sm sm:text-base">
+              <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+              <p className="text-sm sm:text-base font-medium">
                 Loading stock audit logs...
               </p>
             </div>
           ) : stockAuditLogs.length === 0 ? (
             <div className="p-6 sm:p-8 text-center text-slate-500">
               <AlertTriangle className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm sm:text-base">No stock audit logs found</p>
+              <p className="text-sm sm:text-base font-medium">No stock audit logs found</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
               <div className="">
-                <div className="overflow-x-auto h-[calc(100vh-350px)] sm:h-[calc(100vh-400px)] overflow-y-auto">
+                <div className="overflow-x-auto h-[calc(100vh-350px)] sm:h-[calc(100vh-420px)] overflow-y-auto no-scrollbar">
                   <table className="w-full text-sm text-left min-w-[1000px]">
                     <thead className="bg-slate-50 border-b sticky top-0 z-10">
                       <tr>
@@ -414,9 +424,9 @@ export const Settings: React.FC = () => {
                               <button
                                 key={pageNum}
                                 onClick={() => loadStockAuditLogs(pageNum)}
-                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-semibold rounded-lg transition-all ${
                                   currentPage === pageNum
-                                    ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                                    ? "z-10 bg-[#2216a8] border-[#2216a8] text-white shadow-sm"
                                     : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                                 }`}
                               >
@@ -449,18 +459,18 @@ export const Settings: React.FC = () => {
 
       {/* Transfer Management Tab */}
       {activeTab === "transfer" && (
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-            <h2 className="text-lg font-semibold flex items-center">
-              <Truck className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />{" "}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center">
+              <Truck className="w-5 h-5 mr-2 text-[#2216a8]" />{" "}
               Transfer Management
             </h2>
             <button
               onClick={loadTransfers}
-              className="hidden sm:flex items-center gap-2 bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
           </div>
           <TransferList
@@ -477,6 +487,8 @@ export const Settings: React.FC = () => {
         onClose={() => setIsTransferDetailModalOpen(false)}
         transferId={selectedTransferId}
       />
+        </div>
+      </div>
     </div>
   );
 };

@@ -42,7 +42,7 @@ const AppLayout: React.FC = () => {
       {token && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-40 p-2.5 bg-white border border-gray-200 shadow-md rounded-xl text-[#2216a8] hover:bg-gray-50 transition-all cursor-pointer"
+          className="lg:hidden fixed top-4 right-4 z-40 p-2.5 bg-white border border-gray-200 shadow-md rounded-xl text-[#2216a8] hover:bg-gray-50 transition-all cursor-pointer"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
@@ -229,7 +229,22 @@ const App: React.FC = () => {
   return (
     <LanguageProvider>
       <AppProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster 
+          position="top-right" 
+          toastOptions={{
+            style: {
+              borderRadius: '1rem',
+              fontFamily: 'inherit',
+            },
+            classNames: {
+              toast: 'border shadow-xl text-sm font-semibold p-4',
+              success: '!bg-white !text-[#2216a8] !border-[#2216a8]/30',
+              error: '!bg-white !text-red-600 !border-red-600/30',
+              info: '!bg-white !text-[#2216a8] !border-[#2216a8]/30',
+              warning: '!bg-white !text-amber-600 !border-amber-600/30',
+            }
+          }} 
+        />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />

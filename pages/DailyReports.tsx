@@ -19,44 +19,17 @@ import {
   fetchLatestDailyReport,
   DailyReport,
 } from "../services/Reports/fetchDailyReports";
+import { useLanguage } from "../context/LanguageContext";
 
-// ─── Myanmar Formatting Helpers ───────────────────────────────
+// ─── Formatting Helpers ───────────────────────────────
 
-function toMyanmarDigits(num: number): string {
-  const digits = "၀၁၂၃၄၅၆၇၈၉";
-  return String(num).replace(/\d/g, (d) => digits[parseInt(d)]);
+function formatMyanmarCurrency(amount: number, symbol: string): string {
+  return `${Math.round(amount).toLocaleString("en-US")} ${symbol}`;
 }
 
-function formatMyanmarCurrency(amount: number): string {
-  amount = Math.round(amount);
-  if (amount === 0) return "၀ ကျပ်";
-
-  const lakhs = Math.floor(amount / 100000);
-  const remainder = amount % 100000;
-  const tenThousands = Math.floor(remainder / 10000);
-  const rest = remainder % 10000;
-
-  const parts: string[] = [];
-
-  if (lakhs > 0) {
-    const prefix = lakhs === 1 ? "တစ်" : toMyanmarDigits(lakhs);
-    parts.push(prefix + "သိန်း");
-  }
-
-  if (tenThousands > 0) {
-    parts.push(toMyanmarDigits(tenThousands) + "သောင်း");
-  }
-
-  if (rest > 0) {
-    parts.push(toMyanmarDigits(rest));
-  }
-
-  return parts.join(" ") + "ကျပ်";
-}
-
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, isMyanmar: boolean): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("my-MM", {
+  return d.toLocaleDateString(isMyanmar ? "my-MM" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -73,12 +46,12 @@ interface SummaryCardProps {
 }
 
 const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, icon, color }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-4">
+  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-4 flex-1">
     <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
       {icon}
     </div>
     <div className="min-w-0">
-      <p className="text-xs text-slate-500 font-medium truncate">{title}</p>
+      <p className="text-xs text-slate-400 font-semibold truncate">{title}</p>
       <p className="text-lg font-bold text-slate-800 truncate">{value}</p>
     </div>
   </div>
@@ -87,6 +60,10 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, icon, color }) 
 // ─── Main Page ────────────────────────────────────────────────
 
 export const DailyReports: React.FC = () => {
+  const { t, language } = useLanguage();
+  const isMyanmar = language === "my";
+  const currencySymbol = t("dailyReports.currencySymbol");
+
   const [reports, setReports] = useState<DailyReport[]>([]);
   const [latest, setLatest] = useState<DailyReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -147,163 +124,160 @@ export const DailyReports: React.FC = () => {
   const detailReport = selectedReport || latest;
 
   return (
-    <div className="p-4 sm:p-6 max-w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
+    <div className="w-full lg:h-[calc(100vh-2rem)]">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
-              နေ့စဉ်အစီရင်ခံစာများ
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t("dailyReports.title")}
             </h1>
-            <p className="text-sm text-slate-500">
-              Daily Reports
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("dailyReports.subtitle")}
             </p>
           </div>
+          <button
+            onClick={refresh}
+            disabled={loading || loadingLatest}
+            className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span>{t("common.refresh")}</span>
+          </button>
         </div>
-        <button
-          onClick={refresh}
-          disabled={loading || loadingLatest}
-          className="flex items-center gap-2 bg-slate-600 text-white px-4 py-2 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors text-sm"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          ပြန်စင်
-        </button>
-      </div>
 
-      {/* Summary Cards */}
-      {loadingLatest ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-          <span className="ml-2 text-slate-500">Loading latest report...</span>
-        </div>
-      ) : latest ? (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            <SummaryCard
-              title="စုစုပေါင်းရောင်းရငွေ"
-              value={formatMyanmarCurrency(latest.finalAmount)}
-              icon={<DollarSign className="w-5 h-5 text-white" />}
-              color="bg-emerald-500"
-            />
-            <SummaryCard
-              title="ကဒ်/Mobile Banking"
-              value={formatMyanmarCurrency(latest.totalCardAmount)}
-              icon={<CreditCard className="w-5 h-5 text-white" />}
-              color="bg-blue-500"
-            />
-            <SummaryCard
-              title="လက်ငင်းငွေသား (Cash)"
-              value={formatMyanmarCurrency(latest.totalCashAmount)}
-              icon={<Banknote className="w-5 h-5 text-white" />}
-              color="bg-amber-500"
-            />
-            <SummaryCard
-              title="အော်ဒါအရေအတွက်"
-              value={`${toMyanmarDigits(latest.orderCount)} ခု`}
-              icon={<ShoppingBag className="w-5 h-5 text-white" />}
-              color="bg-purple-500"
-            />
-            <SummaryCard
-              title="လျှော့စျေး (Discount)"
-              value={formatMyanmarCurrency(latest.discount)}
-              icon={<Percent className="w-5 h-5 text-white" />}
-              color="bg-red-500"
-            />
-            <SummaryCard
-              title="ရောင်းရသည့်ပစ္စည်း"
-              value={`${toMyanmarDigits(latest.totalQuantity)} ခု`}
-              icon={<Package className="w-5 h-5 text-white" />}
-              color="bg-indigo-500"
-            />
-          </div>
-
-          {/* Latest Report Full Text */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                <Bot className="w-5 h-5 text-emerald-500" />
-                နောက်ဆုံး Report — {formatDate(latest.generatedAt)}
-              </h2>
-              {latest._id && (
-                <span className="text-xs text-slate-400">
-                  {latest.date}
-                </span>
-              )}
+        <div className="flex-1 overflow-y-auto space-y-6 pr-1 no-scrollbar">
+          {/* Summary Cards */}
+          {loadingLatest ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+              <span className="ml-2 text-slate-500">{t("dailyReports.loadingLatest")}</span>
             </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 sm:p-6 border border-emerald-100">
-              <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
-                {latest.reportText}
-              </pre>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center mb-6">
-          <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">ယနေ့အတွက် report မရှိသေးပါ။</p>
-          <p className="text-sm text-slate-400 mt-1">
-            ညနေ ၉ နာရီတွင် အလိုအလျောက်ထုတ်ပေးမည်။
-          </p>
-        </div>
-      )}
+          ) : latest ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <SummaryCard
+                  title={t("dailyReports.totalSales")}
+                  value={formatMyanmarCurrency(latest.finalAmount, currencySymbol)}
+                  icon={<DollarSign className="w-5 h-5 text-white" />}
+                  color="bg-emerald-500"
+                />
+                <SummaryCard
+                  title={t("dailyReports.totalCardMobile")}
+                  value={formatMyanmarCurrency(latest.totalCardAmount, currencySymbol)}
+                  icon={<CreditCard className="w-5 h-5 text-white" />}
+                  color="bg-blue-500"
+                />
+                <SummaryCard
+                  title={t("dailyReports.totalCash")}
+                  value={formatMyanmarCurrency(latest.totalCashAmount, currencySymbol)}
+                  icon={<Banknote className="w-5 h-5 text-white" />}
+                  color="bg-amber-500"
+                />
+                <SummaryCard
+                  title={t("dailyReports.totalOrders")}
+                  value={`${latest.orderCount} ခု`}
+                  icon={<ShoppingBag className="w-5 h-5 text-white" />}
+                  color="bg-purple-500"
+                />
+                <SummaryCard
+                  title={t("dailyReports.discount")}
+                  value={formatMyanmarCurrency(latest.discount, currencySymbol)}
+                  icon={<Percent className="w-5 h-5 text-white" />}
+                  color="bg-red-500"
+                />
+                <SummaryCard
+                  title={t("dailyReports.itemsSold")}
+                  value={`${latest.totalQuantity} ခု`}
+                  icon={<Package className="w-5 h-5 text-white" />}
+                  color="bg-indigo-500"
+                />
+              </div>
 
-      {/* Selected Report Detail Modal */}
-      {selectedReport && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setSelectedReport(null)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-800">
-                  Report — {formatDate(selectedReport.generatedAt)}
-                </h3>
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
-                <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
-                  {selectedReport.reportText}
-                </pre>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <span className="text-slate-500">စုစုပေါင်းရောင်းရငွေ:</span>
-                  <p className="font-bold text-slate-800">{formatMyanmarCurrency(selectedReport.finalAmount)}</p>
+              {/* Latest Report Full Text */}
+              <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-emerald-500" />
+                    {t("dailyReports.latestReport")} — {formatDate(latest.generatedAt, isMyanmar)}
+                  </h2>
+                  {latest._id && (
+                    <span className="text-xs font-semibold text-slate-400">
+                      {latest.date}
+                    </span>
+                  )}
                 </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <span className="text-slate-500">အော်ဒါအရေအတွက်:</span>
-                  <p className="font-bold text-slate-800">{toMyanmarDigits(selectedReport.orderCount)} ခု</p>
+                <div className="bg-gradient-to-br from-emerald-50/30 to-teal-50/30 rounded-2xl p-4 sm:p-6 border border-emerald-100/50">
+                  <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
+                    {latest.reportText}
+                  </pre>
                 </div>
               </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500 font-semibold">{t("dailyReports.noTodayReport")}</p>
+              <p className="text-sm text-slate-400 mt-1 font-medium">
+                {t("dailyReports.autoGenerateNote")}
+              </p>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          {/* Selected Report Detail Modal */}
+          {selectedReport && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setSelectedReport(null)}>
+              <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-slate-800">
+                      Report — {formatDate(selectedReport.generatedAt, isMyanmar)}
+                    </h3>
+                    <button
+                      onClick={() => setSelectedReport(null)}
+                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors font-bold text-slate-500"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-50/30 to-teal-50/30 rounded-2xl p-4 border border-emerald-100/50">
+                    <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
+                      {selectedReport.reportText}
+                    </pre>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                      <span className="text-slate-400 font-semibold">{t("dailyReports.totalSales")}:</span>
+                      <p className="font-bold text-slate-800 mt-1">{formatMyanmarCurrency(selectedReport.finalAmount, currencySymbol)}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                      <span className="text-slate-400 font-semibold">{t("dailyReports.totalOrders")}:</span>
+                      <p className="font-bold text-slate-800 mt-1">{selectedReport.orderCount} ခု</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
       {/* History Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-slate-100">
           <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
             <FileText className="w-5 h-5 text-slate-500" />
-            မှတ်တမ်းများ
+            {t("dailyReports.history")}
           </h2>
         </div>
 
         {loading ? (
           <div className="p-8 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-2" />
-            Loading reports...
+            <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+            {t("dailyReports.loadingReports")}
           </div>
         ) : reports.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p>မှတ်တမ်းမရှိသေးပါ။</p>
+            <p>{t("dailyReports.noReports")}</p>
           </div>
         ) : (
           <>
@@ -311,11 +285,11 @@ export const DailyReports: React.FC = () => {
               <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50 border-b">
                   <tr>
-                    <th className="px-4 py-3 font-semibold text-slate-600">ရက်စွဲ</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">စုစုပေါင်းရောင်းရငွေ</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">ကဒ်/KPay</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">Cash</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">အော်ဒါ</th>
+                    <th className="px-4 py-3 font-semibold text-slate-600">{t("dailyReports.date")}</th>
+                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.totalSales")}</th>
+                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.cardKPay")}</th>
+                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.cash")}</th>
+                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.orders")}</th>
                     <th className="px-4 py-3 font-semibold text-slate-600 text-center"></th>
                   </tr>
                 </thead>
@@ -323,26 +297,26 @@ export const DailyReports: React.FC = () => {
                   {reports.map((report) => (
                     <tr key={report._id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        {formatDate(report.generatedAt)}
+                        {formatDate(report.generatedAt, isMyanmar)}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-emerald-700">
-                        {formatMyanmarCurrency(report.finalAmount)}
+                        {formatMyanmarCurrency(report.finalAmount, currencySymbol)}
                       </td>
                       <td className="px-4 py-3 text-right text-blue-600">
-                        {formatMyanmarCurrency(report.totalCardAmount)}
+                        {formatMyanmarCurrency(report.totalCardAmount, currencySymbol)}
                       </td>
                       <td className="px-4 py-3 text-right text-amber-600">
-                        {formatMyanmarCurrency(report.totalCashAmount)}
+                        {formatMyanmarCurrency(report.totalCashAmount, currencySymbol)}
                       </td>
                       <td className="px-4 py-3 text-right text-slate-700">
-                        {toMyanmarDigits(report.orderCount)} ခု
+                        {report.orderCount} ခု
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => setSelectedReport(report)}
-                          className="text-emerald-600 hover:text-emerald-800 font-medium text-xs px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                          className="text-[#2216a8] hover:text-[#2216a8]/80 font-semibold text-xs px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
                         >
-                          ကြည့်
+                          {t("dailyReports.view")}
                         </button>
                       </td>
                     </tr>
@@ -354,8 +328,11 @@ export const DailyReports: React.FC = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="px-4 py-3 border-t flex items-center justify-between bg-slate-50">
-                <p className="text-sm text-slate-600">
-                  စုစုပေါင်း {totalItems} ခုအနက် စာမျက်နှာ {currentPage} / {totalPages}
+                <p className="text-sm text-slate-600 font-semibold">
+                  {t("dailyReports.totalItemsLabel")
+                    .replace("{total}", String(totalItems))
+                    .replace("{current}", String(currentPage))
+                    .replace("{totalPage}", String(totalPages))}
                 </p>
                 <div className="flex gap-1">
                   <button
@@ -382,7 +359,7 @@ export const DailyReports: React.FC = () => {
                         onClick={() => loadReports(pageNum)}
                         className={`px-3 py-2 rounded-lg border text-sm font-medium ${
                           currentPage === pageNum
-                            ? "bg-emerald-500 text-white border-emerald-500"
+                            ? "bg-[#2216a8] text-white border-[#2216a8]"
                             : "bg-white border-slate-300 hover:bg-slate-50"
                         }`}
                       >
@@ -404,5 +381,7 @@ export const DailyReports: React.FC = () => {
         )}
       </div>
     </div>
+  </div>
+</div>
   );
 };

@@ -39,7 +39,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 1024);
     };
 
     handleResize();
@@ -176,53 +176,61 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border z-50 p-3 sm:p-4 w-[calc(100vw-2rem)] sm:w-auto max-w-[360px] md:max-w-none flex items-center justify-center flex-col">
-          {singleDate ? (
-            <Calendar
-              date={dateRange.startDate}
-              onChange={handleSingleDateSelect}
-              color="#3b82f6"
-            />
-          ) : fixedStartDate ? (
-            <div className="flex flex-col gap-2">
-              <div className="text-sm text-slate-500 mb-2">
-                Start Date (Fixed): <span className="font-medium text-slate-700">{formatDate(startDate)}</span>
-                <div className="mt-1">Select End Date:</div>
-              </div>
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
+          onClick={() => setIsOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 sm:p-5 flex flex-col items-center justify-center max-w-full overflow-y-auto max-h-[95vh] animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {singleDate ? (
               <Calendar
-                date={dateRange.endDate}
-                onChange={handleFixedStartSelect}
-                color="#3b82f6"
-                minDate={startDate || undefined}
+                date={dateRange.startDate}
+                onChange={handleSingleDateSelect}
+                color="#2216a8"
               />
-            </div>
-          ) : (
-            <DateRange
-              key={isMobile ? "mobile-calendar" : "desktop-calendar"}
-              ranges={[dateRange]}
-              onChange={handleRangeSelect}
-              moveRangeOnFirstSelection={false}
-              months={isMobile ? 1 : 2}
-              direction={isMobile ? "vertical" : "horizontal"}
-              rangeColors={["#3b82f6"]}
-            />
-          )}
+            ) : fixedStartDate ? (
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-slate-500 mb-2">
+                  Start Date (Fixed): <span className="font-semibold text-slate-700">{formatDate(startDate)}</span>
+                  <div className="mt-1">Select End Date:</div>
+                </div>
+                <Calendar
+                  date={dateRange.endDate}
+                  onChange={handleFixedStartSelect}
+                  color="#2216a8"
+                  minDate={startDate || undefined}
+                />
+              </div>
+            ) : (
+              <DateRange
+                key={isMobile ? "mobile-calendar" : "desktop-calendar"}
+                ranges={[dateRange]}
+                onChange={handleRangeSelect}
+                moveRangeOnFirstSelection={false}
+                months={isMobile ? 1 : 2}
+                direction={isMobile ? "vertical" : "horizontal"}
+                rangeColors={["#2216a8"]}
+              />
+            )}
 
-          <div className="flex w-full justify-end gap-2 mt-4 pt-4 border-t">
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleApply}
-              className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              Apply
-            </button>
+            <div className="flex w-full justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApply}
+                className="px-6 py-2 text-sm font-semibold bg-[#2216a8] text-white rounded-full hover:bg-[#2216a8]/90 transition-colors shadow-md shadow-indigo-600/10 cursor-pointer"
+              >
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       )}

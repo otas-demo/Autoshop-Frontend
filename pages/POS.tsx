@@ -1260,36 +1260,36 @@ export const POS: React.FC = () => {
       {/* Checkout Modal */}
       {showCheckoutModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md sm:mx-4 max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-md sm:mx-4 max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col border border-slate-100">
             {/* Modal Header */}
-            <div className="p-4 border-b bg-primary/10">
+            <div className="p-5 border-b border-slate-100 bg-[#2216a8]/5">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg text-gray-800">
+                <h3 className="font-bold text-lg text-slate-800">
                   {/* {t("pos.checkout")} */}
                   {devices.isMobile ? "Mobile" : "Desktop"}
                 </h3>
                 <button
                   onClick={() => setShowCheckoutModal(false)}
-                  className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-all cursor-pointer"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm font-semibold text-slate-400 mt-1">
                 {cart.reduce((sum, item) => sum + getSafeQty(item.qty), 0)}{" "}
                 {t("pos.itemsLower")} • {subtotal.toLocaleString()} MMK
               </p>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
               {/* Payment Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("pos.paymentType")}
                 </label>
                 <select
-                  className="payment-type-select w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="payment-type-select w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                   value={paymentType}
                   onChange={(e) => {
                     setPaymentType(e.target.value as "paid" | "credit");
@@ -1311,14 +1311,14 @@ export const POS: React.FC = () => {
 
               {/* Order Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("pos.orderDate") || "Order Date"}
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="date"
-                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                     value={createdAt}
                     onChange={(e) => setCreatedAt(e.target.value)}
                   />
@@ -1327,14 +1327,14 @@ export const POS: React.FC = () => {
 
               {/* Credit Person Selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("pos.selectCreditPerson")}
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <select
-                      className="w-full pl-9 pr-4 py-2.5 border border-orange-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none bg-orange-50"
+                      className="w-full pl-9 pr-4 py-2.5 border border-indigo-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none bg-indigo-50/20 transition-all"
                       value={selectedCreditPersonId}
                       onChange={(e) =>
                         setSelectedCreditPersonId(e.target.value)
@@ -1361,7 +1361,7 @@ export const POS: React.FC = () => {
                       setNewCreditPersonAddress("");
                       setShowAddCreditPersonModal(true);
                     }}
-                    className="px-3 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1 text-sm font-medium whitespace-nowrap"
+                    className="px-4 py-2 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full transition-all shadow-md shadow-indigo-600/10 flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     {t("pos.addCreditPerson")}
@@ -1371,11 +1371,11 @@ export const POS: React.FC = () => {
 
               {/* Payment Method */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("pos.paymentMethod")}
                 </label>
                 <select
-                  className="payment-method-select w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="payment-method-select w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                   value={paymentMethod}
                   onChange={(e) =>
                     setPaymentMethod(e.target.value as PaymentMethod)
@@ -1440,28 +1440,28 @@ export const POS: React.FC = () => {
               </div>
 
               {/* Discount/Markup Toggle */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div>
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
                   Pricing Option
                 </label>
                 <div className="flex gap-4">
-                  <label className="flex items-center cursor-pointer">
+                  <label className="flex items-center cursor-pointer font-semibold text-slate-600">
                     <input
                       type="radio"
                       name="pricingOption"
                       checked={!useMarkup}
                       onChange={() => setUseMarkup(false)}
-                      className="mr-2"
+                      className="mr-2 accent-[#2216a8]"
                     />
                     <span className="text-sm">Discount</span>
                   </label>
-                  <label className="flex items-center cursor-pointer">
+                  <label className="flex items-center cursor-pointer font-semibold text-slate-600">
                     <input
                       type="radio"
                       name="pricingOption"
                       checked={useMarkup}
                       onChange={() => setUseMarkup(true)}
-                      className="mr-2"
+                      className="mr-2 accent-[#2216a8]"
                     />
                     <span className="text-sm">Markup</span>
                   </label>
@@ -1471,11 +1471,11 @@ export const POS: React.FC = () => {
               {/* Discount */}
               {!useMarkup && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-slate-500 mb-1.5 flex items-center">
                     {t("pos.discount")} (%)
                     <button
                       onClick={() => setShowDiscountCalculator(true)}
-                      className="ml-2 text-primary hover:text-primary-700 transition-colors"
+                      className="ml-2 text-[#2216a8] hover:text-[#2216a8]/80 transition-colors"
                       title="Calculate discount percentage"
                     >
                       <Calculator className="w-4 h-4" />
@@ -1485,7 +1485,7 @@ export const POS: React.FC = () => {
                     type="number"
                     min="0"
                     max="100"
-                    className="discount-input w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    className="discount-input w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                     value={discount}
                     onChange={(e) => setDiscount(Number(e.target.value))}
                   />
@@ -1495,20 +1495,13 @@ export const POS: React.FC = () => {
               {/* Markup */}
               {useMarkup && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                     Markup Amount (MMK)
-                    {/* <button
-                      onClick={() => setShowMarkupCalculator(true)}
-                      className="ml-2 text-primary hover:text-primary-700 transition-colors"
-                      title="Add fixed markup amount"
-                    >
-                      <Calculator className="w-4 h-4" />
-                    </button> */}
                   </label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                     value={markupAmount}
                     onChange={(e) => setMarkupAmount(Number(e.target.value))}
                   />
@@ -1517,7 +1510,7 @@ export const POS: React.FC = () => {
 
               {/* Paid Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {paymentMethod === PaymentMethod.FOC
                     ? `${t("pos.paidAmount")} (MMK) - ${t("pos.focMessage") || "Free of Charge"}`
                     : `${t("pos.paidAmount")} (MMK)`}
@@ -1530,9 +1523,9 @@ export const POS: React.FC = () => {
                   type="number"
                   min="0"
                   disabled={paymentMethod === PaymentMethod.FOC}
-                  className={`w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none ${
+                  className={`w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all ${
                     paymentMethod === PaymentMethod.FOC
-                      ? "bg-gray-100 cursor-not-allowed"
+                      ? "bg-slate-100 cursor-not-allowed"
                       : ""
                   }`}
                   value={paymentMethod === PaymentMethod.FOC ? 0 : paidAmount}
@@ -1552,12 +1545,12 @@ export const POS: React.FC = () => {
 
               {/* Note */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("pos.note")} ({t("common.optional")})
                 </label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={t("pos.notePlaceholder")}
@@ -1565,13 +1558,13 @@ export const POS: React.FC = () => {
               </div>
 
               {/* Order Summary */}
-              <div className="bg-gray-50 p-4 rounded-lg border space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t("common.subtotal")}</span>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
+                <div className="flex justify-between text-sm font-semibold text-slate-600">
+                  <span>{t("common.subtotal")}</span>
                   <span>{subtotal.toLocaleString()} MMK</span>
                 </div>
                 {!useMarkup && discount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
+                  <div className="flex justify-between text-sm text-green-600 font-semibold">
                     <span>
                       {t("common.discount")} ({discount}%)
                     </span>
@@ -1579,19 +1572,19 @@ export const POS: React.FC = () => {
                   </div>
                 )}
                 {useMarkup && markupAmount > 0 && (
-                  <div className="flex justify-between text-sm text-blue-600">
+                  <div className="flex justify-between text-sm text-[#2216a8] font-semibold">
                     <span>Markup Amount</span>
                     <span>+{markupAmount.toLocaleString()} MMK</span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t">
+                <div className="flex justify-between text-base font-bold text-slate-800 pt-2.5 border-t border-slate-150">
                   <span>{t("common.total")}</span>
                   <span>{total.toLocaleString()} MMK</span>
                 </div>
                 {paidAmount > 0 &&
                   paidAmount >= total &&
                   paymentType === "paid" && (
-                    <div className="change-display-row flex justify-between text-sm text-green-600 font-medium">
+                    <div className="change-display-row flex justify-between text-sm text-green-600 font-bold">
                       <span>{t("common.change")}</span>
                       <span>{(paidAmount - total).toLocaleString()} MMK</span>
                     </div>
@@ -1600,7 +1593,7 @@ export const POS: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t bg-gray-50 space-y-2">
+            <div className="p-5 border-t border-slate-100 bg-slate-50/50 space-y-2.5">
               <button
                 onClick={() => {
                   handleCheckout();
@@ -1612,7 +1605,7 @@ export const POS: React.FC = () => {
                   (paymentType === "paid" && paidAmount < total) ||
                   (paymentType === "credit" && paidAmount > total)
                 }
-                className="complete-sale-btn w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-bold transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="complete-sale-btn w-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white py-3 rounded-full font-semibold transition-all shadow-md shadow-indigo-600/15 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isProcessing ? (
                   <>
@@ -1627,7 +1620,7 @@ export const POS: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowCheckoutModal(false)}
-                className="w-full py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="w-full py-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all text-sm font-semibold cursor-pointer"
               >
                 {t("common.cancel")}
               </button>
@@ -1846,55 +1839,55 @@ export const POS: React.FC = () => {
       {/* Add Credit Person Modal */}
       {showAddCreditPersonModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden border border-slate-100">
             {/* Header */}
-            <div className="p-4 border-b bg-green-50">
+            <div className="p-5 border-b border-slate-100 bg-[#2216a8]/5">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg text-gray-800">
+                <h3 className="font-bold text-lg text-slate-800">
                   {t("pos.addCreditPerson")}
                 </h3>
                 <button
                   onClick={() => setShowAddCreditPersonModal(false)}
-                  className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-all cursor-pointer"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
             </div>
 
             {/* Form */}
-            <div className="p-4 space-y-3">
+            <div className="p-5 space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("credits.name")} *
                 </label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                   value={newCreditPersonName}
                   onChange={(e) => setNewCreditPersonName(e.target.value)}
                   placeholder={t("credits.namePlaceholder")}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("credits.phone")} *
                 </label>
                 <input
                   type="tel"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                   value={newCreditPersonPhone}
                   onChange={(e) => setNewCreditPersonPhone(e.target.value)}
                   placeholder={t("credits.phonePlaceholder")}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-500 mb-1.5">
                   {t("credits.address")}
                 </label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
                   value={newCreditPersonAddress}
                   onChange={(e) => setNewCreditPersonAddress(e.target.value)}
                   placeholder={t("credits.addressPlaceholder")}
@@ -1903,10 +1896,10 @@ export const POS: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t flex gap-2">
+            <div className="p-5 border-t border-slate-100 flex gap-3 bg-slate-50/50">
               <button
                 onClick={() => setShowAddCreditPersonModal(false)}
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border border-indigo-200 rounded-full text-sm font-semibold text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all cursor-pointer"
               >
                 {t("common.cancel")}
               </button>
@@ -1944,7 +1937,7 @@ export const POS: React.FC = () => {
                   }
                 }}
                 disabled={isAddingCreditPerson}
-                className="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-semibold transition-all shadow-md shadow-indigo-600/15 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {isAddingCreditPerson ? (
                   <>

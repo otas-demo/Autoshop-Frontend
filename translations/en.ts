@@ -554,10 +554,13 @@ export const en = {
   },
   accountManagement: {
     title: "Account Management",
+    subtitle: "Manage system user accounts and permissions",
+    refresh: "Refresh",
     createAccount: "Create Account",
     totalAccounts: "Total Accounts",
     activeAccounts: "Active Accounts",
     deactivatedAccounts: "Deactivated Accounts",
+    rolesCount: "Roles:",
     searchPlaceholder: "Search by name...",
     filterByRole: "Filter by Role",
     filterByStatus: "Filter by Status",

@@ -44,7 +44,7 @@ export const FOCTab: React.FC<FOCTabProps> = ({ focOrders, loading }) => {
   );
 
   // Convert to array and sort by quantity (highest first)
-  const productList = Object.values(aggregatedProducts).sort(
+  const productList = (Object.values(aggregatedProducts) as AggregatedProduct[]).sort(
     (a, b) => b.quantity - a.quantity,
   );
 

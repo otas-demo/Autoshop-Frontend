@@ -12,6 +12,8 @@ import {
   Percent,
   Package,
   Bot,
+  Plus,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -46,13 +48,13 @@ interface SummaryCardProps {
 }
 
 const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, icon, color }) => (
-  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-4 flex-1">
-    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+  <div className="bg-white rounded-2xl px-5 h-32 border border-gray-200 flex items-center gap-4 shadow-sm w-full">
+    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${color}`}>
       {icon}
     </div>
-    <div className="min-w-0">
-      <p className="text-xs text-slate-400 font-semibold truncate">{title}</p>
-      <p className="text-lg font-bold text-slate-800 truncate">{value}</p>
+    <div className="min-w-0 flex-1">
+      <p className="text-[14px] md:text-[16px] font-bold text-slate-500 truncate">{title}</p>
+      <p className="text-lg md:text-2xl font-bold text-slate-800 mt-1 truncate">{value}</p>
     </div>
   </div>
 );
@@ -120,9 +122,6 @@ export const DailyReports: React.FC = () => {
     loadLatest();
   };
 
-  // Determine which report to show detail for
-  const detailReport = selectedReport || latest;
-
   return (
     <div className="w-full lg:h-[calc(100vh-2rem)]">
       <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
@@ -136,84 +135,119 @@ export const DailyReports: React.FC = () => {
               {t("dailyReports.subtitle")}
             </p>
           </div>
-          <button
-            onClick={refresh}
-            disabled={loading || loadingLatest}
-            className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span>{t("common.refresh")}</span>
-          </button>
+          {/* <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => toast.info("Redirecting to Account Management...")}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />{" "}
+              <span>{t("accountManagement.createAccount")}</span>
+            </button>
+            <button
+              onClick={refresh}
+              disabled={loading || loadingLatest}
+              className="px-5 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-[#f0efff] hover:bg-indigo-100 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <span>{t("dailyReports.refresh")}</span>
+            </button>
+          </div> */}
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-6 pr-1 no-scrollbar">
-          {/* Summary Cards */}
+          {/* Main Grid for Cards and Latest Report Panel */}
           {loadingLatest ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#2216a8]" />
               <span className="ml-2 text-slate-500">{t("dailyReports.loadingLatest")}</span>
             </div>
           ) : latest ? (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* Left side: 6 Stats Cards */}
+              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <SummaryCard
                   title={t("dailyReports.totalSales")}
                   value={formatMyanmarCurrency(latest.finalAmount, currencySymbol)}
-                  icon={<DollarSign className="w-5 h-5 text-white" />}
-                  color="bg-emerald-500"
+                  icon={<DollarSign className="w-5 h-5" />}
+                  color="bg-indigo-50 border-indigo-100 text-indigo-600"
                 />
                 <SummaryCard
                   title={t("dailyReports.totalCardMobile")}
                   value={formatMyanmarCurrency(latest.totalCardAmount, currencySymbol)}
-                  icon={<CreditCard className="w-5 h-5 text-white" />}
-                  color="bg-blue-500"
+                  icon={<CreditCard className="w-5 h-5" />}
+                  color="bg-blue-50 border-blue-100 text-blue-600"
+                />
+                <SummaryCard
+                  title={t("dailyReports.totalOrders")}
+                  value={`${latest.orderCount}`}
+                  icon={<ShoppingBag className="w-5 h-5" />}
+                  color="bg-indigo-50 border-indigo-100 text-indigo-600"
                 />
                 <SummaryCard
                   title={t("dailyReports.totalCash")}
                   value={formatMyanmarCurrency(latest.totalCashAmount, currencySymbol)}
-                  icon={<Banknote className="w-5 h-5 text-white" />}
-                  color="bg-amber-500"
+                  icon={<Banknote className="w-5 h-5" />}
+                  color="bg-blue-50 border-blue-100 text-blue-600"
                 />
                 <SummaryCard
-                  title={t("dailyReports.totalOrders")}
-                  value={`${latest.orderCount} ခု`}
-                  icon={<ShoppingBag className="w-5 h-5 text-white" />}
-                  color="bg-purple-500"
+                  title={t("dailyReports.itemsSold")}
+                  value={`${latest.totalQuantity}`}
+                  icon={<Package className="w-5 h-5" />}
+                  color="bg-indigo-50 border-indigo-100 text-indigo-600"
                 />
                 <SummaryCard
                   title={t("dailyReports.discount")}
                   value={formatMyanmarCurrency(latest.discount, currencySymbol)}
-                  icon={<Percent className="w-5 h-5 text-white" />}
-                  color="bg-red-500"
-                />
-                <SummaryCard
-                  title={t("dailyReports.itemsSold")}
-                  value={`${latest.totalQuantity} ခု`}
-                  icon={<Package className="w-5 h-5 text-white" />}
-                  color="bg-indigo-500"
+                  icon={<Percent className="w-5 h-5" />}
+                  color="bg-blue-50 border-blue-100 text-blue-600"
                 />
               </div>
 
-              {/* Latest Report Full Text */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Bot className="w-5 h-5 text-emerald-500" />
-                    {t("dailyReports.latestReport")} — {formatDate(latest.generatedAt, isMyanmar)}
-                  </h2>
-                  {latest._id && (
-                    <span className="text-xs font-semibold text-slate-400">
-                      {latest.date}
-                    </span>
-                  )}
+              {/* Right side: Latest Report Summary Panel */}
+              <div className="lg:col-span-1 border-2 border-indigo-200/80 rounded-2xl p-5 bg-white shadow-sm flex flex-col h-full min-h-[300px]">
+                {/* Header inside Panel */}
+                <div className="flex items-center gap-2 text-indigo-800 font-bold mb-4">
+                  <Bot className="w-5 h-5 text-[#2216a8]" />
+                  <span className="text-sm font-bold">{t("dailyReports.latestReport")}</span>
                 </div>
-                <div className="bg-gradient-to-br from-emerald-50/30 to-teal-50/30 rounded-2xl p-4 sm:p-6 border border-emerald-100/50">
-                  <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
-                    {latest.reportText}
-                  </pre>
+
+                {/* Boxed Content */}
+                <div className="border border-slate-200 rounded-xl p-5 flex-1 bg-slate-50/50">
+                  <p className="text-xs font-bold text-slate-800 mb-4 leading-relaxed">
+                    ဒီတစ်လ၏ အရောင်းအစီရင်ခံစာ အနှစ်ချုပ်မှာ အောက်ပါအတိုင်း ဖြစ်ပါတယ်ခင်ဗျာ
+                  </p>
+                  <div className="space-y-3.5 text-xs font-semibold text-slate-700">
+                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-1.5">
+                      <span>- {t("dailyReports.totalSales")} :</span>
+                      <span className="font-bold text-slate-900">{formatMyanmarCurrency(latest.finalAmount, currencySymbol)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-1.5">
+                      <span>- ကတ်/Mobile Banking ဖြင့် ပေးချေမှု :</span>
+                      <span className="font-bold text-slate-900">{formatMyanmarCurrency(latest.totalCardAmount, currencySymbol)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-1.5">
+                      <span>- လက်ငင်းငွေသား (Cash) ဖြင့် ပေးချေမှု :</span>
+                      <span className="font-bold text-slate-900">{formatMyanmarCurrency(latest.totalCashAmount, currencySymbol)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-1.5">
+                      <span>- လျှော့ဈေး (Discount) :</span>
+                      <span className="font-bold text-slate-900">{formatMyanmarCurrency(latest.discount, currencySymbol)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-1.5">
+                      <span>- စုစုပေါင်း အော်ဒါ (Order) အရေအတွက် :</span>
+                      <span className="font-bold text-slate-900">{latest.orderCount} PCS</span>
+                    </div>
+                    <div className="flex justify-between pb-1.5">
+                      <span>- စုစုပေါင်း ရောင်းရသည့် ပစ္စည်းအရေအတွက် :</span>
+                      <span className="font-bold text-slate-900">{latest.totalQuantity} PCS</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 mt-4 leading-relaxed">
+                    ကျေးဇူးတင်ပါတယ်ခင်ဗျာ။
+                  </p>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
@@ -260,128 +294,146 @@ export const DailyReports: React.FC = () => {
             </div>
           )}
 
-      {/* History Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-slate-500" />
-            {t("dailyReports.history")}
-          </h2>
-        </div>
+          {/* History Section Header */}
+          <div className="flex items-center gap-2 mt-8 mb-2">
+            <FileText className="w-5 h-5 text-[#2216a8]" />
+            <h2 className="text-lg font-bold text-slate-800">
+              {t("dailyReports.history")}
+            </h2>
+          </div>
 
-        {loading ? (
-          <div className="p-8 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
-            {t("dailyReports.loadingReports")}
-          </div>
-        ) : reports.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p>{t("dailyReports.noReports")}</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold text-slate-600">{t("dailyReports.date")}</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.totalSales")}</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.cardKPay")}</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.cash")}</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">{t("dailyReports.orders")}</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-center"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {reports.map((report) => (
-                    <tr key={report._id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-slate-800">
-                        {formatDate(report.generatedAt, isMyanmar)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-emerald-700">
-                        {formatMyanmarCurrency(report.finalAmount, currencySymbol)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-blue-600">
-                        {formatMyanmarCurrency(report.totalCardAmount, currencySymbol)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-amber-600">
-                        {formatMyanmarCurrency(report.totalCashAmount, currencySymbol)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-slate-700">
-                        {report.orderCount} ခု
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => setSelectedReport(report)}
-                          className="text-[#2216a8] hover:text-[#2216a8]/80 font-semibold text-xs px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-                        >
-                          {t("dailyReports.view")}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* History Table */}
+          {loading ? (
+            <div className="bg-white rounded-xl border p-8 text-center text-slate-500">
+              <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+              {t("dailyReports.loadingReports")}
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-4 py-3 border-t flex items-center justify-between bg-slate-50">
-                <p className="text-sm text-slate-600 font-semibold">
-                  {t("dailyReports.totalItemsLabel")
-                    .replace("{total}", String(totalItems))
-                    .replace("{current}", String(currentPage))
-                    .replace("{totalPage}", String(totalPages))}
-                </p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => loadReports(currentPage - 1)}
-                    disabled={currentPage <= 1 || loading}
-                    className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => loadReports(pageNum)}
-                        className={`px-3 py-2 rounded-lg border text-sm font-medium ${
-                          currentPage === pageNum
-                            ? "bg-[#2216a8] text-white border-[#2216a8]"
-                            : "bg-white border-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => loadReports(currentPage + 1)}
-                    disabled={currentPage >= totalPages || loading}
-                    className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+          ) : reports.length === 0 ? (
+            <div className="bg-white rounded-xl border p-8 text-center text-slate-500">
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p>{t("dailyReports.noReports")}</p>
+            </div>
+          ) : (
+            <>
+              <div className="bg-white rounded-2xl border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left min-w-[900px]">
+                    <thead className="bg-[#fafafa] border-b border-gray-100">
+                      <tr>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider w-[80px]">
+                          No
+                        </th>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                          Total Amount
+                        </th>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                          Mobile Banking Amount
+                        </th>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                          Cash
+                        </th>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                          Total Order
+                        </th>
+                        <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {reports.map((report, index) => (
+                        <tr key={report._id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-slate-400 text-xs">
+                            {String(index + 1).padStart(2, "0")}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-800 text-sm">
+                            {new Date(report.generatedAt).toLocaleDateString("en-US")}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-slate-800 text-sm">
+                            {formatMyanmarCurrency(report.finalAmount, currencySymbol)}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-600 text-sm">
+                            {formatMyanmarCurrency(report.totalCardAmount, currencySymbol)}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-600 text-sm">
+                            {formatMyanmarCurrency(report.totalCashAmount, currencySymbol)}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-800 text-sm">
+                            {report.orderCount} PCS
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => setSelectedReport(report)}
+                              className="bg-[#2216a8] hover:bg-[#2216a8]/90 text-white px-5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                              {t("dailyReports.view")}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            )}
-          </>
-        )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 flex items-center justify-between bg-[#fafafa] rounded-b-2xl border-t border-gray-100">
+                  <p className="text-sm text-slate-500 font-medium">
+                    {t("dailyReports.totalItemsLabel")
+                      .replace("{total}", String(totalItems))
+                      .replace("{current}", String(currentPage))
+                      .replace("{totalPage}", String(totalPages))}
+                  </p>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => loadReports(currentPage - 1)}
+                      disabled={currentPage <= 1 || loading}
+                      className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => loadReports(pageNum)}
+                          className={`px-3 py-1.5 rounded-lg border text-sm font-semibold cursor-pointer ${currentPage === pageNum
+                            ? "bg-[#2216a8] text-white border-[#2216a8]"
+                            : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600"
+                            }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => loadReports(currentPage + 1)}
+                      disabled={currentPage >= totalPages || loading}
+                      className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-</div>
   );
 };

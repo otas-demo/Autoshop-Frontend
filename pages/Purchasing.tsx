@@ -102,7 +102,6 @@ export const Purchasing: React.FC = () => {
       const res = await fetchPurchases({ page, limit, status });
       if (res.success) {
         setPOList(res.data);
-        // console.log(res.data);
         setPoPagination(res.pagination);
       }
     } catch (error) {
@@ -117,7 +116,6 @@ export const Purchasing: React.FC = () => {
       if (res.success) {
         setDeletedPOList(res.data);
         setDeletedPoPagination(res.pagination);
-        // console.log(res.data);
       }
     } catch (error) {
       console.error("Failed to load deleted POs", error);
@@ -164,87 +162,95 @@ export const Purchasing: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-800">
-        <ShoppingBag className="w-6 h-6" /> {t("purchasing.title")}
-      </h1>
+    <div className="w-full">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+        
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <ShoppingBag className="w-6 h-6 text-[#2216a8]" /> {t("purchasing.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              Create purchase orders and log incoming goods inventory
+            </p>
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b">
-        <button
-          onClick={() => setActiveTab("po")}
-          className={`px-4 py-2 font-semibold flex items-center gap-2 ${
-            activeTab === "po"
-              ? "border-b-2 border-yellow-800 text-yellow-800"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {t("purchasing.purchaseOrder")}
-          </span>
-          <span className="sm:hidden">PO</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("grn")}
-          className={`px-4 py-2 font-semibold flex items-center gap-2 ${
-            activeTab === "grn"
-              ? "border-b-2 border-yellow-800 text-yellow-800"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <PackageCheck className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {t("purchasing.goodsReceivedNote")}
-          </span>
-          <span className="sm:hidden">GRN</span>
-        </button>
+        {/* Tabs Section */}
+        <div className="flex gap-1 sm:gap-4 border-b border-gray-100 overflow-x-auto pb-px">
+          <button
+            onClick={() => setActiveTab("po")}
+            className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === "po"
+                ? "border-b-2 border-[#2216a8] text-[#2216a8]"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>{t("purchasing.purchaseOrder")}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("grn")}
+            className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === "grn"
+                ? "border-b-2 border-[#2216a8] text-[#2216a8]"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <PackageCheck className="w-4 h-4" />
+            <span>{t("purchasing.goodsReceivedNote")}</span>
+          </button>
+        </div>
+
+        {/* Tab Contents */}
+        <div className="w-full">
+          {/* PO Tab */}
+          {activeTab === "po" && (
+            <div className="space-y-6">
+              <PurchaseOrderList
+                poList={poList}
+                deletedPOList={deletedPOList}
+                suppliers={suppliers}
+                setIsCreateModalOpen={setIsCreateModalOpen}
+                loadPurchases={loadPurchases}
+                loadDeletedPurchases={loadDeletedPurchases}
+                onViewPO={handleViewPO}
+                pagination={poPagination}
+                deletedPagination={deletedPoPagination}
+                onCreateGRN={handleCreateGRNFromPO}
+              />
+              <CreatePOModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                suppliers={suppliers}
+                products={products}
+                onSuccess={loadPurchases}
+              />
+              <PODetailModal
+                isOpen={isPODetailModalOpen}
+                onClose={() => setIsPODetailModalOpen(false)}
+                purchaseId={selectedPOId}
+                suppliers={suppliers}
+              />
+            </div>
+          )}
+
+          {/* GRN Tab */}
+          {activeTab === "grn" && (
+            <div className="space-y-6">
+              <GRNList
+                grnList={grnList}
+                setIsCreateModalOpen={setIsCreateGRNModalOpen}
+                onStatusChange={loadGRNs}
+                onViewGRN={handleViewGRN}
+                onTransferGRN={handleTransferGRN}
+                pagination={grnPagination}
+              />
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* PO Tab */}
-      {activeTab === "po" && (
-        <>
-          <PurchaseOrderList
-            poList={poList}
-            deletedPOList={deletedPOList}
-            suppliers={suppliers}
-            setIsCreateModalOpen={setIsCreateModalOpen}
-            loadPurchases={loadPurchases}
-            loadDeletedPurchases={loadDeletedPurchases}
-            onViewPO={handleViewPO}
-            pagination={poPagination}
-            deletedPagination={deletedPoPagination}
-            onCreateGRN={handleCreateGRNFromPO}
-          />
-          <CreatePOModal
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            suppliers={suppliers}
-            products={products}
-            onSuccess={loadPurchases}
-          />
-          <PODetailModal
-            isOpen={isPODetailModalOpen}
-            onClose={() => setIsPODetailModalOpen(false)}
-            purchaseId={selectedPOId}
-            suppliers={suppliers}
-          />
-        </>
-      )}
-
-      {/* GRN Tab */}
-      {activeTab === "grn" && (
-        <>
-          <GRNList
-            grnList={grnList}
-            setIsCreateModalOpen={setIsCreateGRNModalOpen}
-            onStatusChange={loadGRNs}
-            onViewGRN={handleViewGRN}
-            onTransferGRN={handleTransferGRN}
-            pagination={grnPagination}
-          />
-        </>
-      )}
 
       {/* Global Modals - accessible from any tab */}
       <CreateGRNModal

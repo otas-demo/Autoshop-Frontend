@@ -11,6 +11,8 @@ import {
   Ban,
   RotateCcw,
   Archive,
+  Search,
+  RefreshCw,
 } from "lucide-react";
 import { createSupplier } from "../services/Supplier/createSupplier";
 import { updateSupplier } from "../services/Supplier/updateSupplier";
@@ -36,6 +38,7 @@ export const Suppliers: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [search, setSearch] = useState("");
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(
     null,
   );
@@ -67,6 +70,11 @@ export const Suppliers: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    await loadSuppliers();
+    toast.success(t("storefront.refresh"));
   };
 
   const resetForm = () => {
@@ -165,8 +173,6 @@ export const Suppliers: React.FC = () => {
     try {
       await restoreSupplier(supplierId);
       toast.success(t("suppliers.supplierRestored"));
-      // If viewing deleted suppliers, reload the deleted list
-      // Otherwise, reload active suppliers
       loadSuppliers();
     } catch (error: any) {
       toast.error(error.message || t("suppliers.failedToRestore"));
@@ -199,295 +205,363 @@ export const Suppliers: React.FC = () => {
     }
   };
 
-  return (
-    <div className="p-4 sm:p-6">
-      <div className="flex flex-row justify-between items-start gap-4 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
-          {t("suppliers.title")}
-        </h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base"
-        >
-          <Plus className="w-4 h-4" />{" "}
-          <span className="hidden sm:inline">{t("suppliers.addSupplier")}</span>
-          <span className="sm:hidden">Add</span>
-        </button>
-      </div>
+  // Search Filter
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    const searchLower = search.toLowerCase();
+    return (
+      supplier.supplierName.toLowerCase().includes(searchLower) ||
+      supplier.contactNumber.includes(search)
+    );
+  });
 
-      {/* Suppliers List */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-          <h2 className="text-lg font-semibold">
-            {showDeleted
-              ? t("suppliers.deletedSuppliers")
-              : t("suppliers.registeredSuppliers")}
-          </h2>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-              <button
-                onClick={() => setShowDeleted(false)}
-                className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
-                  !showDeleted
-                    ? "bg-white text-slate-800 shadow-sm"
-                    : "text-slate-600 hover:text-slate-800"
-                }`}
-              >
-                {t("suppliers.active")}
-              </button>
-              <button
-                onClick={() => setShowDeleted(true)}
-                className={`px-3 py-1.5 text-sm font-medium rounded transition-colors flex items-center gap-1 ${
-                  showDeleted
-                    ? "bg-white text-slate-800 shadow-sm"
-                    : "text-slate-600 hover:text-slate-800"
-                }`}
-              >
-                <Archive className="w-4 h-4" />
-                <span className="hidden sm:inline">
-                  {t("suppliers.inactive")}
-                </span>
-                <span className="sm:hidden">Inactive</span>
-              </button>
-            </div>
-            <span className="hidden md:block bg-primary/20 text-primary-700 text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap">
-              {t("suppliers.total")}: {suppliers.length}
-            </span>
+  return (
+    <div className="w-full">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+        
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              {t("suppliers.title")}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              {t("suppliers.registeredSuppliers")} and contact information
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <span>{t("storefront.refresh")}</span>
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t("suppliers.addSupplier")}</span>
+            </button>
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12 text-slate-500">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            {t("suppliers.loading")}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Displayed Suppliers */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+            <div className="p-3 bg-indigo-50 rounded-xl">
+              <Users className="w-5 h-5 text-[#2216a8]" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                {showDeleted ? t("suppliers.deletedSuppliers") : t("suppliers.registeredSuppliers")}
+              </p>
+              <p className="text-lg font-black text-slate-800 mt-1">
+                {suppliers.length} <span className="text-xs font-semibold text-slate-400">ဦး</span>
+              </p>
+            </div>
           </div>
-        ) : suppliers.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-lg border border-dashed">
-            <Users className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-            <p>
-              {showDeleted
-                ? t("suppliers.noDeletedSuppliers")
-                : t("suppliers.noSuppliers")}
-            </p>
-            {!showDeleted && (
-              <p className="text-sm mt-1">{t("suppliers.addFirstSupplier")}</p>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {suppliers.map((supplier) => (
-              <div
-                key={supplier.id || supplier._id}
-                className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow bg-white"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-medium text-slate-900 text-sm sm:text-base truncate">
-                        {supplier.supplierName}
-                      </h3>
-                      <div className="flex items-center text-sm text-slate-500 mt-1">
-                        <Phone className="w-3 h-3 mr-1 flex-shrink-0" />
-                        <span className="truncate">
-                          {supplier.contactNumber}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col items-end gap-2">
-                    {userRole === "owner" && (
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        {!supplier.isDeleted && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEdit(supplier);
-                            }}
-                            className="p-1.5 text-slate-600 hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                            title={t("common.edit")}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        )}
-                        {supplier.isDeleted ? (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRestore(supplier);
-                              }}
-                              disabled={
-                                processingId === (supplier.id || supplier._id)
-                              }
-                              className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
-                              title={t("suppliers.restore")}
-                            >
-                              {processingId ===
-                              (supplier.id || supplier._id) ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <RotateCcw className="w-4 h-4" />
-                              )}
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenPermanentDelete(supplier);
-                              }}
-                              disabled={
-                                processingId === (supplier.id || supplier._id)
-                              }
-                              className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                              title={t("suppliers.delete")}
-                            >
-                              {processingId ===
-                              (supplier.id || supplier._id) ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-4 h-4" />
-                              )}
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenDeactivate(supplier);
-                            }}
-                            disabled={
-                              processingId === (supplier.id || supplier._id)
-                            }
-                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                            title={t("suppliers.deactivate")}
-                          >
-                            {processingId === (supplier.id || supplier._id) ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Ban className="w-4 h-4" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex items-center">
-                      <span
-                        className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${
-                          supplier.isDeleted ? "bg-red-500" : "bg-green-500"
-                        }`}
-                      ></span>
-                      <span className="text-xs text-slate-500">
-                        {supplier.isDeleted
-                          ? t("suppliers.inactive")
-                          : t("suppliers.active")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3 pt-3 border-t text-xs text-slate-400 space-y-1">
-                  {supplier.createdAt && (
-                    <div>
-                      {t("suppliers.added")}:{" "}
-                      {new Date(supplier.createdAt).toLocaleDateString()}
-                    </div>
-                  )}
-                  {supplier.deletedAt && (
-                    <div className="text-red-500">
-                      {t("suppliers.deletedAt")}:{" "}
-                      {new Date(supplier.deletedAt).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+          {/* Current State */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+            <div className="p-3 bg-green-50 rounded-xl">
+              <Archive className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                Current Filter State
+              </p>
+              <p className="text-sm font-bold text-slate-700 mt-1">
+                {showDeleted ? "Deleted (Inactive) List" : "Active Suppliers"}
+              </p>
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Filters and Search */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by supplier name or phone..."
+              className="w-full pl-11 pr-4 py-2.5 border border-gray-200/80 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-700 bg-white"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {/* Active / Inactive Tabs */}
+          <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1 self-start md:self-auto">
+            <button
+              onClick={() => {
+                setShowDeleted(false);
+                setSearch("");
+              }}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                !showDeleted
+                  ? "bg-white text-[#2216a8] shadow-sm"
+                  : "text-slate-600 hover:text-slate-850"
+              }`}
+            >
+              {t("suppliers.active")}
+            </button>
+            <button
+              onClick={() => {
+                setShowDeleted(true);
+                setSearch("");
+              }}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                showDeleted
+                  ? "bg-white text-[#2216a8] shadow-sm"
+                  : "text-slate-600 hover:text-slate-850"
+              }`}
+            >
+              <Archive className="w-3.5 h-3.5" />
+              <span>{t("suppliers.inactive")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Suppliers Table */}
+        <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
+          <div className="p-4 border-b bg-slate-50">
+            <h2 className="font-semibold text-slate-800">
+              {showDeleted ? t("suppliers.deletedSuppliers") : t("suppliers.registeredSuppliers")} ({filteredSuppliers.length})
+            </h2>
+          </div>
+
+          {isLoading ? (
+            <div className="p-8 text-center text-slate-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {t("suppliers.loading")}
+            </div>
+          ) : filteredSuppliers.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              {search ? "No suppliers match search criteria." : t("suppliers.noSuppliers")}
+            </div>
+          ) : (
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+              <table className="w-full text-sm text-left min-w-[700px]">
+                <thead className="text-slate-500">
+                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("suppliers.name")}</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("suppliers.contact")}</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("common.status")}</th>
+                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                      {showDeleted ? t("suppliers.deletedAt") : t("suppliers.added")}
+                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("common.actions")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {filteredSuppliers.map((supplier, index) => (
+                    <tr key={supplier.id || supplier._id} className="hover:bg-slate-50/40 transition-colors">
+                      {/* No */}
+                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+
+                      {/* Name */}
+                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                        {supplier.supplierName}
+                      </td>
+
+                      {/* Contact */}
+                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                        {supplier.contactNumber}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-4">
+                        {supplier.isDeleted ? (
+                          <span className="border border-red-200 text-red-650 bg-red-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            {t("suppliers.inactive")}
+                          </span>
+                        ) : (
+                          <span className="border border-green-200 text-green-650 bg-green-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            {t("suppliers.active")}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
+                        {supplier.isDeleted && supplier.deletedAt ? (
+                          <span className="text-red-500 font-semibold">
+                            {new Date(supplier.deletedAt).toLocaleDateString()}
+                          </span>
+                        ) : supplier.createdAt ? (
+                          <span>
+                            {new Date(supplier.createdAt).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {userRole === "owner" && (
+                            <>
+                              {!supplier.isDeleted && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEdit(supplier);
+                                  }}
+                                  className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
+                                  title={t("common.edit")}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              )}
+                              {supplier.isDeleted ? (
+                                <>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRestore(supplier);
+                                    }}
+                                    disabled={processingId === (supplier.id || supplier._id)}
+                                    className="p-1.5 text-green-650 hover:text-green-700 hover:bg-green-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                    title={t("suppliers.restore")}
+                                  >
+                                    {processingId === (supplier.id || supplier._id) ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <RotateCcw className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenPermanentDelete(supplier);
+                                    }}
+                                    disabled={processingId === (supplier.id || supplier._id)}
+                                    className="p-1.5 text-red-650 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                    title={t("suppliers.delete")}
+                                  >
+                                    {processingId === (supplier.id || supplier._id) ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenDeactivate(supplier);
+                                  }}
+                                  disabled={processingId === (supplier.id || supplier._id)}
+                                  className="p-1.5 text-red-650 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                  title={t("suppliers.deactivate")}
+                                >
+                                  {processingId === (supplier.id || supplier._id) ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Ban className="w-4 h-4" />
+                                  )}
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Create Supplier Modal */}
+      {/* Create/Edit Supplier Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-10">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
-                {editingId
-                  ? t("suppliers.editSupplier")
-                  : t("suppliers.addNewSupplier")}
+                {editingId ? t("suppliers.editSupplier") : t("suppliers.addNewSupplier")}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("suppliers.name")} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    className="w-full border rounded-lg pl-10 p-2 focus:ring-2 focus:ring-primary outline-none"
-                    placeholder={t("suppliers.namePlaceholder")}
-                    value={formData.supplierName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, supplierName: e.target.value })
-                    }
-                  />
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {t("suppliers.name")} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      className="w-full border border-slate-350 rounded-lg pl-10 p-2.5 focus:ring-2 focus:ring-primary outline-none"
+                      placeholder={t("suppliers.namePlaceholder")}
+                      value={formData.supplierName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, supplierName: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {t("suppliers.contact")} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                    <input
+                      type="tel"
+                      required
+                      className="w-full border border-slate-350 rounded-lg pl-10 p-2.5 focus:ring-2 focus:ring-primary outline-none"
+                      placeholder={t("suppliers.contactPlaceholder")}
+                      value={formData.contactNumber}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactNumber: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("suppliers.contact")}{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
-                  <input
-                    type="tel"
-                    required
-                    className="w-full border rounded-lg pl-10 p-2 focus:ring-2 focus:ring-primary outline-none"
-                    placeholder={t("suppliers.contactPlaceholder")}
-                    value={formData.contactNumber}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        contactNumber: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t">
+              <div className="p-6 border-t bg-slate-50 flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors order-2 sm:order-1"
+                  className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors order-2 sm:order-1 cursor-pointer"
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2 cursor-pointer font-medium"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />{" "}
-                      {editingId
-                        ? t("suppliers.updating")
-                        : t("suppliers.creating")}
+                      {editingId ? t("suppliers.updating") : t("suppliers.creating")}
                     </>
                   ) : editingId ? (
                     t("suppliers.updateSupplier")

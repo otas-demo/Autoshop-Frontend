@@ -71,9 +71,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
     { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
     { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
-    { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
-    { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
-    { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
+    // { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
+    // { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
+    // { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
     { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
   ];
 
@@ -198,9 +198,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
           {/* Popover Menu */}
           {showMenu && (
             <div
-              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
-                isCollapsed ? "left-0 w-48" : "left-0 right-0"
-              }`}
+              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed ? "left-0 w-48" : "left-0 right-0"
+                }`}
             >
               <div className="flex flex-col gap-1">
                 {/* Language Switcher */}
@@ -252,9 +251,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
           {/* User Profile Card Button */}
           <div
             onClick={() => setShowMenu(!showMenu)}
-            className={`bg-white border border-gray-200/70 rounded-2xl p-2.5 shadow-md flex items-center cursor-pointer hover:bg-slate-50 transition-all duration-300 select-none ${
-              isCollapsed ? "justify-center" : "justify-start gap-3 px-3"
-            }`}
+            className={`bg-white border border-gray-200/70 rounded-2xl p-2.5 shadow-md flex items-center cursor-pointer hover:bg-slate-50 transition-all duration-300 select-none ${isCollapsed ? "justify-center" : "justify-start gap-3 px-3"
+              }`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               {/* Circle Logo / Avatar */}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X, ChevronDown } from "lucide-react";
 import { Product } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 
@@ -97,7 +97,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onSave,
   onFormDataChange,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Combobox states for category and subCategory
   const [categoryInput, setCategoryInput] = useState("");
@@ -205,33 +205,89 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     });
   };
 
+  const getLabel = (key: string) => {
+    const isMm = language === "my";
+    switch (key) {
+      case "productName":
+        return isMm ? "ပစ္စည်း နာမည်" : "Product Name";
+      case "productNamePlaceholder":
+        return isMm ? "ပစ္စည်း နာမည်ထည့်ပေးပါ" : "Enter product name";
+      case "carCode":
+        return isMm ? "ကားကုဒ် နံပါတ်" : "Car Code Number";
+      case "carCodePlaceholder":
+        return isMm ? "ကားကုဒ် နံပါတ်ထည့်ပေးပါ" : "Enter car code";
+      case "productCode":
+        return isMm ? "ပစ္စည်းကုဒ် နံပါတ်" : "Product Code Number";
+      case "productCodePlaceholder":
+        return isMm ? "ပစ္စည်းကုဒ် နံပါတ်ထည့်ပေးပါ" : "Enter product code";
+      case "category":
+        return isMm ? "ပစ္စည်း အမျိုးအစား:" : "Product Category";
+      case "categoryPlaceholder":
+        return isMm ? "အမျိုးအစားရွေးပါ , အသစ်ဆိုရိုက်ထည့်ပါ" : "Select category or type new";
+      case "brand":
+        return isMm ? "ပစ္စည်း အမှတ်တံဆိပ် (မထည့်လည်းရ)" : "Product Brand (Optional)";
+      case "brandPlaceholder":
+        return isMm ? "ပစ္စည်းကုတ် နံပါတ်ထည့်ပေးပါ" : "Enter brand name";
+      case "buyingPrice":
+        return isMm ? "ဝယ်ယူဈေးနှုန်း:" : "Buying Price";
+      case "buyingPricePlaceholder":
+        return isMm ? "ဝယ်ယူဈေးနှုန်း ရိုက်ထည့်ပါ" : "Enter buying price";
+      case "sellingPrice":
+        return isMm ? "ရောင်းချ ဈေးနှုန်း:" : "Selling Price";
+      case "sellingPricePlaceholder":
+        return isMm ? "ရောင်းချဈေးနှုန်း ရိုက်ထည့်ပါ" : "Enter selling price";
+      case "note":
+        return isMm ? "ပစ္စည်း မှတ်ချက် (မထည့်လည်းရ)" : "Product Remark (Optional)";
+      case "notePlaceholder":
+        return isMm ? "မှတ်ချက် ရှိပါက ထည့်ပေးပါ" : "Enter remark if any";
+      case "cancel":
+        return isMm ? "မလုပ်တော့ပါ" : "Cancel";
+      case "save":
+        return editingId
+          ? (isMm ? "ပစ္စည်း ပြင်ဆင်မည်" : "Save Changes")
+          : (isMm ? "ပစ္စည်းအသစ် ထည့်မည်" : "ပစ္စည်းအသစ် ထည့်မည်");
+      default:
+        return "";
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white p-6 rounded-lg w-full max-w-2xl my-8 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">
-          {editingId
-            ? t("inventory.editProduct")
-            : t("inventory.addNewProduct")}
-        </h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-[#f7f6f2] p-8 rounded-3xl w-full max-w-2xl my-8 shadow-2xl relative max-h-[95vh] overflow-y-auto border border-white/40">
+        
+        {/* Header with Close Button */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-black text-slate-800">
+            {editingId
+              ? (language === "en" ? "Edit Product" : "ပြင်ဆင်မည်")
+              : (language === "en" ? "Add New Product" : "ပစ္စည်းအသစ်ထည့်မည်")}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
+          <div className="mb-4 p-3.5 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm font-semibold">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Required Fields */}
+        <div className="grid grid-cols-2 gap-x-5 gap-y-4 mb-6">
+          {/* Product Name */}
           <div className="col-span-2">
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.productName")}{" "}
-              <span className="text-red-500">*</span>
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("productName")} <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
               value={formData.productName}
+              placeholder={getLabel("productNamePlaceholder")}
               onChange={(e) => {
                 const productName = e.target.value;
                 updateFormData({ productName, productCode: productName });
@@ -239,50 +295,42 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             />
           </div>
 
+          {/* Car Code Number */}
           <div className="col-span-1">
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.barcode")}
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("carCode")}
             </label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
               value={formData.barcode || ""}
               onChange={(e) => updateFormData({ barcode: e.target.value })}
-              placeholder={t("inventory.barcode") || "Enter barcode"}
+              placeholder={getLabel("carCodePlaceholder")}
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.productCode")}{" "}
-              <span className="text-red-500">*</span>
+          {/* Product Code Number */}
+          <div className="col-span-1">
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("productCode")} <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
               value={formData.productCode}
               onChange={(e) => updateFormData({ productCode: e.target.value })}
+              placeholder={getLabel("productCodePlaceholder")}
             />
           </div>
 
-          {/* <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.sku")}
-            </label>
-            <input
-              className="w-full border rounded p-2"
-              value={formData.SKU}
-              onChange={(e) => updateFormData({ SKU: e.target.value })}
-            />
-          </div> */}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.category")} <span className="text-red-500">*</span>
+          {/* Category */}
+          <div className="col-span-1">
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("category")} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
                 type="text"
                 required
-                className="w-full border rounded p-2 pr-8"
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white pr-10"
                 value={categoryInput || formData.category}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -294,16 +342,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 onBlur={() => {
                   setTimeout(() => setCategoryShowDropdown(false), 200);
                 }}
-                placeholder={t("inventory.categoryPlaceholder")}
+                placeholder={getLabel("categoryPlaceholder")}
               />
+              <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               {categoryShowDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {getFilteredCategories(
                     categoryInput || formData.category,
                   ).map((category) => (
                     <div
                       key={category}
-                      className="px-4 py-2 hover:bg-primary/10 cursor-pointer"
+                      className="px-4 py-2.5 hover:bg-indigo-50 hover:text-[#2216a8] text-slate-700 cursor-pointer text-sm font-medium transition-colors"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         updateFormData({ category });
@@ -319,295 +368,89 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             </div>
           </div>
 
-          {/* <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.subCategory")}
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                className="w-full border rounded p-2 pr-8"
-                value={subCategoryInput || formData.subCategory}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSubCategoryInput(value);
-                  updateFormData({ subCategory: value });
-                  setSubCategoryShowDropdown(true);
-                }}
-                onFocus={() => setSubCategoryShowDropdown(true)}
-                onBlur={() => {
-                  setTimeout(() => setSubCategoryShowDropdown(false), 200);
-                }}
-                placeholder={t("inventory.subCategoryPlaceholder")}
-              />
-              {subCategoryShowDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {getFilteredSubCategories(
-                    subCategoryInput || formData.subCategory
-                  ).map((subCategory) => (
-                    <div
-                      key={subCategory}
-                      className="px-4 py-2 hover:bg-primary/10 cursor-pointer"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        updateFormData({ subCategory });
-                        setSubCategoryInput("");
-                        setSubCategoryShowDropdown(false);
-                      }}
-                    >
-                      {subCategory}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div> */}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.brand")}
+          {/* Brand */}
+          <div className="col-span-1">
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("brand")}
             </label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
               value={formData.brand}
               onChange={(e) => updateFormData({ brand: e.target.value })}
+              placeholder={getLabel("brandPlaceholder")}
             />
           </div>
 
-          {/* <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.unitOfMeasure")}{" "}
-              <span className="text-red-500">*</span>
-            </label>
-            <select
-              className="w-full border rounded p-2"
-              value={formData.unitOfMeasure}
-              onChange={(e) =>
-                updateFormData({ unitOfMeasure: e.target.value })
-              }
-            >
-              {UNIT_OF_MEASURE_OPTIONS.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-          </div> */}
-
-          {/* <div className="col-span-2">
-            <label className="block text-xs font-bold text-slate-500">
-              {t("common.description")}
-            </label>
-            <textarea
-              className="w-full border rounded p-2"
-              rows={3}
-              value={formData.description}
-              onChange={(e) => updateFormData({ description: e.target.value })}
-            />
-          </div> */}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.buyingPrice")}{" "}
-              <span className="text-red-500">*</span>
+          {/* Buying Price */}
+          <div className="col-span-1">
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("buyingPrice")} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               step="0.01"
               min="0"
-              className="w-full border rounded p-2"
-              value={formData.buyingPrice}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+              value={formData.buyingPrice || ""}
               onChange={(e) =>
                 updateFormData({ buyingPrice: Number(e.target.value) })
               }
+              placeholder={getLabel("buyingPricePlaceholder")}
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-500">
-              {t("inventory.sellingPrice")}{" "}
-              <span className="text-red-500">*</span>
+          {/* Selling Price */}
+          <div className="col-span-1">
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("sellingPrice")} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               step="0.01"
               min="0"
-              className="w-full border rounded p-2"
-              value={formData.sellingPrice}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+              value={formData.sellingPrice || ""}
               onChange={(e) =>
                 updateFormData({ sellingPrice: Number(e.target.value) })
               }
+              placeholder={getLabel("sellingPricePlaceholder")}
             />
           </div>
+
+          {/* Note */}
           <div className="col-span-2">
-            <label className="block text-xs font-bold text-slate-500">
-              {t("pos.note") || "Note"}
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("note")}
             </label>
             <textarea
-              className="w-full border rounded p-2"
+              className="w-full border border-gray-300 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white resize-none"
               rows={2}
               value={formData.note || ""}
               onChange={(e) => updateFormData({ note: e.target.value })}
-              placeholder={t("pos.notePlaceholder") || "Enter product note..."}
+              placeholder={getLabel("notePlaceholder")}
             />
           </div>
-
-          {/* Wholesale prices */}
-          {/* <div className="col-span-2">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold text-slate-800">
-                    Wholesale prices
-                  </div>
-                  <div className="text-xs text-slate-600">
-                    Bulk quantity tiers and unit prices (MMK)
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={addWholesaleTier}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-900 hover:bg-amber-200 text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add tier
-                </button>
-              </div>
-
-              {wholesalePrices.length === 0 ? (
-                <div className="mt-4 border-2 border-dashed border-amber-200 rounded-xl bg-amber-50/40 p-8 text-center">
-                  <div className="text-slate-500 text-sm mb-3">
-                    No wholesale tiers yet
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addWholesaleTier}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-900 text-sm font-semibold"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add first tier
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-4 space-y-2">
-                  {wholesalePrices.map((tier, idx) => {
-                    const tierKey = getTierKey(tier, idx);
-                    return (
-                    <div
-                      key={tierKey}
-                      className="flex flex-col sm:flex-row sm:items-end gap-2 bg-white border border-amber-200 rounded-xl p-3"
-                    >
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-500">
-                            Quantity
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            className="w-full border rounded p-2"
-                            value={getTierQuantityValue(tierKey, tier)}
-                            onChange={(e) => {
-                              setTierDrafts((prev) => ({
-                                ...prev,
-                                [tierKey]: {
-                                  ...prev[tierKey],
-                                  quantity: e.target.value,
-                                },
-                              }));
-                            }}
-                            onBlur={() => {
-                              const raw =
-                                tierDrafts[tierKey]?.quantity ??
-                                String(tier.quantity ?? "");
-                              updateWholesaleTier(idx, {
-                                quantity: Math.max(1, parseInt(raw, 10) || 1),
-                              });
-                              setTierDrafts((prev) => {
-                                const next = { ...prev };
-                                if (next[tierKey]) {
-                                  delete next[tierKey].quantity;
-                                  if (Object.keys(next[tierKey]).length === 0) {
-                                    delete next[tierKey];
-                                  }
-                                }
-                                return next;
-                              });
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-500">
-                            Price (MMK)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            className="w-full border rounded p-2"
-                            value={getTierPriceValue(tierKey, tier)}
-                            onChange={(e) => {
-                              setTierDrafts((prev) => ({
-                                ...prev,
-                                [tierKey]: {
-                                  ...prev[tierKey],
-                                  price: e.target.value,
-                                },
-                              }));
-                            }}
-                            onBlur={() => {
-                              const raw =
-                                tierDrafts[tierKey]?.price ??
-                                String(tier.price ?? "");
-                              updateWholesaleTier(idx, {
-                                price: Math.max(0, Number(raw) || 0),
-                              });
-                              setTierDrafts((prev) => {
-                                const next = { ...prev };
-                                if (next[tierKey]) {
-                                  delete next[tierKey].price;
-                                  if (Object.keys(next[tierKey]).length === 0) {
-                                    delete next[tierKey];
-                                  }
-                                }
-                                return next;
-                              });
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeWholesaleTier(idx)}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-red-700 hover:bg-red-50 border border-transparent hover:border-red-100"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="text-sm">Remove</span>
-                        </button>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div> */}
         </div>
-        <div className="flex justify-end gap-2">
+
+        {/* Footer Actions */}
+        <div className="flex justify-end gap-3 mt-4">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded"
+            className="px-6 py-2.5 border border-[#2216a8] text-[#2216a8] hover:bg-indigo-50/50 rounded-full text-sm font-bold transition-all cursor-pointer"
           >
-            {t("common.cancel")}
+            {getLabel("cancel")}
           </button>
           <button
+            type="button"
             onClick={onSave}
             disabled={isLoading}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 bg-[#2216a8] text-white rounded-full text-sm font-bold flex items-center gap-2 hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-md shadow-indigo-600/10"
           >
-            {isLoading ? t("inventory.saving") : t("inventory.save")}
+            {!isLoading && <Plus className="w-4 h-4" />}
+            {isLoading
+              ? (language === "en" ? "Saving..." : "သိမ်းဆည်းနေသည်...")
+              : getLabel("save")}
           </button>
         </div>
       </div>

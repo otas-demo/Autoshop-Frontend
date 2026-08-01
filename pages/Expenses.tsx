@@ -11,6 +11,7 @@ import {
   Edit,
   Trash2,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchExpenses, Expense } from "../services/Expense/fetchExpenses";
@@ -477,18 +478,19 @@ export const Expenses: React.FC = () => {
 
       {/* Add Expense Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-primary" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
+              <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-[#2216a8]" />
                 {editingId
                   ? t("expenses.editExpense")
                   : t("expenses.newExpense")}
               </h2>
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -496,57 +498,63 @@ export const Expenses: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("expenses.category")}{" "}
                   <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                >
-                  <option value="electricity">
-                    {t("expenses.electricity")}
-                  </option>
-                  <option value="water">{t("expenses.water")}</option>
-                  <option value="utilities">{t("expenses.utilities")}</option>
-                  <option value="salary">{t("expenses.salary")}</option>
-                  <option value="maintenance">
-                    {t("expenses.maintenance")}
-                  </option>
-                  <option value="rent">{t("expenses.rent")}</option>
-                  <option value="other">{t("expenses.other")}</option>
-                </select>
+                <div className="relative">
+                  <select
+                    required
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                  >
+                    <option value="electricity">
+                      {t("expenses.electricity")}
+                    </option>
+                    <option value="water">{t("expenses.water")}</option>
+                    <option value="utilities">{t("expenses.utilities")}</option>
+                    <option value="salary">{t("expenses.salary")}</option>
+                    <option value="maintenance">
+                      {t("expenses.maintenance")}
+                    </option>
+                    <option value="rent">{t("expenses.rent")}</option>
+                    <option value="other">{t("expenses.other")}</option>
+                  </select>
+                  <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
 
               {userRole !== "cashier" && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
                     Location <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    required
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                    value={formData.locationId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, locationId: e.target.value })
-                    }
-                  >
-                    <option value="">Select Location</option>
-                    {locations.map((location) => (
-                      <option key={location._id} value={location._id}>
-                        {location.locationName} ({location.locationCode})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      required
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                      value={formData.locationId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, locationId: e.target.value })
+                      }
+                    >
+                      <option value="">Select Location</option>
+                      {locations.map((location) => (
+                        <option key={location._id} value={location._id}>
+                          {location.locationName} ({location.locationCode})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("expenses.amount")} (MMK){" "}
                   <span className="text-red-500">*</span>
                 </label>
@@ -555,7 +563,7 @@ export const Expenses: React.FC = () => {
                   required
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                   placeholder="0"
                   value={formData.amount || ""}
                   onChange={(e) =>
@@ -568,13 +576,13 @@ export const Expenses: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("expenses.date")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   required
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                   value={formData.date}
                   onChange={(e) =>
                     setFormData({ ...formData, date: e.target.value })
@@ -583,13 +591,13 @@ export const Expenses: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("expenses.notesOptional")}
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   maxLength={500}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white resize-none"
                   placeholder={t("expenses.notesPlaceholder")}
                   value={formData.notes}
                   onChange={(e) =>
@@ -598,18 +606,18 @@ export const Expenses: React.FC = () => {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors order-2 sm:order-1"
+                  className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
+                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-600/10 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -623,10 +631,9 @@ export const Expenses: React.FC = () => {
                   ) : (
                     <>
                       <Plus className="w-4 h-4" />{" "}
-                      <span className="hidden sm:inline">
+                      <span>
                         {t("expenses.createExpense")}
                       </span>
-                      <span className="sm:hidden">Create</span>
                     </>
                   )}
                 </button>

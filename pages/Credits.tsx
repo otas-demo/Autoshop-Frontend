@@ -349,16 +349,17 @@ export const Credits: React.FC = () => {
 
       {/* Add Credit Profile Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-primary" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
+              <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-[#2216a8]" />
                 {editingId ? t("credits.editProfile") : t("credits.addProfile")}
               </h2>
               <button
+                type="button"
                 onClick={handleCloseAddModal}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -366,12 +367,12 @@ export const Credits: React.FC = () => {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("credits.name")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                   placeholder={t("credits.namePlaceholder")}
                   value={formData.name}
                   onChange={(e) =>
@@ -381,12 +382,12 @@ export const Credits: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("credits.phone")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
-                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                   placeholder={t("credits.phonePlaceholder")}
                   value={formData.phone}
                   onChange={(e) =>
@@ -396,12 +397,12 @@ export const Credits: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   {t("credits.address")}
                 </label>
                 <input
                   type="text"
-                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                   placeholder={t("credits.addressPlaceholder")}
                   value={formData.address}
                   onChange={(e) =>
@@ -411,17 +412,18 @@ export const Credits: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t bg-slate-50 rounded-b-xl flex flex-col sm:flex-row justify-end gap-3">
+            <div className="p-6 border-t border-gray-200/50 bg-slate-50/40 flex justify-end gap-3">
               <button
+                type="button"
                 onClick={handleCloseAddModal}
-                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors order-2 sm:order-1"
+                className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleSubmitProfile}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 font-medium order-1 sm:order-2"
+                className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
@@ -433,10 +435,9 @@ export const Credits: React.FC = () => {
                 ) : (
                   <>
                     <UserPlus className="w-4 h-4" />{" "}
-                    <span className="hidden sm:inline">
+                    <span>
                       {t("credits.createProfile")}
                     </span>
-                    <span className="sm:hidden">Create</span>
                   </>
                 )}
               </button>

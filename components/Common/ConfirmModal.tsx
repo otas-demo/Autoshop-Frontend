@@ -45,8 +45,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl max-w-md w-full border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
@@ -54,31 +54,31 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-slate-800 mb-2">{title}</h3>
-              <p className="text-sm text-slate-600">{message}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-black text-slate-800 mb-1.5">{title}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">{message}</p>
             </div>
             <button
               onClick={onCancel}
               disabled={isLoading}
-              className="flex-shrink-0 text-slate-400 hover:text-slate-600 p-1 disabled:opacity-50"
+              className="flex-shrink-0 text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-200/50 rounded-full transition-all disabled:opacity-50"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+ 
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
             <button
               onClick={onCancel}
               disabled={isLoading}
-              className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+              className="px-5 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
             >
               {cancelText || t("common.cancel")}
             </button>
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${getButtonColorClasses()}`}
+              className={`px-5 py-2 rounded-full text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer shadow-sm ${getButtonColorClasses()}`}
             >
               {isLoading ? (
                 <>

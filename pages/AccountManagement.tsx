@@ -19,6 +19,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -37,7 +38,40 @@ import {
 import { useLanguage } from "../context/LanguageContext";
 
 export const AccountManagement: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const getModalLabel = (key: string) => {
+    const isMm = language === "my";
+    switch (key) {
+      case "title":
+        return isMm ? "အကောင့်အသစ်ထည့်မည်" : "Create New Account";
+      case "name":
+        return isMm ? "အကောင့် နာမည်" : "Account Name";
+      case "namePlaceholder":
+        return isMm ? "အကောင့် နာမည်ထည့်ပေးပါ" : "Enter account name";
+      case "role":
+        return isMm ? "Role" : "Role";
+      case "rolePlaceholder":
+        return isMm ? "Role ရွေးပေးပါ" : "Select role";
+      case "location":
+        return isMm ? "ဆိုင်ခွဲ (မရွေးလည်းရ)" : "Location (Optional)";
+      case "locationPlaceholder":
+        return isMm ? "ဆိုင်ခွဲ ရွေးပေးပါ" : "Select location";
+      case "password":
+        return isMm ? "Password" : "Password";
+      case "passwordPlaceholder":
+        return isMm ? "Password ထည့်ပေးပါ" : "Enter password";
+      case "confirmPassword":
+        return isMm ? "Confirm Password" : "Confirm Password";
+      case "confirmPasswordPlaceholder":
+        return isMm ? "Password ပြန်ရိုက်ထည့်ပေးပါ" : "Confirm password";
+      case "cancel":
+        return isMm ? "မလုပ်တော့ပါ" : "Cancel";
+      case "submit":
+        return isMm ? "အကောင့်အသစ်ထည့်မည်" : "Create Account";
+      default:
+        return "";
+    }
+  };
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -715,16 +749,17 @@ export const AccountManagement: React.FC = () => {
 
         {/* Edit Account Modal */}
         {isEditModalOpen && selectedAccount && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-primary" />
-                  Edit Account
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                  <Edit className="w-5 h-5 text-[#2216a8]" />
+                  {language === "my" ? "အကောင့်ပြင်ဆင်မည်" : "Edit Account"}
                 </h2>
                 <button
+                  type="button"
                   onClick={handleCloseEditModal}
-                  className="text-slate-400 hover:text-slate-600 p-1"
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -732,14 +767,14 @@ export const AccountManagement: React.FC = () => {
 
               <form onSubmit={handleUpdateAccount} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Account Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {language === "my" ? "အကောင့် နာမည်" : "Account Name"} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     maxLength={200}
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                     placeholder="Enter account name"
                     value={editFormData.name}
                     onChange={(e) =>
@@ -749,28 +784,31 @@ export const AccountManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
                     Role <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    required
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                    value={editFormData.role}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, role: e.target.value })
-                    }
-                  >
-                    <option value="">Select Role</option>
-                    {availableRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role.charAt(0).toUpperCase() + role.slice(1)}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      required
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                      value={editFormData.role}
+                      onChange={(e) =>
+                        setEditFormData({ ...editFormData, role: e.target.value })
+                      }
+                    >
+                      <option value="">Select Role</option>
+                      {availableRoles.map((role) => (
+                        <option key={role} value={role}>
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* Account Info Display */}
-                <div className="bg-slate-50 p-4 rounded-lg space-y-2 text-sm">
+                <div className="bg-white border border-gray-200/70 p-4 rounded-xl space-y-2 text-xs">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Account ID:</span>
                     <span className="font-mono text-slate-700">
@@ -780,31 +818,31 @@ export const AccountManagement: React.FC = () => {
                   {selectedAccount.locationId && (
                     <div className="flex justify-between">
                       <span className="text-slate-500">Location:</span>
-                      <span className="text-slate-700">
+                      <span className="text-slate-700 font-semibold">
                         {selectedAccount.locationId.locationName}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-slate-500">Created:</span>
-                    <span className="text-slate-700">
+                    <span className="text-slate-700 font-semibold">
                       {formatDate(selectedAccount.createdAt)}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50">
                   <button
                     type="button"
                     onClick={handleCloseEditModal}
-                    className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors order-2 sm:order-1"
+                    className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
                   >
-                    Cancel
+                    {language === "my" ? "မလုပ်တော့ပါ" : "Cancel"}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
+                    className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
@@ -813,8 +851,7 @@ export const AccountManagement: React.FC = () => {
                     ) : (
                       <>
                         <Edit className="w-4 h-4" />{" "}
-                        <span className="hidden sm:inline">Update Account</span>
-                        <span className="sm:hidden">Update</span>
+                        <span>{language === "my" ? "ပြင်ဆင်မည်" : "Update Account"}</span>
                       </>
                     )}
                   </button>
@@ -1008,14 +1045,15 @@ export const AccountManagement: React.FC = () => {
 
         {/* Create Account Modal */}
         {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-primary" />
-                  Create New Account
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-[#2216a8]" />
+                  {getModalLabel("title")}
                 </h2>
                 <button
+                  type="button"
                   onClick={() => {
                     setIsCreateModalOpen(false);
                     setCreateFormData({
@@ -1026,7 +1064,7 @@ export const AccountManagement: React.FC = () => {
                       role: "cashier",
                     });
                   }}
-                  className="text-slate-400 hover:text-slate-600 p-1"
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -1034,15 +1072,15 @@ export const AccountManagement: React.FC = () => {
 
               <form onSubmit={handleCreateAccount} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Account Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {getModalLabel("name")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     maxLength={200}
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                    placeholder="Enter account name"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                    placeholder={getModalLabel("namePlaceholder")}
                     value={createFormData.name}
                     onChange={(e) =>
                       setCreateFormData({
@@ -1054,84 +1092,90 @@ export const AccountManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Role <span className="text-red-500">*</span>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {getModalLabel("role")} <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    required
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                    value={createFormData.role}
-                    onChange={(e) =>
-                      setCreateFormData({
-                        ...createFormData,
-                        role: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="cashier">Cashier</option>
-                    <option value="owner">Owner</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      required
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                      value={createFormData.role}
+                      onChange={(e) =>
+                        setCreateFormData({
+                          ...createFormData,
+                          role: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="cashier">Cashier</option>
+                      <option value="owner">Owner</option>
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Location (Optional)
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {getModalLabel("location")}
                   </label>
-                  <select
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                    value={createFormData.locationId}
-                    onChange={(e) =>
-                      setCreateFormData({
-                        ...createFormData,
-                        locationId: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">No location</option>
-                    {locationProfiles.length === 0 ? (
-                      <option disabled>Loading locations...</option>
-                    ) : (
-                      <>
-                        {locationProfiles.filter(
-                          (loc) => loc.type === "storefront",
-                        ).length > 0 && (
-                            <optgroup label="Storefronts">
-                              {locationProfiles
-                                .filter((loc) => loc.type === "storefront")
-                                .map((loc) => (
-                                  <option key={loc._id} value={loc._id}>
-                                    {loc.locationName} ({loc.locationCode})
-                                  </option>
-                                ))}
-                            </optgroup>
-                          )}
-                        {locationProfiles.filter(
-                          (loc) => loc.type === "warehouse",
-                        ).length > 0 && (
-                            <optgroup label="Warehouses">
-                              {locationProfiles
-                                .filter((loc) => loc.type === "warehouse")
-                                .map((loc) => (
-                                  <option key={loc._id} value={loc._id}>
-                                    {loc.locationName} ({loc.locationCode})
-                                  </option>
-                                ))}
-                            </optgroup>
-                          )}
-                        {locationProfiles.length > 0 &&
-                          locationProfiles.filter(
+                  <div className="relative">
+                    <select
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                      value={createFormData.locationId}
+                      onChange={(e) =>
+                        setCreateFormData({
+                          ...createFormData,
+                          locationId: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">No location</option>
+                      {locationProfiles.length === 0 ? (
+                        <option disabled>Loading locations...</option>
+                      ) : (
+                        <>
+                          {locationProfiles.filter(
                             (loc) => loc.type === "storefront",
-                          ).length === 0 &&
-                          locationProfiles.filter(
+                          ).length > 0 && (
+                              <optgroup label="Storefronts">
+                                {locationProfiles
+                                  .filter((loc) => loc.type === "storefront")
+                                  .map((loc) => (
+                                    <option key={loc._id} value={loc._id}>
+                                      {loc.locationName} ({loc.locationCode})
+                                    </option>
+                                  ))}
+                              </optgroup>
+                            )}
+                          {locationProfiles.filter(
                             (loc) => loc.type === "warehouse",
-                          ).length === 0 && (
-                            <option disabled>
-                              No active locations available
-                            </option>
-                          )}
-                      </>
-                    )}
-                  </select>
+                          ).length > 0 && (
+                              <optgroup label="Warehouses">
+                                {locationProfiles
+                                  .filter((loc) => loc.type === "warehouse")
+                                  .map((loc) => (
+                                    <option key={loc._id} value={loc._id}>
+                                      {loc.locationName} ({loc.locationCode})
+                                    </option>
+                                  ))}
+                              </optgroup>
+                            )}
+                          {locationProfiles.length > 0 &&
+                            locationProfiles.filter(
+                              (loc) => loc.type === "storefront",
+                            ).length === 0 &&
+                            locationProfiles.filter(
+                              (loc) => loc.type === "warehouse",
+                            ).length === 0 && (
+                              <option disabled>
+                                No active locations available
+                              </option>
+                            )}
+                        </>
+                      )}
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                   {locationProfiles.length === 0 && (
                     <p className="text-xs text-slate-500 mt-1">
                       No locations found. Please check if locations are available.
@@ -1140,15 +1184,15 @@ export const AccountManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Password <span className="text-red-500">*</span>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {getModalLabel("password")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       required
-                      className="w-full border rounded-lg p-2 pr-10 focus:ring-2 focus:ring-primary outline-none"
-                      placeholder="Enter password"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white pr-10"
+                      placeholder={getModalLabel("passwordPlaceholder")}
                       value={createFormData.password}
                       onChange={(e) =>
                         setCreateFormData({
@@ -1160,27 +1204,27 @@ export const AccountManagement: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="w-4.5 h-4.5" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4.5 h-4.5" />
                       )}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Confirm Password <span className="text-red-500">*</span>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {getModalLabel("confirmPassword")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       required
-                      className="w-full border rounded-lg p-2 pr-10 focus:ring-2 focus:ring-primary outline-none"
-                      placeholder="Confirm password"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white pr-10"
+                      placeholder={getModalLabel("confirmPasswordPlaceholder")}
                       value={createFormData.confirmPassword}
                       onChange={(e) =>
                         setCreateFormData({
@@ -1192,18 +1236,18 @@ export const AccountManagement: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="w-4.5 h-4.5" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4.5 h-4.5" />
                       )}
                     </button>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50">
                   <button
                     type="button"
                     onClick={() => {
@@ -1216,22 +1260,22 @@ export const AccountManagement: React.FC = () => {
                         role: "cashier",
                       });
                     }}
-                    className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
                   >
-                    Cancel
+                    {getModalLabel("cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={isCreating}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50"
                   >
                     {isCreating ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Creating...
+                        <Loader2 className="w-4 h-4 animate-spin" /> {language === "my" ? "သိမ်းဆည်းနေသည်..." : "Creating..."}
                       </>
                     ) : (
                       <>
-                        <Plus className="w-4 h-4" /> Create Account
+                        <Plus className="w-4 h-4" /> <span>{getModalLabel("submit")}</span>
                       </>
                     )}
                   </button>

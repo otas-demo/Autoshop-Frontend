@@ -18,6 +18,7 @@ import {
   Users,
   ShoppingBag,
   ChevronDown,
+  Languages,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { removeAuthToken } from "../services/axios";
@@ -35,8 +36,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
   const { currentUser } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [adminData, setAdminData] = useState<any>(null);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     // Get admin data from localStorage
@@ -184,42 +186,101 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
         </div>
 
         {/* User Profile Card at Bottom */}
-        <div
-          className={`bg-white border border-gray-200/70 rounded-2xl p-2.5 shadow-md flex items-center mt-3 transition-all duration-300 ${isCollapsed ? "justify-center" : "justify-between gap-3 px-3"
-            }`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* Circle Logo / Avatar */}
-            <div className="bg-[#2216a8] rounded-full w-9 h-9 flex-shrink-0 flex items-center justify-center text-white text-sm font-bold uppercase select-none">
-              {(adminData?.name || currentUser?.name || "U").substring(0, 1).toUpperCase()}
-            </div>
-
-            {/* Text (Hidden when collapsed) */}
-            {!isCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="text-slate-800 font-bold text-sm leading-tight truncate">
-                  {adminData?.name || currentUser?.name || "User"}
-                </span>
-                <span className="text-gray-400 font-semibold text-xs leading-none mt-0.5 capitalize">
-                  {userRole || "User"}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Settings Button (Hidden when collapsed) */}
-          {!isCollapsed && (
-            <button
-              onClick={() => {
-                navigate("/settings");
-                onClose();
-              }}
-              className="p-1.5 hover:bg-slate-50 text-gray-400 hover:text-[#2216a8] rounded-lg transition-colors cursor-pointer"
-              title="Settings"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+        <div className="relative mt-3">
+          {/* Popover Menu Backdrop overlay to dismiss */}
+          {showMenu && (
+            <div
+              className="fixed inset-0 z-40 bg-transparent"
+              onClick={() => setShowMenu(false)}
+            />
           )}
+
+          {/* Popover Menu */}
+          {showMenu && (
+            <div
+              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
+                isCollapsed ? "left-0 w-48" : "left-0 right-0"
+              }`}
+            >
+              <div className="flex flex-col gap-1">
+                {/* Language Switcher */}
+                <button
+                  onClick={() => {
+                    setLanguage(language === "en" ? "my" : "en");
+                    setShowMenu(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-500 hover:text-[#2216a8] hover:bg-slate-50 rounded-xl transition-all font-medium text-left cursor-pointer"
+                >
+                  <Languages className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-semibold">
+                    {language === "en" ? "မြန်မာ ဘာသာ" : "English"}
+                  </span>
+                </button>
+
+                {/* Settings */}
+                <button
+                  onClick={() => {
+                    navigate("/settings");
+                    setShowMenu(false);
+                    onClose();
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-500 hover:text-[#2216a8] hover:bg-slate-50 rounded-xl transition-all font-medium text-left cursor-pointer"
+                >
+                  <Settings className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-semibold">
+                    {language === "en" ? "Settings" : "ဆက်တင်များ"}
+                  </span>
+                </button>
+
+                {/* Logout */}
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setShowMenu(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all font-medium text-left cursor-pointer"
+                >
+                  <LogOut className="w-5 h-5 text-red-400" />
+                  <span className="text-sm font-semibold">
+                    {language === "en" ? "Log out" : "အကောင့်ထွက်မယ်"}
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* User Profile Card Button */}
+          <div
+            onClick={() => setShowMenu(!showMenu)}
+            className={`bg-white border border-gray-200/70 rounded-2xl p-2.5 shadow-md flex items-center cursor-pointer hover:bg-slate-50 transition-all duration-300 select-none ${
+              isCollapsed ? "justify-center" : "justify-start gap-3 px-3"
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              {/* Circle Logo / Avatar */}
+              <div className="bg-[#2216a8] rounded-full w-9 h-9 flex-shrink-0 flex flex-col items-center justify-center text-white select-none leading-none">
+                {((adminData?.name || currentUser?.name || "Auto Shop Demo").toLowerCase().includes("auto shop")) ? (
+                  <div className="flex flex-col items-center justify-center text-[7px] font-black tracking-wider">
+                    <span>AUTO</span>
+                    <span className="mt-0.5">SHOP</span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-bold uppercase">
+                    {(adminData?.name || currentUser?.name || "U").substring(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              {/* Text (Hidden when collapsed) */}
+              {!isCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[#2216a8] font-bold text-sm leading-tight truncate">
+                    {adminData?.name || currentUser?.name || "Auto Shop Demo"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>

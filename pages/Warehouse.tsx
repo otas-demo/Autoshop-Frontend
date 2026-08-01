@@ -10,6 +10,7 @@ import {
   User,
   Mail,
   ChevronRight,
+  ChevronDown,
   Edit,
   RefreshCw,
   AlertTriangle,
@@ -598,34 +599,35 @@ export const Warehouse: React.FC = () => {
 
       {/* Add Warehouse Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-10">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-[#2216a8]" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto border border-white/40 animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2] sticky top-0 z-10">
+              <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2.5">
+                <Building2 className="w-6 h-6 text-[#2216a8]" />
                 {editingId ? t("warehouse.editProfile") : t("warehouse.newProfile")}
               </h2>
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-8 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                   {/* Location Code */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-705 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("warehouse.locationCode")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       maxLength={50}
-                      className="w-full border border-slate-350 rounded-lg p-2.5 focus:ring-2 focus:ring-primary outline-none uppercase"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white uppercase"
                       placeholder={t("warehouse.codePlaceholder")}
                       value={formData.warehouseCode}
                       onChange={(e) =>
@@ -640,34 +642,37 @@ export const Warehouse: React.FC = () => {
 
                   {/* Status */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-705 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("warehouse.status")}
                     </label>
-                    <select
-                      className="w-full border border-slate-350 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-primary outline-none"
-                      value={formData.status}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          status: e.target.value as "active" | "inactive",
-                        })
-                      }
-                    >
-                      <option value="active">{t("warehouse.active")}</option>
-                      <option value="inactive">{t("warehouse.inactive")}</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                        value={formData.status}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            status: e.target.value as "active" | "inactive",
+                          })
+                        }
+                      >
+                        <option value="active">{t("warehouse.active")}</option>
+                        <option value="inactive">{t("warehouse.inactive")}</option>
+                      </select>
+                      <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                   </div>
 
                   {/* Location Name */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-705 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("warehouse.locationName")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       maxLength={200}
-                      className="w-full border border-slate-355 rounded-lg p-2.5 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                       placeholder={t("warehouse.namePlaceholder")}
                       value={formData.warehouseName}
                       onChange={(e) =>
@@ -681,14 +686,14 @@ export const Warehouse: React.FC = () => {
 
                   {/* Location Address */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-705 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("warehouse.locationAddress")} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
                       maxLength={500}
                       rows={2}
-                      className="w-full border border-slate-355 rounded-lg p-2.5 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white resize-none"
                       placeholder={t("warehouse.addressPlaceholder")}
                       value={formData.warehouseAddress}
                       onChange={(e) =>
@@ -702,14 +707,14 @@ export const Warehouse: React.FC = () => {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-705 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("warehouse.locationPhone")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
                       required
                       maxLength={20}
-                      className="w-full border border-slate-355 rounded-lg p-2.5 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                       placeholder={t("warehouse.phonePlaceholder")}
                       value={formData.warehousePhone}
                       onChange={(e) =>
@@ -723,13 +728,13 @@ export const Warehouse: React.FC = () => {
 
                   {/* Manager Name */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-705 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("warehouse.managerName")}
                     </label>
                     <input
                       type="text"
                       maxLength={200}
-                      className="w-full border border-slate-355 rounded-lg p-2.5 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                       placeholder={t("warehouse.managerPlaceholder")}
                       value={formData.managerName}
                       onChange={(e) =>
@@ -740,18 +745,18 @@ export const Warehouse: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-6 border-t bg-slate-50 rounded-b-xl flex flex-col sm:flex-row justify-end gap-3">
+              <div className="p-6 border-t border-gray-200/50 bg-slate-50/40 flex justify-end gap-3 rounded-b-3xl">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors order-2 sm:order-1 cursor-pointer"
+                  className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[#2216a8]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2 cursor-pointer font-medium"
+                  className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

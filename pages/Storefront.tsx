@@ -9,6 +9,7 @@ import {
   User,
   Mail,
   ChevronRight,
+  ChevronDown,
   Edit,
   Package,
   RefreshCw,
@@ -578,28 +579,29 @@ export const Storefront: React.FC = () => {
 
         {/* Add Storefront Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <Store className="w-5 h-5 text-primary" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto border border-white/40 animate-in zoom-in-95 duration-200">
+              <div className="px-8 py-5 border-b border-gray-200/50 flex justify-between items-center sticky top-0 bg-[#f7f6f2] z-10">
+                <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2.5">
+                  <Store className="w-6 h-6 text-[#2216a8]" />
                   {editingId
                     ? t("storefront.editProfile")
                     : t("storefront.newProfile")}
                 </h2>
                 <button
+                  type="button"
                   onClick={handleCloseModal}
-                  className="text-slate-400 hover:text-slate-600 p-1"
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
                 >
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="p-8 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                   {/* Required Fields */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("storefront.locationCode")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
@@ -607,7 +609,7 @@ export const Storefront: React.FC = () => {
                       type="text"
                       required
                       maxLength={50}
-                      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none uppercase"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white uppercase"
                       placeholder={t("storefront.codePlaceholder")}
                       value={formData.storefrontCode}
                       onChange={(e) =>
@@ -621,26 +623,29 @@ export const Storefront: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("storefront.status")}
                     </label>
-                    <select
-                      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                      value={formData.status}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          status: e.target.value as "active" | "inactive",
-                        })
-                      }
-                    >
-                      <option value="active">{t("storefront.active")}</option>
-                      <option value="inactive">{t("storefront.inactive")}</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                        value={formData.status}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            status: e.target.value as "active" | "inactive",
+                          })
+                        }
+                      >
+                        <option value="active">{t("storefront.active")}</option>
+                        <option value="inactive">{t("storefront.inactive")}</option>
+                      </select>
+                      <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("storefront.locationName")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
@@ -648,7 +653,7 @@ export const Storefront: React.FC = () => {
                       type="text"
                       required
                       maxLength={200}
-                      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                       placeholder={t("storefront.namePlaceholder")}
                       value={formData.storefrontName}
                       onChange={(e) =>
@@ -661,7 +666,7 @@ export const Storefront: React.FC = () => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("storefront.locationAddress")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
@@ -669,7 +674,7 @@ export const Storefront: React.FC = () => {
                       required
                       maxLength={500}
                       rows={2}
-                      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white resize-none"
                       placeholder={t("storefront.addressPlaceholder")}
                       value={formData.storefrontAddress}
                       onChange={(e) =>
@@ -682,7 +687,7 @@ export const Storefront: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("storefront.locationPhone")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
@@ -690,7 +695,7 @@ export const Storefront: React.FC = () => {
                       type="tel"
                       required
                       maxLength={20}
-                      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                       placeholder={t("storefront.phonePlaceholder")}
                       value={formData.storefrontPhone}
                       onChange={(e) =>
@@ -702,35 +707,14 @@ export const Storefront: React.FC = () => {
                     />
                   </div>
 
-                  {/*  <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t("storefront.locationEmail")}
-                  </label>
-                  <input
-                    type="email"
-                    maxLength={200}
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                    placeholder={t("storefront.emailPlaceholder")}
-                    value={formData.storefrontEmail}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        storefrontEmail: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                */}
-
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
                       {t("storefront.managerName")}
                     </label>
                     <input
                       type="text"
                       maxLength={200}
-                      className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
                       placeholder={t("storefront.managerPlaceholder")}
                       value={formData.managerName}
                       onChange={(e) =>
@@ -740,50 +724,18 @@ export const Storefront: React.FC = () => {
                   </div>
                 </div>
 
-                {/* <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("storefront.description")}
-                </label>
-                <textarea
-                  maxLength={1000}
-                  rows={2}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                  placeholder={t("storefront.descriptionPlaceholder")}
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("storefront.notes")}
-                </label>
-                <textarea
-                  maxLength={500}
-                  rows={2}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-primary outline-none"
-                  placeholder={t("storefront.notesPlaceholder")}
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
-                />
-              </div> */}
-
-                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors order-2 sm:order-1"
+                    className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
                   >
                     {t("common.cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-purple-600/10 transition-all disabled:opacity-50"
                   >
                     {isSubmitting
                       ? editingId

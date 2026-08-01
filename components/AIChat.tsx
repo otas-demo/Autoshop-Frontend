@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Bot, Loader2, MessageSquare } from "lucide-react";
+import { Send, Bot, Loader2, MessageSquare, ArrowLeft, ChevronDown, XCircle, PlusCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 import { toast } from "sonner";
 import axios from "../services/axios";
 import { sendAiChatMessage } from "../services/Reports/aiChat";
@@ -17,6 +19,8 @@ import {
 import type { ChatMessage, ChatConversation } from "../types";
 
 export const AIChat: React.FC = () => {
+  const navigate = useNavigate();
+  const { language } = useLanguage();
   // ─── Storage ─────────────────────────────────────────────────
   const storage = useRef(new LocalStorageChatStorage()).current;
 
@@ -249,7 +253,16 @@ export const AIChat: React.FC = () => {
       startDate = todayStr;
       endDate = todayStr;
       timeframeLabel = "ဒီနေ့အတွက်";
-    } else if (suggestionText.includes("ဒီတပတ်") || suggestionText.includes("ဒီပတ်")) {
+    } else if (suggestionText.includes("မနေ့က")) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yYear = yesterday.getFullYear();
+      const yMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
+      const yDate = String(yesterday.getDate()).padStart(2, '0');
+      startDate = `${yYear}-${yMonth}-${yDate}`;
+      endDate = `${yYear}-${yMonth}-${yDate}`;
+      timeframeLabel = "မနေ့ကအတွက်";
+    } else if (suggestionText.includes("ဒီတပတ်") || suggestionText.includes("ဒီပတ်") || suggestionText.includes("ဒီအပတ်")) {
       const d = new Date();
       const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -337,7 +350,7 @@ ${productLines}`;
           };
           appendMessage(convId, errMsg);
         }
-      } else if (suggestionText.includes("အသုံးစရိတ်")) {
+      } else if (suggestionText.includes("အသုံးစရိတ်") || suggestionText.includes("အဆုံးစရိတ်")) {
         const result = await axios.get(
           `/expense?locationId=${selectedStorefrontId}&startDate=${startDate}&endDate=${endDate}`
         );
@@ -472,55 +485,95 @@ ${paymentMethodsLines ? paymentMethodsLines + "\n" : ""}• လျှော့�
   };
 
   // ─── Render ──────────────────────────────────────────────────
+  const renderMessageContent = (content: string) => {
+    const mdLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    if (mdLinkRegex.test(content)) {
+      const parts = [];
+      let lastIndex = 0;
+      mdLinkRegex.lastIndex = 0;
+      let match;
+      while ((match = mdLinkRegex.exec(content)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(content.substring(lastIndex, match.index));
+        }
+        parts.push(
+          <a
+            key={match.index}
+            href={match[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline font-bold cursor-pointer"
+          >
+            {match[1]}
+          </a>
+        );
+        lastIndex = mdLinkRegex.lastIndex;
+      }
+      if (lastIndex < content.length) {
+        parts.push(content.substring(lastIndex));
+      }
+      return parts;
+    }
+
+    const parts = content.split(urlRegex);
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline font-bold cursor-pointer"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="w-full lg:h-[calc(100vh-2rem)]">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
+      <div className="bg-white border border-gray-200/50 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              AI Assistant
-            </h1>
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-200/50 pb-5">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-slate-200/60 rounded-full transition-colors cursor-pointer text-slate-700 hover:text-slate-900"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800">
+                {language === "my" ? "AI အရောင်းမန်နေဂျာ" : "AI Sales Manager"}
+              </h1>
+              <p className="text-xs text-slate-400 font-bold mt-1">
+                {language === "my" ? "ဆိုင်နဲ့ပတ်သက်ပြီး သိချင်တာကို AI အရောင်းမန်နေဂျာကို မေးမယ်" : "Ask the AI Sales Manager anything about the shop"}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* Storefront Selector dropdown styled as a pill */}
-            <div className="relative flex items-center min-w-[140px]">
-              <select
-                value={selectedStorefrontId}
-                onChange={(e) => setSelectedStorefrontId(e.target.value)}
-                className="pl-4 pr-8 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all outline-none cursor-pointer appearance-none w-full"
-              >
-                <option value="">Select Storefront</option>
-                {storefronts.map((sf) => (
-                  <option key={sf._id} value={sf._id}>
-                    {sf.locationName}
-                  </option>
-                ))}
-              </select>
-              {/* Custom chevron indicator */}
-              <div className="pointer-events-none absolute right-3 flex items-center text-[#2216a8]">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                </svg>
-              </div>
-            </div>
-
-            <button
-              onClick={startNewConversation}
-              className="px-4 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-1.5 cursor-pointer"
-              title="New conversation"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>New</span>
-            </button>
-
             <button
               onClick={clearCurrentConversation}
               disabled={!activeConversation || messages.length === 0}
-              className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 text-sm font-bold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              Clear
+              <XCircle className="w-4.5 h-4.5" />
+              <span>{language === "my" ? "အကုန်ဖျက်မယ်" : "Clear"}</span>
+            </button>
+
+            <button
+              onClick={startNewConversation}
+              className="px-5 py-2.5 text-sm font-bold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-1.5 cursor-pointer"
+            >
+              <PlusCircle className="w-4.5 h-4.5" />
+              <span>{language === "my" ? "အခြားအကြောင်း အသစ်တစ်ခု မေးမယ်" : "New Conversation"}</span>
             </button>
           </div>
         </div>
@@ -528,40 +581,53 @@ ${paymentMethodsLines ? paymentMethodsLines + "\n" : ""}• လျှော့�
         {/* Chat Container */}
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto pb-4 space-y-4 no-scrollbar">
+          <div className="flex-1 overflow-y-auto pb-4 px-4 space-y-6 no-scrollbar">
             {messages.length === 0 && (
-              <div className="text-center text-slate-500 mt-12 sm:mt-20">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-[#2216a8] rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-600/20">
-                  <Bot className="w-8 h-8 text-white" />
+              <div className="flex flex-col items-center justify-center min-h-[50vh] my-auto py-8">
+                {/* Logo / Robot Section */}
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <span className="text-xl font-black tracking-tighter text-[#2216a8] leading-none">AUTO</span>
+                    <span className="text-xl font-black tracking-widest text-[#2216a8] leading-none">SHOP</span>
+                  </div>
+                  <div className="w-12 h-12 bg-white border border-gray-200 rounded-2xl flex items-center justify-center shadow-sm">
+                    <Bot className="w-7 h-7 text-[#2216a8]" />
+                  </div>
+                  <div className="h-8 w-px bg-gray-300" />
+                  <div className="text-left">
+                    <h2 className="text-xl font-black text-slate-800">
+                      {language === "my" ? `မင်္ဂလာပါ ${adminData?.name ?? "မဇင်ဇင်ဝေ"}` : `Hello ${adminData?.name ?? "Manager"}`}
+                    </h2>
+                    <p className="text-xs text-slate-400 font-bold mt-0.5">
+                      {language === "my" ? "ဆိုင်နဲ့ပတ်သက်ပြီး ကျွန်တော် ဘယ်လိုကူညီရမလဲဗျ ?" : "How can I help you regarding the shop?"}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-700 mb-2">
-                  မင်္ဂလာပါ ကျွန်တော်က Bossရဲ့ AI လက်ထောက် မန်နေဂျာပါ။
-                </h3>
-                <p className="text-sm font-semibold text-slate-400 max-w-md mx-auto mb-6">
-                  Boss အနေနဲ့ လုပ်ငန်းနဲ့ပတ်သက်ပြီး ဘာအချက်အလက်လေးတွေ
-                  သိလိုပါသလဲ ခင်ဗျာ
-                </p>
 
-                {/* Suggestion Chips */}
-                <div className="flex flex-col items-center gap-3">
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">အကြံပြုမေးခွန်းများ (Suggestions)</span>
-                  <div className="flex flex-wrap justify-center gap-2.5 max-w-xl">
+                {/* Suggestions Card */}
+                <div className="border border-gray-300 rounded-3xl p-6 bg-white w-full max-w-2xl mx-auto shadow-sm">
+                  <p className="text-sm font-bold text-slate-800 mb-4 text-left">
+                    {language === "my" ? "AI အရောင်းမန်နေဂျာကို မေးလေ့ရှိတဲ့ မေးခွန်းများ:" : "Frequently asked questions to AI Sales Manager:"}
+                  </p>
+                  <div className="flex flex-wrap justify-start gap-2.5">
                     {[
-                      "ဒီနေ့ ဘယ်လောက်ဖိုး ရောင်းရလဲ",
-                      "ဒီတပတ်အတွက်အရောင်းအစီအရင်ခံစာပြပေးပါ",
-                      "ဒီလအတွက် အရောင်းအစီရင်ခံစာ ပြပေးပါ",
-                      "ဒီနေ့ အရောင်းရဆုံး ပစ္စည်းများ",
-                      "ဒီတပတ် အရောင်းရဆုံး ပစ္စည်းများ",
-                      "ဒီလ အရောင်းရဆုံး ပစ္စည်းများ",
-                      "ဒီနေ့အသုံးစရိတ်တွေပြပေးပါ"
+                      { my: "ဒီနေ့ ဘယ်လောက်ဖိုး ရောင်းရလဲ?", en: "How much sold today?" },
+                      { my: "ဒီအပတ်အတွက် အရောင်းစာရင်းကြည့်မယ်", en: "View sales for this week" },
+                      { my: "ဒီလအတွက် အရောင်းစာရင်းကြည့်မယ်", en: "View sales for this month" },
+                      { my: "ဒီနေ့ အရောင်းရဆုံးပစ္စည်းများ", en: "Best selling products today" },
+                      { my: "ဒီအပတ် အရောင်းရဆုံးပစ္စည်းများ", en: "Best selling products this week" },
+                      { my: "ဒီလ အရောင်းရဆုံးပစ္စည်းများ", en: "Best selling products this month" },
+                      { my: "ဒီနေ့ အသုံးစရိတ်ပြပေးပါ", en: "Show expenses today" },
+                      { my: "မနေ့က အသုံးစရိတ်ပြပေးပါ", en: "Show expenses yesterday" },
+                      { my: "ဒီနေ့ အဆုံးစရိတ်ပြပေးပါ", en: "Show final expenses today" }
                     ].map((suggestion, idx) => (
                       <button
                         key={idx}
-                        onClick={() => handleSuggestionClick(suggestion)}
+                        onClick={() => handleSuggestionClick(suggestion.my)}
                         disabled={isLoading}
-                        className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 text-xs font-bold rounded-full border border-indigo-600/70 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {suggestion}
+                        {language === "my" ? suggestion.my : suggestion.en}
                       </button>
                     ))}
                   </div>
@@ -574,34 +640,41 @@ ${paymentMethodsLines ? paymentMethodsLines + "\n" : ""}• လျှော့�
                 key={msg.id}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 flex flex-col ${msg.role === "user"
-                    ? "bg-[#2216a8] text-white shadow-md shadow-indigo-600/10"
-                    : "bg-slate-50 text-slate-800 border border-slate-100 shadow-sm"
-                    }`}
-                >
-                  <div className="flex items-start gap-2 mb-1.5">
-                    {msg.role === "ai" && (
-                      <Bot className="w-4 h-4 text-[#2216a8] mt-0.5 flex-shrink-0" />
-                    )}
-                    <span className="text-xs font-semibold opacity-70">
-                      {msg.role === "user" ? "You" : "AI Assistant"}
+                {msg.role === "user" ? (
+                  <div className="max-w-[75%] bg-white border border-gray-200/80 rounded-2xl rounded-tr-none px-5 py-3.5 text-slate-800 font-medium text-sm shadow-sm">
+                    <span className="whitespace-pre-wrap leading-relaxed break-words">
+                      {msg.content}
                     </span>
                   </div>
-                  <span className="text-sm whitespace-pre-wrap leading-relaxed break-words font-medium">
-                    {msg.content}
-                  </span>
-                </div>
+                ) : (
+                  <div className="flex items-start gap-3 w-full max-w-[85%]">
+                    <div className="flex flex-col items-end flex-shrink-0 mt-1 select-none">
+                      <span className="text-[10px] font-black tracking-tighter text-[#2216a8] leading-none">AUTO</span>
+                      <span className="text-[10px] font-black tracking-widest text-[#2216a8] leading-none">SHOP</span>
+                    </div>
+                    <div className="flex-1 bg-transparent text-slate-800 font-medium text-sm whitespace-pre-wrap leading-relaxed break-words">
+                      {renderMessageContent(msg.content)}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
 
             {isLoading && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-slate-50 text-slate-800 border border-slate-100 shadow-sm flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#2216a8]" />
-                  <span className="text-sm font-semibold text-slate-400">
-                    AI is thinking...
-                  </span>
+                <div className="flex items-start gap-3 w-full max-w-[85%]">
+                  <div className="flex flex-col items-end flex-shrink-0 mt-1 select-none">
+                    <span className="text-[10px] font-black tracking-tighter text-[#2216a8] leading-none">AUTO</span>
+                    <span className="text-[10px] font-black tracking-widest text-[#2216a8] leading-none">SHOP</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-500 font-medium text-sm italic">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#2216a8]" />
+                    <span>
+                      {language === "my"
+                        ? "မန်နေဂျာကြီး စာရင်းတွေ လှော်လှန်ရှာဖွေနေဆဲပါဗျ ခဏလေးစောင့်ပေးပါဗျ................"
+                        : "Manager is searching the files, please wait a moment..."}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -609,31 +682,50 @@ ${paymentMethodsLines ? paymentMethodsLines + "\n" : ""}• လျှော့�
           </div>
 
           {/* Input */}
-          <div className="pt-4 border-t border-slate-100 bg-white">
-            <div className="flex items-end gap-3 bg-slate-50/70 rounded-2xl p-2 border border-indigo-100 focus-within:border-[#2216a8] focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all">
+          <div className="pt-4 border-t border-gray-200/50 bg-white">
+            <div className="max-w-3xl mx-auto w-full border border-gray-300 rounded-2xl p-2 bg-white flex items-center justify-between gap-3 shadow-md focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-[#2216a8] transition-all">
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Ask me anything about your business..."
+                placeholder={language === "my" ? "မေးချင်တာတွေ မေးမယ်" : "Ask me anything about your business..."}
                 className="flex-1 outline-none bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] px-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 font-medium"
                 rows={1}
                 disabled={isLoading}
               />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className="p-3 sm:p-3.5 bg-[#2216a8] text-white rounded-xl hover:bg-[#2216a8]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-600/10 cursor-pointer"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Storefront Selector dropdown styled as a pill */}
+                <div className="relative flex items-center min-w-[130px]">
+                  <select
+                    value={selectedStorefrontId}
+                    onChange={(e) => setSelectedStorefrontId(e.target.value)}
+                    className="pl-3 pr-8 py-2.5 text-xs font-bold rounded-full border border-gray-300 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all outline-none cursor-pointer appearance-none w-full"
+                  >
+                    <option value="">{language === "my" ? "ဆိုင်ရွေးမယ်" : "Select Shop"}</option>
+                    {storefronts.map((sf) => (
+                      <option key={sf._id} value={sf._id}>
+                        {sf.locationName}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                <button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isLoading}
+                  className="p-3 bg-[#2216a8] text-white rounded-full hover:bg-[#2216a8]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-600/15 cursor-pointer flex-shrink-0"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-slate-400 mt-2 text-center font-medium">
+            <p className="text-[10px] text-slate-400 mt-2 text-center font-bold">
               Press Enter to send, Shift+Enter for new line
             </p>
           </div>

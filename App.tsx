@@ -28,6 +28,7 @@ import PrintReceipt from "./pages/PrintReceipt";
 import { AIChat } from "./components/AIChat";
 import { DailyReports } from "./pages/DailyReports";
 import MobilePrint from "./pages/MobilePrint";
+import { AIFloatingIcon } from "./components/AIFloatingIcon";
 
 const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +39,8 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f5f3]">
+      {/* Floating AI hanging badge */}
+      {token && <AIFloatingIcon />}
       {/* Floating Hamburger Menu Button (Mobile/Tablet Only) */}
       {token && (
         <button

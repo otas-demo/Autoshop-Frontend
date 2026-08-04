@@ -50,6 +50,7 @@ export interface CreditPersonaRecordsData {
     _id: string;
     name: string;
     phone: string;
+    address?: string;
   };
   orders: CreditPersonaOrder[];
   creditRecords: {

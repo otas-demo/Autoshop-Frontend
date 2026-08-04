@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import axios from "axios";
+import { getErrorMessage } from "../utils/errorMessages";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -43,12 +44,21 @@ axios.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token expiration
+// Response interceptor to handle token expiration and localise errors
 axios.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
+    const errorCode = error.response?.data?.code;
+    if (errorCode) {
+      const localizedMessage = getErrorMessage(errorCode);
+      if (error.response?.data) {
+        error.response.data.message = localizedMessage;
+      }
+      error.message = localizedMessage;
+    }
+
     if (error.response?.status === 401) {
       // Token expired or invalid
       removeAuthToken();

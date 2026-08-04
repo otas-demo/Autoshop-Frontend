@@ -6,10 +6,12 @@ import {
   Warehouse,
   ChevronLeft,
   ChevronRight,
+  PackageCheck,
 } from "lucide-react";
 import { GRNData } from "../../services/Purchase/fetchGRNs";
 import { updateGRNStatus } from "../../services/Purchase/updateGRNStatus";
 import { toast } from "sonner";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface PaginationData {
   currentPage: number;
@@ -162,99 +164,108 @@ export const GRNList: React.FC<GRNListProps> = ({
     }
   };
 
+  const { language } = useLanguage();
+  const isMy = language === "my";
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border">
-        <h2 className="font-bold text-lg text-slate-800">
-          Goods Received Notes List
-        </h2>
-        {/* <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" /> Create New GRN
-        </button> */}
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex gap-2">
+      {/* Filter Tabs / Pills */}
+      <div className="flex gap-3">
         <button
           onClick={() => setGrnFilter("pending")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
             grnFilter === "pending"
-              ? "bg-slate-800 text-white"
-              : "bg-white text-slate-600 hover:bg-slate-50 border"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
           }`}
         >
-          Pending
+          {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
         </button>
         <button
           onClick={() => setGrnFilter("completed")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
             grnFilter === "completed"
-              ? "bg-primary text-white"
-              : "bg-white text-slate-600 hover:bg-slate-50 border"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
           }`}
         >
-          Completed
+          {isMy ? "စာရင်း လက်ခံပြီး" : "Completed"}
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="h-[calc(100vh-450px)] overflow-y-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 border-b sticky top-0 z-10">
-              <tr>
-                <th className="p-4">GRN Number</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Items</th>
-                <th className="p-4">Received Qty</th>
-                <th className="p-4">Good / Bad</th>
-                <th className="p-4">Total Amount</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Notes</th>
-                <th className="p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredGRNs.length === 0 ? (
+      {filteredGRNs.length === 0 ? (
+        /* Empty State Card matching the design */
+        <div className="py-12 bg-white rounded-xl border border-gray-100 flex items-center justify-center">
+          <div className="bg-[#f0effb]/70 border border-indigo-100 rounded-3xl p-8 w-full max-w-sm mx-auto flex flex-col items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-indigo-100/50">
+              <PackageCheck className="w-6 h-6 text-[#2216a8]" />
+            </div>
+            <div className="text-center flex flex-col items-center">
+              <span className="text-slate-500 font-bold text-xs">
+                {isMy ? "လက်တလော" : "Currently"}
+              </span>
+              <span className="text-[#2216a8] font-black text-sm my-1">
+                {isMy ? "ပစ္စည်းလက်ခံ စာရင်းများ" : "Goods Received Notes"}
+              </span>
+              <span className="text-slate-500 font-bold text-xs">
+                {isMy ? "မရှိသေးပါ" : "Not available yet"}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="h-[calc(100vh-450px)] overflow-y-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 border-b sticky top-0 z-10 text-slate-700 text-xs font-bold">
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-400">
-                    No {grnFilter} GRNs found
-                  </td>
+                  <th className="p-4 w-12 text-center">No</th>
+                  <th className="p-4">GRN Number ID</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4">Items</th>
+                  <th className="p-4">Received Qty</th>
+                  <th className="p-4">Condition Status</th>
+                  <th className="p-4">Total Amount</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Note</th>
+                  <th className="p-4">Actions</th>
                 </tr>
-              ) : (
-                filteredGRNs.map((grn) => (
+              </thead>
+              <tbody className="divide-y text-slate-600 font-medium">
+                {filteredGRNs.map((grn, idx) => (
                   <tr key={grn._id} className="hover:bg-slate-50">
-                    <td className="p-4 font-medium text-blue-600">
+                    <td className="p-4 text-center text-slate-400">
+                      {(pagination.currentPage - 1) * pagination.itemsPerPage + idx + 1}
+                    </td>
+                    <td className="p-4 font-bold text-[#2216a8]">
                       {grn.grnNumber}
                     </td>
                     <td className="p-4">
                       {new Date(grn.grnDate).toLocaleDateString()}
                     </td>
                     <td className="p-4">
-                      <span className="bg-slate-100 px-2 py-1 rounded text-xs font-medium">
+                      <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-bold">
                         {grn.lineItems.length} item(s)
                       </span>
                     </td>
-                    <td className="p-4 font-medium">
+                    <td className="p-4 font-bold text-slate-800">
                       {grn.totalReceivedQuantity}
                     </td>
                     <td className="p-4">
-                      <span className="text-green-600 font-medium">
+                      <span className="text-green-600 font-bold">
                         {grn.totalGoodQuantity}
                       </span>
                       {" / "}
-                      <span className="text-red-600 font-medium">
+                      <span className="text-red-600 font-bold">
                         {grn.totalBadQuantity}
                       </span>
                     </td>
-                    <td className="p-4 font-medium">
+                    <td className="p-4 font-bold text-slate-800">
                       {grn.totalAmount.toLocaleString()}
                     </td>
                     <td className="p-4">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-bold ${getStatusColor(
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black ${getStatusColor(
                           grn.status
                         )}`}
                       >
@@ -268,9 +279,9 @@ export const GRNList: React.FC<GRNListProps> = ({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => onViewGRN?.(grn)}
-                          className="text-xs bg-primary/50 text-yellow-800 px-3 py-1.5 rounded hover:bg-yellow-100 border border-blue-200 font-medium transition-colors flex items-center gap-1"
+                          className="text-xs bg-[#2216a8]/5 text-[#2216a8] border border-[#2216a8]/10 hover:bg-[#2216a8]/10 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
                         >
-                          <Eye className="w-3 h-3" /> View
+                          <Eye className="w-3.5 h-3.5" /> {isMy ? "ကြည့်ရန်" : "View"}
                         </button>
                         {grn.status?.toLowerCase() === "pending" && (
                           <button
@@ -278,10 +289,10 @@ export const GRNList: React.FC<GRNListProps> = ({
                               handleUpdateStatus(grn._id, "verified")
                             }
                             disabled={updatingId === grn._id}
-                            className="text-xs bg-purple-50 text-purple-600 px-3 py-1.5 rounded hover:bg-purple-100 border border-purple-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
+                            className="text-xs bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 border border-purple-200 font-bold transition-colors flex items-center gap-1 disabled:opacity-50 cursor-pointer"
                           >
-                            <CheckCircle className="w-3 h-3" />
-                            {updatingId === grn._id ? "..." : "Verify"}
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            {updatingId === grn._id ? "..." : (isMy ? "အတည်ပြုမယ်" : "Verify")}
                           </button>
                         )}
                         {grn.status?.toLowerCase() === "verified" &&
@@ -290,21 +301,22 @@ export const GRNList: React.FC<GRNListProps> = ({
                           ) && (
                             <button
                               onClick={() => onTransferGRN?.(grn)}
-                              className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded hover:bg-green-100 border border-green-200 font-medium transition-colors flex items-center gap-1"
+                              className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
                             >
-                              <Warehouse className="w-3 h-3" /> Transfer
+                              <Warehouse className="w-3.5 h-3.5" /> {isMy ? "လွှဲပြောင်းမယ်" : "Transfer"}
                             </button>
                           )}
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {renderPagination()}
         </div>
-        {renderPagination()}
-      </div>
+      )}
     </div>
   );
 };
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShoppingBag, FileText, PackageCheck } from "lucide-react";
+import { ShoppingBag, FileText, PackageCheck, Plus } from "lucide-react";
 import { Supplier, Product, ApiPurchaseOrder } from "../types";
 import { fetchSuppliers } from "../services/Supplier/fetchSuppliers";
 import { fetchProducts } from "../services/Inventory/fetchProducts";
@@ -18,7 +18,7 @@ import { TransferWarehouseModal } from "../components/Purchasing/TransferWarehou
 type TabType = "po" | "grn";
 
 export const Purchasing: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>("po");
 
   // Shared State
@@ -161,6 +161,8 @@ export const Purchasing: React.FC = () => {
     setIsTransferModalOpen(true);
   };
 
+  const isMy = language === "my";
+
   return (
     <div className="w-full">
       <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
@@ -168,11 +170,13 @@ export const Purchasing: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-              <ShoppingBag className="w-6 h-6 text-[#2216a8]" /> {t("purchasing.title")}
+            <h1 className="text-2xl font-black text-slate-850">
+              {isMy ? "ပစ္စည်း အမှာစာရင်း" : "Purchasing Records"}
             </h1>
-            <p className="text-xs text-slate-400 mt-1.5 font-medium">
-              Create purchase orders and log incoming goods inventory
+            <p className="text-xs text-slate-400 mt-1.5 font-bold">
+              {isMy 
+                ? "ဆိုင်အတွက် ပစ္စည်းတွေ မှာမယ် , မှာထားတဲ့ ပစ္စည်းစာရင်းတွေစစ်မယ်" 
+                : "Order items for shop, check list of ordered items"}
             </p>
           </div>
         </div>
@@ -188,7 +192,7 @@ export const Purchasing: React.FC = () => {
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>{t("purchasing.purchaseOrder")}</span>
+            <span>{isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders"}</span>
           </button>
           <button
             onClick={() => setActiveTab("grn")}
@@ -199,7 +203,30 @@ export const Purchasing: React.FC = () => {
             }`}
           >
             <PackageCheck className="w-4 h-4" />
-            <span>{t("purchasing.goodsReceivedNote")}</span>
+            <span>{isMy ? "ပစ္စည်းလက်ခံ စာရင်းများ" : "Goods Received Notes"}</span>
+          </button>
+        </div>
+
+        {/* Active Tab Content Title and Action Button */}
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-black text-slate-800">
+            {activeTab === "po" 
+              ? (isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders List")
+              : (isMy ? "ပစ္စည်းလက်ခံ စာရင်းများ" : "Goods Received Notes List")
+            }
+          </h2>
+          <button
+            onClick={() => {
+              if (activeTab === "po") {
+                setIsCreateModalOpen(true);
+              } else {
+                setIsCreateGRNModalOpen(true);
+              }
+            }}
+            className="bg-[#2216a8] hover:bg-[#2216a8]/90 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer transition-all"
+          >
+            <Plus className="w-4.5 h-4.5" />
+            <span>{isMy ? "စာရင်းအသစ်ထည့်မယ်" : "Create New"}</span>
           </button>
         </div>
 

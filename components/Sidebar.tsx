@@ -71,9 +71,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
     { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
     { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
-    // { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
-    // { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
-    // { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
+    { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
+    { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
+    { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
     { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
   ];
 

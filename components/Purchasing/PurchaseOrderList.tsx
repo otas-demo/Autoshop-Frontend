@@ -7,6 +7,7 @@ import {
   PackageCheck,
   Trash2,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 import { ApiPurchaseOrder, Supplier } from "../../types";
 import { updatePurchaseStatus } from "../../services/Purchase/updatePurchaseStatus";
@@ -47,7 +48,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   deletedPagination,
   onCreateGRN,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">(
     "pending",
   );
@@ -262,93 +263,102 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
     );
   };
 
+  const isMy = language === "my";
+  const currentPagination = poFilter === "deleted" ? deletedPagination : pagination;
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border">
-        <h2 className="font-bold text-lg text-slate-800">
-          Purchase Orders List
-        </h2>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" /> Create New PO
-        </button>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex gap-2">
+      {/* Filter Tabs / Pills */}
+      <div className="flex gap-3">
         <button
           onClick={() => setPoFilter("pending")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
             poFilter === "pending"
-              ? "bg-slate-800 text-white"
-              : "bg-white text-slate-600 hover:bg-slate-50 border"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
           }`}
         >
-          {t("purchasing.pending")}
+          {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
         </button>
         <button
           onClick={() => setPoFilter("arrived")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
             poFilter === "arrived"
-              ? "bg-primary text-white"
-              : "bg-white text-slate-600 hover:bg-slate-50 border"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
           }`}
         >
-          {t("purchasing.arrived")}
+          {isMy ? "ပစ္စည်း ရောက်ပြီ" : "Arrived"}
         </button>
         <button
           onClick={() => setPoFilter("deleted")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
             poFilter === "deleted"
-              ? "bg-red-800 text-white"
-              : "bg-white text-slate-600 hover:bg-slate-50 border"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
           }`}
         >
-          {t("purchasing.deleted")}
+          {isMy ? "ဖျက်လိုက်သော စာရင်း" : "Deleted"}
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="h-[calc(100vh-450px)] overflow-y-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 border-b sticky top-0 z-10">
-              <tr>
-                <th className="p-4">PO ID</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Supplier</th>
-                <th className="p-4">Total Amount</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Note</th>
-                <th className="p-4">Total Remaining</th>
-                <th className="p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {displayList.length === 0 ? (
+      {displayList.length === 0 ? (
+        /* Empty State Card matching the design */
+        <div className="py-12 bg-white rounded-xl border border-gray-100 flex items-center justify-center">
+          <div className="bg-[#f0effb]/70 border border-indigo-100 rounded-3xl p-8 w-full max-w-sm mx-auto flex flex-col items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-indigo-100/50">
+              <FileText className="w-6 h-6 text-[#2216a8]" />
+            </div>
+            <div className="text-center flex flex-col items-center">
+              <span className="text-slate-500 font-bold text-xs">
+                {isMy ? "လက်တလော" : "Currently"}
+              </span>
+              <span className="text-[#2216a8] font-black text-sm my-1">
+                {isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders"}
+              </span>
+              <span className="text-slate-500 font-bold text-xs">
+                {isMy ? "မရှိသေးပါ" : "Not available yet"}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="h-[calc(100vh-450px)] overflow-y-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 border-b sticky top-0 z-10 text-slate-700 text-xs font-bold">
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
-                    No {poFilter} purchase orders found
-                  </td>
+                  <th className="p-4 w-12 text-center">No</th>
+                  <th className="p-4">PO Number ID</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4">Supplier</th>
+                  <th className="p-4">Total Amount</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Note</th>
+                  <th className="p-4">Total Remaining</th>
+                  <th className="p-4">Actions</th>
                 </tr>
-              ) : (
-                displayList.map((po) => {
+              </thead>
+              <tbody className="divide-y text-slate-600 font-medium">
+                {displayList.map((po, idx) => {
                   return (
                     <tr key={po._id} className="hover:bg-slate-50">
-                      <td className="p-4  ">{po.poNumber}</td>
+                      <td className="p-4 text-center text-slate-400">
+                        {(currentPagination.currentPage - 1) * currentPagination.itemsPerPage + idx + 1}
+                      </td>
+                      <td className="p-4 font-bold text-[#2216a8]">{po.poNumber}</td>
                       <td className="p-4">
                         {new Date(po.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-4">
                         {po.supplierId?.supplierName || "Unknown Supplier"}
                       </td>
-                      <td className="p-4 font-medium">
+                      <td className="p-4 font-bold text-slate-800">
                         {po.totalAmount.toLocaleString()}
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
                             po.status === "pending"
                               ? "bg-yellow-100 text-yellow-700"
                               : "bg-green-100 text-green-700"
@@ -360,40 +370,40 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       <td className="p-4 text-slate-500 truncate max-w-xs">
                         {po.note}
                       </td>
-                      <td className="p-4">{po.totalRemainingQuantity}</td>
+                      <td className="p-4 font-bold text-slate-800">{po.totalRemainingQuantity}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           {poFilter === "deleted" ? (
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="text-xs bg-primary/50 text-yellow-800 px-3 py-1.5 rounded hover:bg-yellow-100 border border-blue-200 font-medium transition-colors flex items-center gap-1"
+                                className="text-xs bg-[#2216a8]/5 text-[#2216a8] border border-[#2216a8]/10 hover:bg-[#2216a8]/10 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
                               >
-                                <Eye className="w-3 h-3" /> View
+                                <Eye className="w-3.5 h-3.5" /> {isMy ? "ကြည့်ရန်" : "View"}
                               </button>
                               <button
                                 onClick={() => handleRestore(po)}
-                                className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded hover:bg-green-100 border border-green-200 font-medium transition-colors flex items-center gap-1"
+                                className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
                               >
-                                <RotateCcw className="w-3 h-3" /> Restore
+                                <RotateCcw className="w-3.5 h-3.5" /> {isMy ? "ပြန်လည်စတင်မယ်" : "Restore"}
                               </button>
                             </>
                           ) : (
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="text-xs bg-primary/50 text-yellow-800 px-3 py-1.5 rounded hover:bg-yellow-100 border border-blue-200 font-medium transition-colors flex items-center gap-1"
+                                className="text-xs bg-[#2216a8]/5 text-[#2216a8] border border-[#2216a8]/10 hover:bg-[#2216a8]/10 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
                               >
-                                <Eye className="w-3 h-3" /> View
+                                <Eye className="w-3.5 h-3.5" /> {isMy ? "ကြည့်ရန်" : "View"}
                               </button>
                               {po.status === "pending" && (
                                 <button
                                   onClick={() =>
                                     handleUpdateStatus(po._id, "arrived")
                                   }
-                                  className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded hover:bg-green-100 border border-green-200 font-medium transition-colors"
+                                  className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors cursor-pointer"
                                 >
-                                  Mark Arrived
+                                  {isMy ? "ရောက်ရှိကြောင်းမှတ်သားမယ်" : "Mark Arrived"}
                                 </button>
                               )}
                               {(po.status === "arrived" ||
@@ -401,18 +411,18 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                                 po.totalRemainingQuantity > 0 && (
                                   <button
                                     onClick={() => onCreateGRN?.(po)}
-                                    className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded hover:bg-blue-100 border border-blue-200 font-medium transition-colors flex items-center gap-1"
+                                    className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 border border-blue-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
                                   >
-                                    <PackageCheck className="w-3 h-3" />
+                                    <PackageCheck className="w-3.5 h-3.5" />
                                     GRN
                                   </button>
                                 )}
                               {po.status === "pending" && (
                                 <button
                                   onClick={() => handleSoftDelete(po)}
-                                  className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 border border-red-200 font-medium transition-colors flex items-center gap-1"
+                                  className="text-xs bg-red-55 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 border border-red-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
                                 >
-                                  <Trash2 className="w-3 h-3" /> Delete
+                                  <Trash2 className="w-3.5 h-3.5" /> {isMy ? "ဖျက်မယ်" : "Delete"}
                                 </button>
                               )}
                             </>
@@ -421,13 +431,13 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          </div>
+          {renderPagination()}
         </div>
-        {renderPagination()}
-      </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal

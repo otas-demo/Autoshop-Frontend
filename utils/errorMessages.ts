@@ -1,19 +1,19 @@
 export const ERROR_MAPPINGS: Record<string, Record<string, string>> = {
   my: {
-    USER_NOT_FOUND: "အသုံးပြုသူ ရှာမတွေ့ပါ။",
-    INVALID_CREDENTIALS: "အီးမေးလ် သို့မဟုတ် စကားဝှက် မှားယွင်းနေပါသည်။",
-    SERVER_ERROR: "စနစ်ပိုင်းဆိုင်ရာ အမှားတစ်ခု ဖြစ်ပေါ်နေပါသည်။ ကျေးဇူးပြု၍ ခဏစောင့်ပြီး ပြန်လည်ကြိုးစားပါ။",
-    UNAUTHORIZED: "သင်ဤလုပ်ဆောင်ချက်ကို လုပ်ဆောင်ရန် ခွင့်ပြုချက်မရှိပါ။ ကျေးဇူးပြု၍ ပြန်လည်ဝင်ရောက်ပါ။",
-    FORBIDDEN: "သင်ဤလုပ်ဆောင်ချက်ကို လုပ်ဆောင်ရန် ခွင့်ပြုချက်မရှိပါ။",
-    VALIDATION_ERROR: "ထည့်သွင်းထားသော အချက်အလက်များ မမှန်ကန်ပါ။",
-    DUPLICATE_KEY_ERROR: "ဤအချက်အလက်သည် စနစ်ထဲတွင် ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။",
-    TOKEN_EXPIRED: "ဝင်ရောက်ခွင့် သက်တမ်းကုန်ဆုံးသွားပါပြီ။ ကျေးဇူးပြု၍ ပြန်လည်ဝင်ရောက်ပါ။",
-    INVALID_TOKEN: "မမှန်ကန်သော ဝင်ရောက်ခွင့်ကုဒ်ဖြစ်ပါသည်။ ကျေးဇူးပြု၍ ပြန်လည်ဝင်ရောက်ပါ။",
-    DEFAULT: "တစ်ခုခု မှားယွင်းနေပါသည်။"
+    USER_NOT_FOUND: "သုံးစွဲသူကို ရှာမတွေ့ပါ။",
+    INVALID_CREDENTIALS: "လက်ရှိထည့်ထားသော username (သို့မဟုတ်) Password တစ်ခုခုမှားယွင်းနေပါတယ်။  ",
+    SERVER_ERROR: "စနစ်ပိုင်းဆိုင်ရာ ချို့ယွင်းချက်တွေ့ရှိရလို့ Developer များအမြန်ဆုံးပြင်ဆင်ပေးနေပါတယ် ။ ခေတ္တခနစောင့်ဆိုင်းပေးပြီမှ ပြန်လည်ဝင်ရောက် အသုံးပြုပေးဖို့မေတ္တာရပ်ခံပါတယ်။",
+    UNAUTHORIZED: "သုံးစွဲသူရဲ့ လက်ရှိလုပ်ဆောင်ချက်များကို ခွင့်ပြုချက် ကန့်သတ်ထားပါတယ်။ နောက်တစ်ကြိမ် login ပြန်လုပ်ပေးပါ။",
+    FORBIDDEN: "လုပ်ဆောင်ချက်ကို ကန့်သတ်ထားပါတယ်။ နောက်တစ်ကြိမ် login ပြန်လုပ်ပေးပါ ။",
+    VALIDATION_ERROR: "ယခုထည့်သွင်းထားတဲ့ အချက်အလက်တွေ မှားယွင်းနေပါတယ်",
+    DUPLICATE_KEY_ERROR: "ယခု အချက်အလက်တွေက စနစ်ထဲမှာ ထည့်သွင်းပြီးသား ဖြစ်ပါတယ်။",
+    TOKEN_EXPIRED: "ဝင်ရောက်ခွင့်ကုဒ် သက်တမ်းကုန်ဆုံးသွားပါပြီ။ ကျေးဇူးပြုပြီး နောက်တစ်ကြိမ် login ပြန်လုပ်ပေးပါ။",
+    INVALID_TOKEN: "ဝင်ရောက်ခွင့်ကုဒ် မှားယွင်းနေပါတယ်။ ကျေးဇူးပြုပြီး နောက်တစ်ကြိမ် login ပြန်လုပ်ပေးပါ။",
+    DEFAULT: "စနစ်ပိုင်းဆိုင်ရာ တစ်ခုခု မှားယွင်းနေပါတယ်။"
   },
   en: {
     USER_NOT_FOUND: "User not found.",
-    INVALID_CREDENTIALS: "Invalid email or password.",
+    INVALID_CREDENTIALS: "Invalid username or password.",
     SERVER_ERROR: "A system error has occurred. Please wait a moment and try again.",
     UNAUTHORIZED: "You are not authorized to perform this action. Please log in again.",
     FORBIDDEN: "Access denied. You do not have permission for this action.",

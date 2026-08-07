@@ -35,7 +35,7 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 md:p-4 animate-in fade-in duration-200">
       <div
         ref={modalRef}
         className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-7xl h-[85vh] overflow-hidden flex flex-col border border-white/40 animate-in zoom-in-95 duration-200"
@@ -49,7 +49,7 @@ export const Modal: React.FC<ModalProps> = ({
             <X className="w-6 h-6" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">{children}</div>
       </div>
     </div>
   );

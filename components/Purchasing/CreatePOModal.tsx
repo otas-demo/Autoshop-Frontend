@@ -253,8 +253,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
 
         <div className="bg-white p-6 rounded-xl shadow-sm border flex flex-col">
           <h2 className="font-bold text-lg mb-4">PO Summary</h2>
-          <div className="flex-1 overflow-auto mb-4">
-            <table className="w-full text-sm text-left">
+          <div className="flex-1 overflow-x-auto mb-4">
+            <table className="w-full text-sm text-left min-w-[500px]">
               <thead className="bg-slate-50">
                 <tr className="border-b">
                   <th className="py-2 px-1">Item</th>

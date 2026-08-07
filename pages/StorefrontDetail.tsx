@@ -247,8 +247,9 @@ export const StorefrontDetail: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Header */}
+    <div className="w-full h-[calc(100vh-2rem)]">
+      <div className="bg-white h-full border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 overflow-hidden">
+        {/* Header */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="flex items-center gap-2 sm:gap-4">
           <button
@@ -430,17 +431,17 @@ export const StorefrontDetail: React.FC = () => {
       </div>
 
       {/* Stock Items Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-4 border-b bg-slate-50">
+      <div className="bg-white rounded-xl shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="p-4 border-b bg-slate-50 flex-shrink-0">
           <h2 className="font-semibold text-slate-800">Stock Items</h2>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
             Loading stock items...
           </div>
         ) : filteredStockItems.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
             {searchTerm || selectedCategory !== "all" ? (
               <div>
                 <p className="font-medium mb-2">
@@ -462,7 +463,7 @@ export const StorefrontDetail: React.FC = () => {
             )}
           </div>
         ) : (
-          <div>
+          <div className="flex-1 overflow-y-auto min-h-0">
             {/* Mobile scroll indicator */}
             <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
               ← Swipe to see more →
@@ -741,6 +742,7 @@ export const StorefrontDetail: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
 
       {/* Stock Adjustment Modal */}
       {isAdjustmentModalOpen && selectedStockItem && (

@@ -9,7 +9,8 @@ export interface TransferLineItem {
 export interface CreateWarehouseTransferPayload {
   sourceType: "Warehouse";
   sourceWarehouseId: string;
-  destinationStorefrontId: string;
+  destinationStorefrontId?: string;
+  destinationWarehouseId?: string;
   lineItems: TransferLineItem[];
   transferDate?: string;
   notes?: string;

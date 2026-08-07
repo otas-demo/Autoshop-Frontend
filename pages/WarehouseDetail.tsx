@@ -36,6 +36,8 @@ import {
   updateWarehouseStockQuantity,
   UpdateWarehouseStockQuantityPayload,
 } from "../services/Warehouse/updateWarehouseStockQuantity";
+import { fetchWarehouseProfiles } from "../services/Warehouse/fetchWarehouseProfiles";
+import { WarehouseProfile } from "../types";
 
 interface TransferFormItem {
   productCode: string;
@@ -85,6 +87,9 @@ export const WarehouseDetail: React.FC = () => {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [storefronts, setStorefronts] = useState<StorefrontProfile[]>([]);
   const [selectedStorefrontId, setSelectedStorefrontId] = useState("");
+  const [warehouses, setWarehouses] = useState<WarehouseProfile[]>([]);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
+  const [transferType, setTransferType] = useState<"storefront" | "warehouse">("storefront");
   const [transferItems, setTransferItems] = useState<TransferFormItem[]>([]);
   const [transferDate, setTransferDate] = useState(
     new Date().toISOString().split("T")[0],
@@ -109,6 +114,7 @@ export const WarehouseDetail: React.FC = () => {
   useEffect(() => {
     loadWarehouseStock();
     loadStorefronts();
+    loadWarehouses();
   }, [id, currentPage, itemsPerPage, selectedCategory, searchTerm]);
 
   useEffect(() => {
@@ -200,6 +206,17 @@ export const WarehouseDetail: React.FC = () => {
     }
   };
 
+  const loadWarehouses = async () => {
+    try {
+      const response = await fetchWarehouseProfiles();
+      if (response.success && response.data) {
+        setWarehouses(response.data.filter((w) => w._id !== id && w.status === "active"));
+      }
+    } catch (error) {
+      console.error("Error loading warehouses:", error);
+    }
+  };
+
   // Calculate fallback totals if API doesn't provide summary
   const fallbackTotalQuantity = stockItems.reduce(
     (sum, item) => sum + item.quantity,
@@ -241,7 +258,7 @@ export const WarehouseDetail: React.FC = () => {
     });
   };
 
-  const openTransferModal = (item?: WarehouseStockItem) => {
+  const openTransferModal = (type: "storefront" | "warehouse", item?: WarehouseStockItem) => {
     if (item) {
       const maxQuantity = getTransferMaxQuantity(item);
       if (maxQuantity <= 0) {
@@ -262,6 +279,8 @@ export const WarehouseDetail: React.FC = () => {
       setTransferItems([]);
     }
     setSelectedStorefrontId("");
+    setSelectedWarehouseId("");
+    setTransferType(type);
     setTransferDate(new Date().toISOString().split("T")[0]);
     setTransferNotes("");
     setIsTransferModalOpen(true);
@@ -352,8 +371,12 @@ export const WarehouseDetail: React.FC = () => {
   };
 
   const handleSubmitTransfer = async () => {
-    if (!selectedStorefrontId) {
+    if (transferType === "storefront" && !selectedStorefrontId) {
       toast.error("Please select a destination storefront");
+      return;
+    }
+    if (transferType === "warehouse" && !selectedWarehouseId) {
+      toast.error("Please select a destination warehouse");
       return;
     }
 
@@ -399,14 +422,21 @@ export const WarehouseDetail: React.FC = () => {
         ...(item.notes && { notes: item.notes }),
       }));
 
-      const result = await createWarehouseTransfer({
+      const payload: any = {
         sourceType: "Warehouse",
         sourceWarehouseId: id!,
-        destinationStorefrontId: selectedStorefrontId,
         lineItems,
         transferDate,
         ...(transferNotes && { notes: transferNotes }),
-      });
+      };
+
+      if (transferType === "storefront") {
+        payload.destinationStorefrontId = selectedStorefrontId;
+      } else {
+        payload.destinationWarehouseId = selectedWarehouseId;
+      }
+
+      const result = await createWarehouseTransfer(payload);
 
       if (result.success) {
         toast.success("Transfer created successfully!");
@@ -505,13 +535,14 @@ export const WarehouseDetail: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="w-full h-[calc(100vh-2rem)]">
+      <div className="bg-white h-full border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 overflow-hidden">
       {/* Header */}
-      <div className="flex gap-4 mb-6 justify-between">
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => navigate("/warehouse")}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors hidden md:inline"
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
@@ -532,15 +563,26 @@ export const WarehouseDetail: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-2 items-center ">
           {userRole === "owner" && (
-            <button
-              onClick={() => openTransferModal()}
-              disabled={stockItems.length === 0}
-              className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-            >
-              <ArrowRightLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Transfer to Storefront</span>
-              <span className="sm:hidden">Transfer</span>
-            </button>
+            <>
+              <button
+                onClick={() => openTransferModal("storefront")}
+                disabled={stockItems.length === 0}
+                className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Transfer to Storefront</span>
+                <span className="sm:hidden">Storefront</span>
+              </button>
+              <button
+                onClick={() => openTransferModal("warehouse")}
+                disabled={stockItems.length === 0}
+                className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Transfer to Warehouse</span>
+                <span className="sm:hidden">Warehouse</span>
+              </button>
+            </>
           )}
 
           <button
@@ -679,17 +721,17 @@ export const WarehouseDetail: React.FC = () => {
       </div>
 
       {/* Stock Items Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-4 border-b bg-slate-50">
+      <div className="bg-white rounded-xl shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="p-4 border-b bg-slate-50 flex-shrink-0">
           <h2 className="font-semibold text-slate-800">Stock Items</h2>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
             Loading stock items...
           </div>
         ) : stockItems.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
             {searchTerm || selectedCategory !== "all" ? (
               <div>
                 <p className="font-medium mb-2">
@@ -710,7 +752,7 @@ export const WarehouseDetail: React.FC = () => {
             )}
           </div>
         ) : (
-          <div>
+          <div className="flex-1 overflow-y-auto min-h-0">
             {/* Mobile scroll indicator */}
             <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
               ← Swipe to see more →
@@ -819,9 +861,9 @@ export const WarehouseDetail: React.FC = () => {
                         {userRole === "owner" && (
                           <div className="flex items-center gap-1 sm:gap-2">
                             <button
-                              onClick={() => openTransferModal(item)}
+                              onClick={() => openTransferModal("storefront", item)}
                               disabled={item.quantity == 0}
-                              className="text-xs bg-purple-50 text-primary-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-purple-100 border border-purple-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="text-xs bg-blue-50 text-primary-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-blue-100 border border-blue-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <ArrowRightLeft className="w-3 h-3" />{" "}
                               <span className="hidden sm:inline">Transfer</span>
@@ -920,6 +962,7 @@ export const WarehouseDetail: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
 
       {/* Transfer Modal */}
       {isTransferModalOpen && (
@@ -928,7 +971,7 @@ export const WarehouseDetail: React.FC = () => {
             <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <ArrowRightLeft className="w-5 h-5 text-primary-600" />
-                Transfer to Storefront
+                {transferType === "storefront" ? "Transfer to Storefront" : "Transfer to Warehouse"}
               </h2>
               <button
                 onClick={() => setIsTransferModalOpen(false)}
@@ -950,24 +993,44 @@ export const WarehouseDetail: React.FC = () => {
                 </p>
               </div>
 
-              {/* Destination Storefront */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Destination Storefront <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-primary outline-none"
-                  value={selectedStorefrontId}
-                  onChange={(e) => setSelectedStorefrontId(e.target.value)}
-                >
-                  <option value="">Select Storefront...</option>
-                  {storefronts.map((sf) => (
-                    <option key={sf._id} value={sf._id}>
-                      {sf.locationName} ({sf.locationCode})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Destination Selector */}
+              {transferType === "storefront" ? (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Destination Storefront <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-primary outline-none"
+                    value={selectedStorefrontId}
+                    onChange={(e) => setSelectedStorefrontId(e.target.value)}
+                  >
+                    <option value="">Select Storefront...</option>
+                    {storefronts.map((sf) => (
+                      <option key={sf._id} value={sf._id}>
+                        {sf.locationName} ({sf.locationCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Destination Warehouse <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-primary outline-none"
+                    value={selectedWarehouseId}
+                    onChange={(e) => setSelectedWarehouseId(e.target.value)}
+                  >
+                    <option value="">Select Warehouse...</option>
+                    {warehouses.map((w) => (
+                      <option key={w._id} value={w._id}>
+                        {w.locationName} ({w.locationCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Transfer Items */}
               <div>

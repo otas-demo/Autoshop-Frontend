@@ -319,7 +319,7 @@ export const CreditOrders: React.FC = () => {
   return (
     <div className="w-full">
       <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
-        
+
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -330,7 +330,7 @@ export const CreditOrders: React.FC = () => {
               {t("creditOrders.subtitle")}
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={loadOrders}
@@ -360,341 +360,341 @@ export const CreditOrders: React.FC = () => {
           </div>
         </div>
 
-      {/* Filters */}
-      <CreditOrdersFilters
-        search={search}
-        onSearchChange={setSearch}
-        storefronts={storefronts}
-        selectedStorefrontId={selectedStorefrontId}
-        onStorefrontChange={setSelectedStorefrontId}
-        paymentMethodFilter={paymentMethodFilter}
-        onPaymentMethodChange={setPaymentMethodFilter}
-        orders={orders}
-        filteredOrders={filteredOrders}
-      />
+        {/* Filters */}
+        <CreditOrdersFilters
+          search={search}
+          onSearchChange={setSearch}
+          storefronts={storefronts}
+          selectedStorefrontId={selectedStorefrontId}
+          onStorefrontChange={setSelectedStorefrontId}
+          paymentMethodFilter={paymentMethodFilter}
+          onPaymentMethodChange={setPaymentMethodFilter}
+          orders={orders}
+          filteredOrders={filteredOrders}
+        />
 
-      {/* Orders Table */}
-      {/* Orders Table */}
-      <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
-        {loading ? (
-          <div className="p-8 text-center text-slate-500">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
-            <p>{t("creditOrders.loadingCreditOrders")}</p>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p>{t("creditOrders.noCreditOrdersFound")}</p>
-          </div>
-        ) : (
-          <div>
-            {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-              <table className="w-full text-sm text-left min-w-[1000px]">
-                <thead className="text-slate-500">
-                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
-                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Credit Order Num</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Shop</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Items</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Total</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Left</th>
-                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {filteredOrders.map((order, index) => (
-                    <tr key={order._id} className="hover:bg-slate-50/40 transition-colors">
-                      {/* No */}
-                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
-                        {String(index + 1).padStart(2, "0")}
-                      </td>
-
-                      {/* Credit Order Num */}
-                      <td
-                        onClick={() => handleViewOrder(order._id)}
-                        className="px-4 py-4 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs sm:text-sm whitespace-nowrap"
-                      >
-                        {order.orderNumber}
-                      </td>
-
-                      {/* Shop */}
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-slate-800 text-xs sm:text-sm">
-                          {order.storefrontId?.locationName || order.storefrontId?.storefrontName || "-"}
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-medium">
-                          {order.storefrontId?.locationCode || order.storefrontId?.storefrontCode || "Main Store"}
-                        </div>
-                      </td>
-
-                      {/* Customer */}
-                      <td className="px-4 py-4">
-                        {order.creditPersonId && typeof order.creditPersonId === "object" ? (
-                          <>
-                            <div className="font-semibold text-slate-800 text-xs sm:text-sm">
-                              {order.creditPersonId.name}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-medium">
-                              Regular
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="font-semibold text-slate-400 text-xs sm:text-sm">
-                              {t("creditOrders.noCustomerAssigned")}
-                            </div>
-                            <div className="text-[10px] text-slate-300 font-medium">
-                              -
-                            </div>
-                          </>
-                        )}
-                      </td>
-
-                      {/* Items */}
-                      <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
-                        {order.ordersProducts?.length || 0} {order.ordersProducts?.length === 1 ? "Item" : "Items"}
-                      </td>
-
-                      {/* Total */}
-                      <td className="px-4 py-4 font-bold text-slate-800 text-xs whitespace-nowrap">
-                        {order.finalAmount?.toLocaleString()}{" "}
-                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
-                      </td>
-
-                      {/* Paid */}
-                      <td className="px-4 py-4 font-bold text-green-600 text-xs whitespace-nowrap">
-                        {order.paidAmount?.toLocaleString()}{" "}
-                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
-                      </td>
-
-                      {/* Left */}
-                      <td className="px-4 py-4 font-bold text-[#2216a8] text-xs whitespace-nowrap">
-                        {order.remainingBalance?.toLocaleString()}{" "}
-                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleOpenCreditPersonModal(order)}
-                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
-                          >
-                            {t("common.edit")}
-                          </button>
-                          <button
-                            onClick={() => handleViewOrder(order._id)}
-                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
-                          >
-                            {t("common.checkItem")}
-                          </button>
-                        </div>
-                      </td>
+        {/* Orders Table */}
+        {/* Orders Table */}
+        <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
+          {loading ? (
+            <div className="p-8 text-center text-slate-500">
+              <RefreshCw className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+              <p>{t("creditOrders.loadingCreditOrders")}</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p>{t("creditOrders.noCreditOrdersFound")}</p>
+            </div>
+          ) : (
+            <div>
+              {/* Table container with horizontal scroll on mobile */}
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+                <table className="w-full text-sm text-left min-w-[1000px]">
+                  <thead className="text-slate-500">
+                    <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Credit Order Num</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Shop</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Items</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Total</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Left</th>
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {filteredOrders.map((order, index) => (
+                      <tr key={order._id} className="hover:bg-slate-50/40 transition-colors">
+                        {/* No */}
+                        <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                          {String(index + 1).padStart(2, "0")}
+                        </td>
+
+                        {/* Credit Order Num */}
+                        <td
+                          onClick={() => handleViewOrder(order._id)}
+                          className="px-4 py-4 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs sm:text-sm whitespace-nowrap"
+                        >
+                          {order.orderNumber}
+                        </td>
+
+                        {/* Shop */}
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                            {order.storefrontId?.locationName || order.storefrontId?.storefrontName || "-"}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-medium">
+                            {order.storefrontId?.locationCode || order.storefrontId?.storefrontCode || "Main Store"}
+                          </div>
+                        </td>
+
+                        {/* Customer */}
+                        <td className="px-4 py-4">
+                          {order.creditPersonId && typeof order.creditPersonId === "object" ? (
+                            <>
+                              <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                                {order.creditPersonId.name}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-medium">
+                                Regular
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="font-semibold text-slate-400 text-xs sm:text-sm">
+                                {t("creditOrders.noCustomerAssigned")}
+                              </div>
+                              <div className="text-[10px] text-slate-300 font-medium">
+                                -
+                              </div>
+                            </>
+                          )}
+                        </td>
+
+                        {/* Items */}
+                        <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
+                          {order.ordersProducts?.length || 0} {order.ordersProducts?.length === 1 ? "Item" : "Items"}
+                        </td>
+
+                        {/* Total */}
+                        <td className="px-4 py-4 font-bold text-slate-800 text-xs whitespace-nowrap">
+                          {order.finalAmount?.toLocaleString()}{" "}
+                          <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                        </td>
+
+                        {/* Paid */}
+                        <td className="px-4 py-4 font-bold text-green-600 text-xs whitespace-nowrap">
+                          {order.paidAmount?.toLocaleString()}{" "}
+                          <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                        </td>
+
+                        {/* Left */}
+                        <td className="px-4 py-4 font-bold text-[#2216a8] text-xs whitespace-nowrap">
+                          {order.remainingBalance?.toLocaleString()}{" "}
+                          <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleOpenCreditPersonModal(order)}
+                              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                            >
+                              {t("common.edit")}
+                            </button>
+                            <button
+                              onClick={() => handleViewOrder(order._id)}
+                              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                            >
+                              {t("common.view")}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Order Detail Modal */}
+        <OrderDetailModal
+          isOpen={!!selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          order={selectedOrder}
+          loading={loadingDetail}
+          onRefresh={handleRefreshOrderDetails}
+        />
+
+        {/* Credit Person Selection Modal */}
+        <CreditPersonModal
+          isOpen={showCreditPersonModal}
+          order={selectedOrderForCredit}
+          creditPersonas={creditPersonas}
+          assigning={assigningCreditPerson}
+          onClose={() => {
+            setShowCreditPersonModal(false);
+            setSelectedOrderForCredit(null);
+          }}
+          onAssign={handleAssignCreditPerson}
+        />
+        {/* Paid Amount Edit Modal */}
+        {showPaidAmountModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4">
+                  <Edit2 className="w-5 h-5 text-blue-600" />
+                  Edit Paid Amount
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Order Number
+                    </label>
+                    <div className="p-2 bg-slate-50 rounded-lg text-slate-600 text-sm">
+                      {selectedOrderForPaidAmount?.orderNumber}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Total Amount
+                    </label>
+                    <div className="p-2 bg-slate-50 rounded-lg text-slate-800 font-semibold text-sm">
+                      {selectedOrderForPaidAmount?.finalAmount.toLocaleString()}{" "}
+                      MMK
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Enter Paid Amount
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={newPaidAmount}
+                        onChange={(e) => setNewPaidAmount(e.target.value)}
+                        placeholder="Enter amount..."
+                        className="w-full pl-3 pr-12 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-lg font-semibold"
+                        autoFocus
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
+                        MMK
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-blue-700">Remaining Balance:</span>
+                      <span className="font-bold text-blue-800">
+                        {Math.max(
+                          0,
+                          (selectedOrderForPaidAmount?.finalAmount || 0) -
+                          Number(newPaidAmount || 0),
+                        ).toLocaleString()}{" "}
+                        MMK
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={() => setShowPaidAmountModal(false)}
+                    className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUpdatePaidAmount}
+                    disabled={updatingPaidAmount || !newPaidAmount}
+                    className="flex-1 py-3 px-4 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                  >
+                    {updatingPaidAmount ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Confirm"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <Trash2 className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800">
+                      Delete Credit Order
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      This action cannot be undone
+                    </p>
+                  </div>
+                </div>
+
+                {orderToDelete && (
+                  <div className="bg-slate-50 rounded-lg p-4 mb-6">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Order Number:</span>
+                        <span className="font-medium text-slate-800">
+                          {orderToDelete.orderNumber}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Total Amount:</span>
+                        <span className="font-medium text-slate-800">
+                          {orderToDelete.finalAmount.toLocaleString()} MMK
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Customer:</span>
+                        <span className="font-medium text-slate-800">
+                          {orderToDelete.creditPersonId?.name ||
+                            "No customer assigned"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+                  <p className="text-sm text-red-800">
+                    <strong>Warning:</strong> Deleting this credit order will
+                    permanently remove all associated data including payment
+                    records and customer balance information.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCloseDeleteConfirm}
+                    disabled={deletingOrder}
+                    className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteOrder}
+                    disabled={deletingOrder}
+                    className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2"
+                  >
+                    {deletingOrder ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete Order"
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Order Detail Modal */}
-      <OrderDetailModal
-        isOpen={!!selectedOrder}
-        onClose={() => setSelectedOrder(null)}
-        order={selectedOrder}
-        loading={loadingDetail}
-        onRefresh={handleRefreshOrderDetails}
-      />
-
-      {/* Credit Person Selection Modal */}
-      <CreditPersonModal
-        isOpen={showCreditPersonModal}
-        order={selectedOrderForCredit}
-        creditPersonas={creditPersonas}
-        assigning={assigningCreditPerson}
-        onClose={() => {
-          setShowCreditPersonModal(false);
-          setSelectedOrderForCredit(null);
-        }}
-        onAssign={handleAssignCreditPerson}
-      />
-      {/* Paid Amount Edit Modal */}
-      {showPaidAmountModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4">
-                <Edit2 className="w-5 h-5 text-blue-600" />
-                Edit Paid Amount
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Order Number
-                  </label>
-                  <div className="p-2 bg-slate-50 rounded-lg text-slate-600 text-sm">
-                    {selectedOrderForPaidAmount?.orderNumber}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Total Amount
-                  </label>
-                  <div className="p-2 bg-slate-50 rounded-lg text-slate-800 font-semibold text-sm">
-                    {selectedOrderForPaidAmount?.finalAmount.toLocaleString()}{" "}
-                    MMK
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Enter Paid Amount
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={newPaidAmount}
-                      onChange={(e) => setNewPaidAmount(e.target.value)}
-                      placeholder="Enter amount..."
-                      className="w-full pl-3 pr-12 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-lg font-semibold"
-                      autoFocus
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
-                      MMK
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-blue-700">Remaining Balance:</span>
-                    <span className="font-bold text-blue-800">
-                      {Math.max(
-                        0,
-                        (selectedOrderForPaidAmount?.finalAmount || 0) -
-                          Number(newPaidAmount || 0),
-                      ).toLocaleString()}{" "}
-                      MMK
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setShowPaidAmountModal(false)}
-                  className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdatePaidAmount}
-                  disabled={updatingPaidAmount || !newPaidAmount}
-                  className="flex-1 py-3 px-4 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-                >
-                  {updatingPaidAmount ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Confirm"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">
-                    Delete Credit Order
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    This action cannot be undone
-                  </p>
-                </div>
-              </div>
-
-              {orderToDelete && (
-                <div className="bg-slate-50 rounded-lg p-4 mb-6">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Order Number:</span>
-                      <span className="font-medium text-slate-800">
-                        {orderToDelete.orderNumber}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Total Amount:</span>
-                      <span className="font-medium text-slate-800">
-                        {orderToDelete.finalAmount.toLocaleString()} MMK
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Customer:</span>
-                      <span className="font-medium text-slate-800">
-                        {orderToDelete.creditPersonId?.name ||
-                          "No customer assigned"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-                <p className="text-sm text-red-800">
-                  <strong>Warning:</strong> Deleting this credit order will
-                  permanently remove all associated data including payment
-                  records and customer balance information.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCloseDeleteConfirm}
-                  disabled={deletingOrder}
-                  className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteOrder}
-                  disabled={deletingOrder}
-                  className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2"
-                >
-                  {deletingOrder ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete Order"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  </div>
   );
 };

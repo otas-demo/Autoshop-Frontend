@@ -16,6 +16,7 @@ export const en = {
     filter: "Filter",
     refresh: "Refresh",
     view: "View",
+    viewDetails: "View Details",
     back: "Back",
     next: "Next",
     previous: "Previous",

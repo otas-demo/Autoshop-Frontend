@@ -16,6 +16,7 @@ export const my = {
     filter: "စစ်ထုတ်မည်",
     refresh: "Refresh လုပ်မယ်",
     view: "ကြည့်ရှုမည်",
+    viewDetails: "အသေးစိတ် ကြည့်ရှုမည်",
     back: "နောက်သို့",
     next: "ရှေ့သို့",
     previous: "နောက်သို့",

@@ -167,7 +167,7 @@ export const Credits: React.FC = () => {
   return (
     <div className="w-full">
       <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
-        
+
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -178,7 +178,7 @@ export const Credits: React.FC = () => {
               {t("credits.subtitle")}
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleRefresh}
@@ -243,209 +243,209 @@ export const Credits: React.FC = () => {
           />
         </div>
 
-      {/* Credit Personas Table */}
-      <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
-        <div className="p-4 border-b bg-slate-50">
-          <h2 className="font-semibold text-slate-800">
-            {t("credits.title")} ({filteredPersonas.length})
-          </h2>
+        {/* Credit Personas Table */}
+        <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
+          <div className="p-4 border-b bg-slate-50">
+            <h2 className="font-semibold text-slate-800">
+              {t("credits.title")} ({filteredPersonas.length})
+            </h2>
+          </div>
+
+          {loading ? (
+            <div className="p-8 text-center text-slate-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {t("credits.loading")}
+            </div>
+          ) : filteredPersonas.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              {search ? t("credits.noResults") : t("credits.noProfiles")}
+            </div>
+          ) : (
+            <div>
+              {/* Table container with horizontal scroll on mobile */}
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+                <table className="w-full text-sm text-left min-w-[800px]">
+                  <thead className="text-slate-500">
+                    <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Phone Number</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Address</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Status</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Create Date</th>
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {filteredPersonas.map((persona, index) => (
+                      <tr key={persona._id} className="hover:bg-slate-50/40 transition-colors">
+                        {/* No */}
+                        <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                          {String(index + 1).padStart(2, "0")}
+                        </td>
+
+                        {/* Customer */}
+                        <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                          {persona.name}
+                        </td>
+
+                        {/* Phone Number */}
+                        <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                          {persona.phone}
+                        </td>
+
+                        {/* Address */}
+                        <td className="px-4 py-4 text-slate-500 text-xs font-medium max-w-xs truncate" title={persona.address || ""}>
+                          {persona.address || "-"}
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-4">
+                          {persona.blacklist ? (
+                            <span className="border border-red-200 text-red-600 bg-red-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              Blacklisted
+                            </span>
+                          ) : (
+                            <span className="border border-green-200 text-green-600 bg-green-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              Active
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Create Date */}
+                        <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
+                          {new Date(persona.createdAt).toLocaleDateString("en-US")}{" "}
+                          {new Date(persona.createdAt).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleOpenEditModal(persona)}
+                              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                            >
+                              {t("common.edit")}
+                            </button>
+                            <button
+                              onClick={() => handleViewPersona(persona)}
+                              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                            >
+                              {t("common.view")}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <div className="p-8 text-center text-slate-500 flex items-center justify-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            {t("credits.loading")}
-          </div>
-        ) : filteredPersonas.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            {search ? t("credits.noResults") : t("credits.noProfiles")}
-          </div>
-        ) : (
-          <div>
-            {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-              <table className="w-full text-sm text-left min-w-[800px]">
-                <thead className="text-slate-500">
-                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
-                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Phone Number</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Address</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Status</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Create Date</th>
-                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {filteredPersonas.map((persona, index) => (
-                    <tr key={persona._id} className="hover:bg-slate-50/40 transition-colors">
-                      {/* No */}
-                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
-                        {String(index + 1).padStart(2, "0")}
-                      </td>
+        {/* Add Credit Profile Modal */}
+        {isAddModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-[#2216a8]" />
+                  {editingId ? t("credits.editProfile") : t("credits.addProfile")}
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleCloseAddModal}
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
 
-                      {/* Customer */}
-                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
-                        {persona.name}
-                      </td>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {t("credits.name")} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                    placeholder={t("credits.namePlaceholder")}
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                  />
+                </div>
 
-                      {/* Phone Number */}
-                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
-                        {persona.phone}
-                      </td>
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {t("credits.phone")} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                    placeholder={t("credits.phonePlaceholder")}
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                  />
+                </div>
 
-                      {/* Address */}
-                      <td className="px-4 py-4 text-slate-500 text-xs font-medium max-w-xs truncate" title={persona.address || ""}>
-                        {persona.address || "-"}
-                      </td>
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {t("credits.address")}
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                    placeholder={t("credits.addressPlaceholder")}
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
 
-                      {/* Status */}
-                      <td className="px-4 py-4">
-                        {persona.blacklist ? (
-                          <span className="border border-red-200 text-red-600 bg-red-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                            Blacklisted
-                          </span>
-                        ) : (
-                          <span className="border border-green-200 text-green-600 bg-green-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                            Active
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Create Date */}
-                      <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
-                        {new Date(persona.createdAt).toLocaleDateString("en-US")}{" "}
-                        {new Date(persona.createdAt).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleOpenEditModal(persona)}
-                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
-                          >
-                            {t("common.edit")}
-                          </button>
-                          <button
-                            onClick={() => handleViewPersona(persona)}
-                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
-                          >
-                            {t("common.checkItem")}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="p-6 border-t border-gray-200/50 bg-slate-50/40 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleCloseAddModal}
+                  className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handleSubmitProfile}
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                      {editingId ? t("credits.updating") : t("credits.creating")}
+                    </>
+                  ) : editingId ? (
+                    t("credits.updateProfile")
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />{" "}
+                      <span>
+                        {t("credits.createProfile")}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Add Credit Profile Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
-              <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-[#2216a8]" />
-                {editingId ? t("credits.editProfile") : t("credits.addProfile")}
-              </h2>
-              <button
-                type="button"
-                onClick={handleCloseAddModal}
-                className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("credits.name")} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
-                  placeholder={t("credits.namePlaceholder")}
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("credits.phone")} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
-                  placeholder={t("credits.phonePlaceholder")}
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("credits.address")}
-                </label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
-                  placeholder={t("credits.addressPlaceholder")}
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200/50 bg-slate-50/40 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={handleCloseAddModal}
-                className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                onClick={handleSubmitProfile}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />{" "}
-                    {editingId ? t("credits.updating") : t("credits.creating")}
-                  </>
-                ) : editingId ? (
-                  t("credits.updateProfile")
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />{" "}
-                    <span>
-                      {t("credits.createProfile")}
-                    </span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  </div>
   );
 };

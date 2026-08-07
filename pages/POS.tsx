@@ -1480,8 +1480,8 @@ export const POS: React.FC = () => {
                     min="0"
                     max="100"
                     className="discount-input w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
-                    value={discount}
-                    onChange={(e) => setDiscount(Number(e.target.value))}
+                    value={discount === 0 ? "" : discount}
+                    onChange={(e) => setDiscount(e.target.value === "" ? 0 : Number(e.target.value))}
                   />
                 </div>
               )}
@@ -1496,8 +1496,8 @@ export const POS: React.FC = () => {
                     type="number"
                     min="0"
                     className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#2216a8] focus:border-transparent outline-none transition-all"
-                    value={markupAmount}
-                    onChange={(e) => setMarkupAmount(Number(e.target.value))}
+                    value={markupAmount === 0 ? "" : markupAmount}
+                    onChange={(e) => setMarkupAmount(e.target.value === "" ? 0 : Number(e.target.value))}
                   />
                 </div>
               )}
@@ -1521,7 +1521,7 @@ export const POS: React.FC = () => {
                     ? "bg-slate-100 cursor-not-allowed"
                     : ""
                     }`}
-                  value={paymentMethod === PaymentMethod.FOC ? 0 : paidAmount}
+                  value={paymentMethod === PaymentMethod.FOC ? 0 : (paidAmount === 0 ? "" : paidAmount)}
                   onChange={(e) => {
                     const value =
                       e.target.value === "" ? 0 : Number(e.target.value);

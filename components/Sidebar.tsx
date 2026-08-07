@@ -60,21 +60,56 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     onClose();
   };
 
-  const menuItems = [
-    { path: "/pos", label: t("sidebar.checkout"), icon: ShoppingCart },
-    { path: "/inventory", label: t("sidebar.inventory"), icon: Package },
-    { path: "/storefront", label: t("sidebar.storefront"), icon: Store },
-    { path: "/orders", label: t("sidebar.orders"), icon: Receipt },
-    { path: "/credit-orders", label: t("sidebar.creditOrder"), icon: CreditCard },
-    { path: "/credits", label: t("sidebar.creditSales"), icon: Users },
-    { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
-    { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
-    { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
-    { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
-    { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
-    { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
-    { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
-    { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
+  const menuGroups = [
+    {
+      id: "sales",
+      label: t("sidebar.salesGroup"),
+      icon: ShoppingBag,
+      items: [
+        { path: "/pos", label: t("sidebar.checkout"), icon: ShoppingCart },
+        { path: "/storefront", label: t("sidebar.storefront"), icon: Store },
+        { path: "/orders", label: t("sidebar.orders"), icon: Receipt },
+      ],
+    },
+    {
+      id: "credits",
+      label: t("sidebar.creditsGroup"),
+      icon: Users,
+      items: [
+        { path: "/credit-orders", label: t("sidebar.creditOrder"), icon: CreditCard },
+        { path: "/credits", label: t("sidebar.creditSales"), icon: Users },
+      ],
+    },
+    {
+      id: "inventory",
+      label: t("sidebar.inventoryGroup"),
+      icon: Package,
+      items: [
+        { path: "/inventory", label: t("sidebar.inventory"), icon: Package },
+        { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
+        { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
+        { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
+      ],
+    },
+    {
+      id: "finance",
+      label: t("sidebar.financeGroup"),
+      icon: PieChart,
+      items: [
+        { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
+        { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
+        { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
+      ],
+    },
+    {
+      id: "system",
+      label: t("sidebar.systemGroup"),
+      icon: Settings,
+      items: [
+        { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
+        { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
+      ],
+    },
   ];
 
   const userRole = adminData?.role || currentUser?.role;
@@ -91,7 +126,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     return true;
   };
 
-  const visibleItems = menuItems.filter((item) => hasPermission(item.path));
+  const visibleGroups = menuGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => hasPermission(item.path)),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [activePopover, setActivePopover] = useState<string | null>(null);
+
+  // Auto-expand group containing the active item on path change or mount
+  useEffect(() => {
+    visibleGroups.forEach((group) => {
+      const containsActive = group.items.some((item) => item.path === location.pathname);
+      if (containsActive) {
+        setExpandedGroups((prev) => ({ ...prev, [group.id]: true }));
+      }
+    });
+  }, [location.pathname, adminData, currentUser]);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
 
   const toggleCollapse = () => {
     const nextCollapsed = !isCollapsed;
@@ -140,31 +200,133 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
             </div>
 
             {/* Navigation List */}
-            <nav className="mt-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-17rem)] pr-0.5 no-scrollbar">
-              {visibleItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+            <nav className="mt-4 space-y-2 overflow-y-auto max-h-[calc(100vh-17rem)] pr-0.5 no-scrollbar">
+              {visibleGroups.map((group) => {
+                const GroupIcon = group.icon;
+                const isExpanded = !!expandedGroups[group.id];
+                const hasActiveItem = group.items.some((item) => location.pathname === item.path);
 
+                if (isCollapsed) {
+                  return (
+                    <div
+                      key={group.id}
+                      className="relative flex justify-center py-1"
+                      onMouseEnter={() => setActivePopover(group.id)}
+                      onMouseLeave={() => setActivePopover(null)}
+                    >
+                      <button
+                        onClick={() => {
+                          if (group.items.length > 0) {
+                            navigate(group.items[0].path);
+                            onClose();
+                            setActivePopover(null);
+                          }
+                        }}
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 group ${
+                          hasActiveItem
+                            ? "bg-[#2216a8] text-white shadow-md shadow-indigo-600/10"
+                            : "text-gray-400 hover:bg-gray-50 hover:text-[#2216a8]"
+                        }`}
+                      >
+                        <GroupIcon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                          hasActiveItem ? "text-white" : "text-gray-400 group-hover:text-[#2216a8]"
+                        }`} />
+                      </button>
+
+                      {/* Floating Submenu */}
+                      {activePopover === group.id && (
+                        <div 
+                          className="absolute left-16 top-0 w-56 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-2.5 z-50 animate-in fade-in slide-in-from-left-2 duration-150"
+                        >
+                          <div className="text-xs font-bold text-[#2216a8] px-3 py-1.5 border-b border-gray-50 mb-1">
+                            {group.label}
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            {group.items.map((item) => {
+                              const ItemIcon = item.icon;
+                              const isActive = location.pathname === item.path;
+                              return (
+                                <NavLink
+                                  key={item.path}
+                                  to={item.path}
+                                  onClick={onClose}
+                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all font-medium text-left cursor-pointer ${
+                                    isActive
+                                      ? "bg-[#2216a8]/10 text-[#2216a8]"
+                                      : "text-gray-500 hover:text-[#2216a8] hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <ItemIcon className={`w-4 h-4 ${isActive ? "text-[#2216a8]" : "text-gray-400"}`} />
+                                  <span className="text-xs font-semibold">{item.label}</span>
+                                </NavLink>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Expanded Sidebar Mode
                 return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={onClose}
-                    className={`flex items-center transition-all duration-200 group ${isActive
-                      ? "bg-[#2216a8] text-white shadow-md shadow-indigo-600/10"
-                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-                      } ${isCollapsed ? "w-12 h-12 rounded-2xl mx-auto justify-center" : "w-full px-4 py-2.5 rounded-xl"}`}
-                    title={isCollapsed ? item.label : ""}
-                  >
-                    <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"
-                      } ${isCollapsed ? "" : "mr-3"}`} />
+                  <div key={group.id} className="space-y-1">
+                    {/* Group Header */}
+                    <button
+                      onClick={() => toggleGroup(group.id)}
+                      className={`flex items-center justify-between w-full px-4 py-2.5 rounded-xl transition-all duration-200 group font-medium text-sm ${
+                        hasActiveItem
+                          ? "bg-indigo-50/50 text-[#2216a8]"
+                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <GroupIcon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 mr-3 ${
+                          hasActiveItem ? "text-[#2216a8]" : "text-gray-400 group-hover:text-gray-600"
+                        }`} />
+                        <span className="font-semibold tracking-wide text-left text-sm">{group.label}</span>
+                      </div>
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${
+                          isExpanded ? "rotate-0" : "-rotate-90"
+                        }`}
+                      />
+                    </button>
 
-                    {!isCollapsed && (
-                      <span className="text-sm font-medium tracking-wide">
-                        {item.label}
-                      </span>
-                    )}
-                  </NavLink>
+                    {/* Group Sub-Items */}
+                    <div
+                      className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                        isExpanded ? "max-h-[500px] opacity-100 py-1" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="pl-4 space-y-1 border-l border-gray-100 ml-5">
+                        {group.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          const isActive = location.pathname === item.path;
+
+                          return (
+                            <NavLink
+                              key={item.path}
+                              to={item.path}
+                              onClick={onClose}
+                              className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 group ${
+                                isActive
+                                  ? "bg-[#2216a8] text-white shadow-sm"
+                                  : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                              }`}
+                            >
+                              <ItemIcon className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 mr-3 ${
+                                isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"
+                              }`} />
+                              <span className="text-xs font-semibold tracking-wide">
+                                {item.label}
+                              </span>
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </nav>

@@ -222,8 +222,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     type="number"
                     className="w-full border rounded p-2 text-sm"
                     placeholder="Qty"
-                    value={poQty}
-                    onChange={(e) => setPOQty(Number(e.target.value))}
+                    value={poQty === 0 ? "" : poQty}
+                    onChange={(e) => setPOQty(e.target.value === "" ? 0 : Number(e.target.value))}
                     min="1"
                   />
                   <button

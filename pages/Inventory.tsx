@@ -118,6 +118,9 @@ export const Inventory: React.FC = () => {
       sellingPrice: apiProduct.sellingPrice,
       lowStockThreshold: apiProduct.reorderPoint || 0,
       status: (apiProduct.status as "active" | "inactive") || "active",
+      nearestExpiryDate: (apiProduct as any).nearestExpiryDate || null,
+      isExpired: (apiProduct as any).isExpired || false,
+      isExpiringSoon: (apiProduct as any).isExpiringSoon || false,
     };
   };
 

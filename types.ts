@@ -38,6 +38,9 @@ export interface Product {
   sellingPrice: number;
   lowStockThreshold: number;
   status?: "active" | "inactive";
+  nearestExpiryDate?: string | null;
+  isExpired?: boolean;
+  isExpiringSoon?: boolean;
 }
 
 export interface CartItem extends Product {

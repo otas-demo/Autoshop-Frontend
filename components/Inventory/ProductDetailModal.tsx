@@ -6,15 +6,20 @@ import {
   TrendingUp,
   Store,
   Warehouse,
+  Calendar,
 } from "lucide-react";
 import { ProductDetail } from "../../services/Inventory/fetchProductById";
 import { useLanguage } from "../../context/LanguageContext";
+import { formatExpiryDate, getExpiryStatus, ExpiryStatus } from "../../utils/expiryUtils";
 
 interface ProductDetailModalProps {
   isOpen: boolean;
   loading: boolean;
   product: ProductDetail | null;
   onClose: () => void;
+  restrictLocationType?: "warehouse" | "storefront";
+  restrictLocationId?: string;
+  onTransfer?: (targetType: "storefront" | "warehouse", location: any) => void;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -22,11 +27,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   loading,
   product,
   onClose,
+  restrictLocationType,
+  restrictLocationId,
+  onTransfer,
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<"about" | "quantity">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "quantity" | "batches">("about");
   const [stockTab, setStockTab] = useState<"warehouse" | "storefront">(
-    "storefront",
+    restrictLocationType || "storefront",
   );
 
   if (!isOpen) return null;
@@ -40,6 +48,32 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getExpiryStatusBadge = (expiryDate: string | null | undefined) => {
+    const status = getExpiryStatus(expiryDate);
+    if (status === ExpiryStatus.EXPIRED) {
+      return (
+        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-850 border border-red-200">
+          Expired ({formatExpiryDate(expiryDate)})
+        </span>
+      );
+    }
+    if (status === ExpiryStatus.EXPIRING_SOON) {
+      return (
+        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-850 border border-yellow-200">
+          Expiring Soon ({formatExpiryDate(expiryDate)})
+        </span>
+      );
+    }
+    if (status === ExpiryStatus.VALID) {
+      return (
+        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">
+          Valid ({formatExpiryDate(expiryDate)})
+        </span>
+      );
+    }
+    return <span className="text-slate-400 font-medium">-</span>;
   };
 
   return (
@@ -79,7 +113,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 : "text-slate-600 hover:text-slate-800"
             }`}
           >
-            {t("inventory.productQuantity")}
+            Product Quantity
+          </button>
+          <button
+            onClick={() => setActiveTab("batches")}
+            className={`px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === "batches"
+                ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                : "text-slate-600 hover:text-slate-800"
+            }`}
+          >
+            Batches & Expiries
           </button>
         </div>
 
@@ -115,6 +159,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       </p>
                     </div>
                   </div>
+
+                  {/* Expiry Alert Card (If applicable) */}
+                  {product.nearestExpiryDate && (
+                    <div className={`p-4 rounded-lg border flex items-center gap-3 ${
+                      getExpiryStatus(product.nearestExpiryDate) === ExpiryStatus.EXPIRED
+                        ? "bg-red-50 border-red-200 text-red-900"
+                        : getExpiryStatus(product.nearestExpiryDate) === ExpiryStatus.EXPIRING_SOON
+                        ? "bg-yellow-50 border-yellow-200 text-yellow-900"
+                        : "bg-green-50 border-green-200 text-green-900"
+                    }`}>
+                      <Calendar className="w-5 h-5 text-slate-500" />
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Nearest Expiry Date</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="font-bold">{formatExpiryDate(product.nearestExpiryDate)}</span>
+                          {getExpiryStatusBadge(product.nearestExpiryDate)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Pricing & Profit */}
                   <div className="grid grid-cols-1 gap-4">
@@ -183,44 +247,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           </div>
                         </div>
                       )}
-                    {/* <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                        <p className="text-xs text-green-600 font-medium">
-                          {t("inventory.profit")}
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-xs text-green-600">
-                            {t("inventory.profitPercentage")}
-                          </span>
-                          <span className="text-sm font-medium text-green-800 ml-2">
-                            {product.profitMargin}%
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-xs text-green-600">
-                            {t("inventory.profitAmount")}
-                          </span>
-                          <span className="text-sm font-bold text-green-800 ml-2">
-                            {product.profitAmount.toLocaleString()} MMK
-                          </span>
-                        </div>
-                      </div>
-                    </div> */}
                   </div>
 
                   {/* Product Details Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
-                        SKU
-                      </p>
-                      <p className="text-sm font-mono text-slate-800">
-                        {product.SKU}
-                      </p>
-                    </div> */}
                     <div>
                       <p className="text-xs text-slate-500 font-medium mb-1">
                         {t("inventory.category")}
@@ -229,14 +259,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         {product.category}
                       </p>
                     </div>
-                    {/* <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
-                        {t("inventory.subCategoryDetails")}
-                      </p>
-                      <p className="text-sm text-slate-800">
-                        {product.subCategory || "None"}
-                      </p>
-                    </div> */}
                     <div>
                       <p className="text-xs text-slate-500 font-medium mb-1">
                         {t("inventory.brand")}
@@ -253,20 +275,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         {product.unitOfMeasure}
                       </p>
                     </div>
-                    {/* <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
-                        {t("inventory.productStatus")}
-                      </p>
-                      <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          product.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {product.status}
-                      </span>
-                    </div> */}
                   </div>
 
                   {/* Note */}
@@ -278,20 +286,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       <p className="text-sm text-slate-800">{product.note}</p>
                     </div>
                   )}
-
-                  {/* Description */}
-                  {/* {product.description && (
-                    <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
-                        {t("inventory.productDescription")}
-                      </p>
-                      <p className="text-sm text-slate-800 bg-slate-50 p-3 rounded-lg">
-                        {product.description}
-                      </p>
-                    </div>
-                  )} */}
                 </div>
-              ) : (
+              ) : activeTab === "quantity" ? (
                 <div className="space-y-6">
                   {/* Dates */}
                   <div className="grid grid-cols-2 gap-4">
@@ -326,28 +322,30 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </div>
 
                   {/* Stock Tabs */}
-                  <div className="flex gap-5">
-                    <button
-                      onClick={() => setStockTab("warehouse")}
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        stockTab === "warehouse"
-                          ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                          : "text-slate-600 hover:text-slate-800"
-                      }`}
-                    >
-                      {t("inventory.warehouses")}
-                    </button>
-                    <button
-                      onClick={() => setStockTab("storefront")}
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        stockTab === "storefront"
-                          ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                          : "text-slate-600 hover:text-slate-800"
-                      }`}
-                    >
-                      {t("inventory.storefronts")}
-                    </button>
-                  </div>
+                  {!restrictLocationType && (
+                    <div className="flex gap-5">
+                      <button
+                        onClick={() => setStockTab("warehouse")}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                          stockTab === "warehouse"
+                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                            : "text-slate-600 hover:text-slate-800"
+                        }`}
+                      >
+                        {t("inventory.warehouses")}
+                      </button>
+                      <button
+                        onClick={() => setStockTab("storefront")}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                          stockTab === "storefront"
+                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                            : "text-slate-600 hover:text-slate-800"
+                        }`}
+                      >
+                        {t("inventory.storefronts")}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Warehouse Summary Cards */}
                   {stockTab === "warehouse" &&
@@ -373,29 +371,41 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           </div>
                         </div>
 
-                        {/* Warehouse Location Cards */}
-                        <div className="grid grid-cols-2 gap-4">
-                          {product.stockAvailability.warehouses.locations.map(
-                            (location) => (
+                        {/* Warehouse Location Cards (Grouped/Merged Quantity, no batch info) */}
+                        <div className="grid grid-cols-1 gap-4">
+                          {(() => {
+                            // Sum quantities per location ID
+                            const mergedLocationsMap = new Map<string, typeof product.stockAvailability.warehouses.locations[0]>();
+                            product.stockAvailability.warehouses.locations
+                              .filter((loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
+                              .forEach((loc) => {
+                               if (mergedLocationsMap.has(loc.locationId)) {
+                                 mergedLocationsMap.get(loc.locationId)!.quantity += loc.quantity;
+                               } else {
+                                 mergedLocationsMap.set(loc.locationId, { ...loc });
+                               }
+                             });
+                            return Array.from(mergedLocationsMap.values()).map((location) => (
                               <div
                                 key={location.locationId}
-                                className="bg-slate-100 p-4 rounded-lg border border-slate-300"
+                                className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
                               >
-                                <h4 className="font-semibold text-slate-800 mb-1">
-                                  {location.locationName}
-                                </h4>
-                                <p className="text-xs text-slate-600 mb-3">
-                                  {location.locationAddress || "-"}
-                                </p>
-                                <div className="flex justify-end">
-                                  <span className="text-sm font-bold text-slate-800">
-                                    Quantity{" "}
-                                    {location.quantity.toLocaleString()}
+                                <div>
+                                  <h4 className="font-semibold text-slate-800 mb-1">
+                                    {location.locationName}
+                                  </h4>
+                                  <p className="text-xs text-slate-600 mb-1">
+                                    {location.locationAddress || "-"}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-sm font-bold text-slate-850">
+                                    Quantity: {location.quantity.toLocaleString()}
                                   </span>
                                 </div>
                               </div>
-                            ),
-                          )}
+                            ));
+                          })()}
                         </div>
                       </>
                     )}
@@ -424,29 +434,40 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           </div>
                         </div>
 
-                        {/* Storefront Location Cards */}
-                        <div className="grid grid-cols-2 gap-4">
-                          {product.stockAvailability.storefronts.locations.map(
-                            (location) => (
+                        {/* Storefront Location Cards (Grouped/Merged Quantity, no batch info) */}
+                        <div className="grid grid-cols-1 gap-4">
+                          {(() => {
+                            const mergedLocationsMap = new Map<string, typeof product.stockAvailability.storefronts.locations[0]>();
+                            product.stockAvailability.storefronts.locations
+                              .filter((loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
+                              .forEach((loc) => {
+                               if (mergedLocationsMap.has(loc.locationId)) {
+                                 mergedLocationsMap.get(loc.locationId)!.quantity += loc.quantity;
+                               } else {
+                                 mergedLocationsMap.set(loc.locationId, { ...loc });
+                               }
+                             });
+                            return Array.from(mergedLocationsMap.values()).map((location) => (
                               <div
                                 key={location.locationId}
-                                className="bg-slate-100 p-4 rounded-lg border border-slate-300"
+                                className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
                               >
-                                <h4 className="font-semibold text-slate-800 mb-1">
-                                  {location.locationName}
-                                </h4>
-                                <p className="text-xs text-slate-600 mb-3">
-                                  {location.locationAddress || "-"}
-                                </p>
-                                <div className="flex justify-end">
-                                  <span className="text-sm font-bold text-slate-800">
-                                    Quantity{" "}
-                                    {location.quantity.toLocaleString()}
+                                <div>
+                                  <h4 className="font-semibold text-slate-800 mb-1">
+                                    {location.locationName}
+                                  </h4>
+                                  <p className="text-xs text-slate-600 mb-1">
+                                    {location.locationAddress || "-"}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-sm font-bold text-slate-850">
+                                    Quantity: {location.quantity.toLocaleString()}
                                   </span>
                                 </div>
                               </div>
-                            ),
-                          )}
+                            ));
+                          })()}
                         </div>
                       </>
                     )}
@@ -468,7 +489,164 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       </div>
                     )}
                 </div>
-              )}
+              ) : activeTab === "batches" ? (
+                <div className="space-y-6">
+                  {/* Stock Tabs */}
+                  {!restrictLocationType && (
+                    <div className="flex gap-5">
+                      <button
+                        onClick={() => setStockTab("warehouse")}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                          stockTab === "warehouse"
+                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                            : "text-slate-600 hover:text-slate-800"
+                        }`}
+                      >
+                        Warehouse Batches
+                      </button>
+                      <button
+                        onClick={() => setStockTab("storefront")}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                          stockTab === "storefront"
+                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                            : "text-slate-600 hover:text-slate-800"
+                        }`}
+                      >
+                        Storefront Batches
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Batches Cards */}
+                  <div className="grid grid-cols-1 gap-4">
+                    {stockTab === "warehouse" ? (
+                      (() => {
+                        const warehouseLocations = product.stockAvailability.warehouses.locations.filter(
+                          (loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase()
+                        );
+                        return warehouseLocations.length > 0 ? (
+                          warehouseLocations.map((location, idx) => (
+                            <div
+                              key={location.locationId + "-" + location.batchNumber + "-" + idx}
+                              className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+                            >
+                              <div>
+                                <h4 className="font-semibold text-slate-800 mb-1">
+                                  {location.locationName}
+                                </h4>
+                                <p className="text-xs text-slate-600 mb-1">
+                                  {location.locationAddress || "-"}
+                                </p>
+                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                                  <span className="bg-[#2216a8]/10 text-[#2216a8] font-bold px-2 py-0.5 rounded">
+                                    Batch: {location.batchNumber || "__LEGACY__"}
+                                  </span>
+                                  {location.expiryDate && (
+                                    <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                                      Expiry: {formatExpiryDate(location.expiryDate)}
+                                      {getExpiryStatusBadge(location.expiryDate)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                <div className="text-right sm:mr-2">
+                                  <span className="text-sm font-bold text-slate-850">
+                                    Quantity: {location.quantity.toLocaleString()}
+                                  </span>
+                                </div>
+                                {onTransfer && location.quantity > 0 && (
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => onTransfer("storefront", location)}
+                                      className="text-[10px] bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 font-medium transition-colors"
+                                    >
+                                      To Store
+                                    </button>
+                                    <button
+                                      onClick={() => onTransfer("warehouse", location)}
+                                      className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 font-medium transition-colors"
+                                    >
+                                      To Whse
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-slate-500">
+                            <Warehouse className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                            <p>No warehouse batches found</p>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      (() => {
+                        const storefrontLocations = product.stockAvailability.storefronts.locations.filter(
+                          (loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase()
+                        );
+                        return storefrontLocations.length > 0 ? (
+                          storefrontLocations.map((location, idx) => (
+                            <div
+                              key={location.locationId + "-" + location.batchNumber + "-" + idx}
+                              className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+                            >
+                              <div>
+                                <h4 className="font-semibold text-slate-800 mb-1">
+                                  {location.locationName}
+                                </h4>
+                                <p className="text-xs text-slate-600 mb-1">
+                                  {location.locationAddress || "-"}
+                                </p>
+                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                                  <span className="bg-[#2216a8]/10 text-[#2216a8] font-bold px-2 py-0.5 rounded">
+                                    Batch: {location.batchNumber || "__LEGACY__"}
+                                  </span>
+                                  {location.expiryDate && (
+                                    <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                                      Expiry: {formatExpiryDate(location.expiryDate)}
+                                      {getExpiryStatusBadge(location.expiryDate)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                <div className="text-right sm:mr-2">
+                                  <span className="text-sm font-bold text-slate-850">
+                                    Quantity: {location.quantity.toLocaleString()}
+                                  </span>
+                                </div>
+                                {onTransfer && location.quantity > 0 && (
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => onTransfer("storefront", location)}
+                                      className="text-[10px] bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 font-medium transition-colors"
+                                    >
+                                      To Store
+                                    </button>
+                                    <button
+                                      onClick={() => onTransfer("warehouse", location)}
+                                      className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 font-medium transition-colors"
+                                    >
+                                      To Whse
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-slate-500">
+                            <Store className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                            <p>No storefront batches found</p>
+                          </div>
+                        );
+                      })()
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-12">

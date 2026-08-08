@@ -1,6 +1,7 @@
 import React from "react";
 import { Product } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
+import { formatExpiryDate, getExpiryStatus, ExpiryStatus } from "../../utils/expiryUtils";
 
 interface InventoryTableProps {
   products: Product[];
@@ -78,6 +79,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Cost</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Price</th>
+              <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Expiry</th>
               <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Status</th>
               <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
             </tr>
@@ -85,6 +87,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           <tbody className="divide-y divide-gray-100">
             {products.map((p, index) => {
               const isSelected = selectedProductIds.includes(p.id);
+              const expiryStatus = getExpiryStatus(p.nearestExpiryDate);
+
               return (
                 <tr key={p.id} className="hover:bg-slate-50/40 transition-colors">
                   {showSelectBoxes && onSelectionChange && (
@@ -121,6 +125,26 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   </td>
                   <td className="px-3 py-4 text-slate-800 font-bold text-xs sm:text-sm">
                     {p.sellingPrice.toLocaleString()} <span className="text-[10px] text-slate-500 font-bold ml-1">MMK</span>
+                  </td>
+                  <td className="px-3 py-4 text-center">
+                    {expiryStatus === ExpiryStatus.EXPIRED && (
+                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                        Expired ({formatExpiryDate(p.nearestExpiryDate)})
+                      </span>
+                    )}
+                    {expiryStatus === ExpiryStatus.EXPIRING_SOON && (
+                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">
+                        Soon ({formatExpiryDate(p.nearestExpiryDate)})
+                      </span>
+                    )}
+                    {expiryStatus === ExpiryStatus.VALID && (
+                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">
+                        {formatExpiryDate(p.nearestExpiryDate)}
+                      </span>
+                    )}
+                    {expiryStatus === ExpiryStatus.NONE && (
+                      <span className="text-slate-400">-</span>
+                    )}
                   </td>
                   <td className="px-3 py-4 text-center">
                     {onStatusToggle && userRole === "owner" ? (

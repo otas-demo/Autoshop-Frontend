@@ -13,6 +13,8 @@ interface ExtendedGRNItem {
   qtyGood: number;
   qtyBad: number;
   costPrice: number;
+  batchNumber?: string;
+  expiryDate?: string;
   isSelected: boolean;
 }
 
@@ -80,6 +82,8 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
         qtyGood: item.purchaseQuantity,
         qtyBad: 0,
         costPrice: item.buyingPrice,
+        batchNumber: "",
+        expiryDate: "",
         isSelected: true,
       }));
 
@@ -89,7 +93,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
   const updateGRNItem = (
     index: number,
     field: keyof ExtendedGRNItem,
-    value: number | boolean
+    value: any
   ) => {
     setGRNItems((prev) => {
       const updated = [...prev];
@@ -109,6 +113,10 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
       } else if (field === "qtyBad") {
         item.qtyBad = Math.min(value as number, item.qtyReceived);
         item.qtyGood = item.qtyReceived - item.qtyBad;
+      } else if (field === "batchNumber") {
+        item.batchNumber = value as string;
+      } else if (field === "expiryDate") {
+        item.expiryDate = value as string;
       }
 
       updated[index] = item;
@@ -168,6 +176,8 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
           productCode: item.productCode,
           goodQuantity: item.qtyGood,
           badQuantity: item.qtyBad,
+          batchNumber: item.batchNumber || undefined,
+          expiryDate: item.expiryDate || undefined,
         })),
         grnDate: grnDate,
         notes: grnNote,
@@ -412,6 +422,43 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                               }
                               min="0"
                               max={item.qtyReceived}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-slate-500 block mb-1">
+                              Batch Number (Optional):
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full border rounded-lg p-2 text-sm focus:ring-blue-500"
+                              value={item.batchNumber || ""}
+                              onChange={(e) =>
+                                updateGRNItem(
+                                  index,
+                                  "batchNumber",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Auto-generated if blank"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-500 block mb-1">
+                              Expiry Date (Optional):
+                            </label>
+                            <input
+                              type="date"
+                              className="w-full border rounded-lg p-2 text-sm focus:ring-blue-500"
+                              value={item.expiryDate || ""}
+                              onChange={(e) =>
+                                updateGRNItem(
+                                  index,
+                                  "expiryDate",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                         </div>

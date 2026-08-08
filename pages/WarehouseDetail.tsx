@@ -23,6 +23,7 @@ import {
   fetchWarehouseStock,
   WarehouseStockItem,
 } from "../services/Warehouse/fetchWarehouseStock";
+import { fetchWarehouseProfiles } from "../services/Warehouse/fetchWarehouseProfiles";
 import { fetchCategories } from "../services/Inventory/fetchCategories";
 import {
   fetchStorefrontProfiles,
@@ -36,7 +37,9 @@ import {
   updateWarehouseStockQuantity,
   UpdateWarehouseStockQuantityPayload,
 } from "../services/Warehouse/updateWarehouseStockQuantity";
-import { fetchWarehouseProfiles } from "../services/Warehouse/fetchWarehouseProfiles";
+import { formatExpiryDate, getExpiryStatus, ExpiryStatus } from "../utils/expiryUtils";
+import { ProductDetailModal } from "../components/Inventory/ProductDetailModal";
+import { fetchProductById, ProductDetail } from "../services/Inventory/fetchProductById";
 import { WarehouseProfile } from "../types";
 
 interface TransferFormItem {
@@ -44,6 +47,9 @@ interface TransferFormItem {
   productName: string;
   quantity: number;
   maxQuantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  manufacturingDate?: string;
   notes: string;
 }
 
@@ -111,14 +117,38 @@ export const WarehouseDetail: React.FC = () => {
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [isAdjusting, setIsAdjusting] = useState(false);
 
+  // Product Detail Modal State
+  const [selectedProductDetail, setSelectedProductDetail] = useState<ProductDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const handleViewDetails = async (productId: string) => {
+    setLoadingDetail(true);
+    setSelectedProductDetail(null);
+    setIsDetailModalOpen(true);
+    try {
+      const response = await fetchProductById(productId);
+      if (response.success && response.data) {
+        setSelectedProductDetail(response.data);
+      } else {
+        toast.error(response.message || "Failed to load details");
+      }
+    } catch (error) {
+      console.error("Error loading product details:", error);
+      toast.error("Failed to load details");
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   useEffect(() => {
     loadWarehouseStock();
-    loadStorefronts();
-    loadWarehouses();
   }, [id, currentPage, itemsPerPage, selectedCategory, searchTerm]);
 
   useEffect(() => {
     loadCategories();
+    loadStorefronts();
+    loadWarehouses();
   }, []);
 
   useEffect(() => {
@@ -161,6 +191,7 @@ export const WarehouseDetail: React.FC = () => {
           setTotalproductQuantity(response.summary.totalQuantity);
           setTotalAmount(response.summary.totalAmount);
         }
+
         setStockItems(response.data);
 
         // Update pagination info
@@ -175,13 +206,13 @@ export const WarehouseDetail: React.FC = () => {
           const firstItem = response.data[0];
           setWarehouseName(
             firstItem.warehouseId.locationName ||
-              firstItem.warehouseId.warehouseName ||
-              "Warehouse",
+            firstItem.warehouseId.warehouseName ||
+            "Warehouse",
           );
           setWarehouseCode(
             firstItem.warehouseId.locationCode ||
-              firstItem.warehouseId.warehouseCode ||
-              "",
+            firstItem.warehouseId.warehouseCode ||
+            "",
           );
         }
       } else {
@@ -209,8 +240,14 @@ export const WarehouseDetail: React.FC = () => {
   const loadWarehouses = async () => {
     try {
       const response = await fetchWarehouseProfiles();
+      console.log(response)
       if (response.success && response.data) {
-        setWarehouses(response.data.filter((w) => w._id !== id && w.status === "active"));
+        // Ensure id filter is correctly matched using string values
+        const currentIdStr = String(id || "").toLowerCase();
+        const activeWarehouses = response.data.filter(
+          (w) => String(w._id).toLowerCase() !== currentIdStr && w.status === "active"
+        );
+        setWarehouses(activeWarehouses);
       }
     } catch (error) {
       console.error("Error loading warehouses:", error);
@@ -270,8 +307,11 @@ export const WarehouseDetail: React.FC = () => {
         {
           productCode: item.inventoryId.productCode,
           productName: item.inventoryId.productName,
-          quantity: 1,
+          quantity: maxQuantity,
           maxQuantity,
+          batchNumber: item.batchNumber,
+          expiryDate: item.expiryDate,
+          manufacturingDate: item.manufacturingDate,
           notes: "",
         },
       ]);
@@ -419,6 +459,9 @@ export const WarehouseDetail: React.FC = () => {
       const lineItems: TransferLineItem[] = itemsToSubmit.map((item) => ({
         productCode: item.productCode,
         quantity: item.quantity,
+        batchNumber: item.batchNumber,
+        expiryDate: item.expiryDate,
+        manufacturingDate: item.manufacturingDate,
         ...(item.notes && { notes: item.notes }),
       }));
 
@@ -515,8 +558,7 @@ export const WarehouseDetail: React.FC = () => {
 
       if (result.success) {
         toast.success(
-          `Stock ${
-            adjustmentType === "increase" ? "increased" : "decreased"
+          `Stock ${adjustmentType === "increase" ? "increased" : "decreased"
           } successfully!`,
         );
         setIsAdjustmentModalOpen(false);
@@ -537,160 +579,160 @@ export const WarehouseDetail: React.FC = () => {
   return (
     <div className="w-full h-[calc(100vh-2rem)]">
       <div className="bg-white h-full border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button
-            onClick={() => navigate("/warehouse")}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2 flex-wrap">
-              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-              <span className="truncate">{warehouseName}</span>
-              {warehouseCode && (
-                <span className="text-xs sm:text-sm px-2 py-1 bg-primary/20 text-blue-700 rounded-full font-medium flex-shrink-0">
-                  {warehouseCode}
-                </span>
-              )}
-            </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Warehouse Stock Inventory
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center ">
-          {userRole === "owner" && (
-            <>
-              <button
-                onClick={() => openTransferModal("storefront")}
-                disabled={stockItems.length === 0}
-                className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              >
-                <ArrowRightLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Transfer to Storefront</span>
-                <span className="sm:hidden">Storefront</span>
-              </button>
-              <button
-                onClick={() => openTransferModal("warehouse")}
-                disabled={stockItems.length === 0}
-                className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              >
-                <ArrowRightLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Transfer to Warehouse</span>
-                <span className="sm:hidden">Warehouse</span>
-              </button>
-            </>
-          )}
-
-          <button
-            onClick={loadWarehouseStock}
-            disabled={loading}
-            className="hidden md:flex items-center gap-2 px-3 py-2 sm:px-4 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filter Section */}
-      <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search Bar */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search by product name or code..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Category Filter */}
-          <div className="sm:w-64">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none appearance-none"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Clear Filters */}
-          {(searchTerm || selectedCategory !== "all") && (
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("all");
-              }}
-              className="px-3 py-2 sm:px-4 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 text-sm sm:text-base"
+              onClick={() => navigate("/warehouse")}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <X className="w-4 h-4" />
-              <span className="hidden sm:inline">Clear Filters</span>
-              <span className="sm:hidden">Clear</span>
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
             </button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+                <span className="truncate">{warehouseName}</span>
+                {warehouseCode && (
+                  <span className="text-xs sm:text-sm px-2 py-1 bg-primary/20 text-blue-700 rounded-full font-medium flex-shrink-0">
+                    {warehouseCode}
+                  </span>
+                )}
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Warehouse Stock Inventory
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center ">
+            {userRole === "owner" && (
+              <>
+                <button
+                  onClick={() => openTransferModal("storefront")}
+                  disabled={stockItems.length === 0}
+                  className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Transfer to Storefront</span>
+                  <span className="sm:hidden">Storefront</span>
+                </button>
+                <button
+                  onClick={() => openTransferModal("warehouse")}
+                  disabled={stockItems.length === 0}
+                  className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Transfer to Warehouse</span>
+                  <span className="sm:hidden">Warehouse</span>
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={loadWarehouseStock}
+              disabled={loading}
+              className="hidden md:flex items-center gap-2 px-3 py-2 sm:px-4 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Search and Filter Section */}
+        <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search Bar */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search by product name or code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div className="sm:w-64">
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none appearance-none"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Clear Filters */}
+            {(searchTerm || selectedCategory !== "all") && (
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("all");
+                }}
+                className="px-3 py-2 sm:px-4 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 text-sm sm:text-base"
+              >
+                <X className="w-4 h-4" />
+                <span className="hidden sm:inline">Clear Filters</span>
+                <span className="sm:hidden">Clear</span>
+              </button>
+            )}
+          </div>
+
+          {/* Filter Results Summary */}
+          {(searchTerm || selectedCategory !== "all") && (
+            <div className="mt-3 text-sm text-slate-500">
+              Showing {stockItems.length} of {totalItems} items
+            </div>
           )}
         </div>
 
-        {/* Filter Results Summary */}
-        {(searchTerm || selectedCategory !== "all") && (
-          <div className="mt-3 text-sm text-slate-500">
-            Showing {stockItems.length} of {totalItems} items
-          </div>
-        )}
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
-              <Box className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-slate-500">
-                Total Products
-              </p>
-              <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
-                {totalProduct}
-              </p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 bg-primary/20 rounded-lg">
+                <Box className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-slate-500">
+                  Total Products
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
+                  {totalProduct}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Package className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-slate-500">
-                Total Quantity
-              </p>
-              <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
-                {totalproductQuantity}
-              </p>
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-slate-500">
+                  Total Quantity
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
+                  {totalproductQuantity}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
+          {/* <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="p-2 bg-amber-100 rounded-lg">
               <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
@@ -704,265 +746,272 @@ export const WarehouseDetail: React.FC = () => {
           </div>
         </div> */}
 
-        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-indigo-100 sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <Package className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-slate-500">Total Amount</p>
-              <p className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">
-                {totalAmount.toLocaleString()}{" "}
-                <span className="hidden sm:inline">MMK</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stock Items Table */}
-      <div className="bg-white rounded-xl shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div className="p-4 border-b bg-slate-50 flex-shrink-0">
-          <h2 className="font-semibold text-slate-800">Stock Items</h2>
-        </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
-            Loading stock items...
-          </div>
-        ) : stockItems.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
-            {searchTerm || selectedCategory !== "all" ? (
-              <div>
-                <p className="font-medium mb-2">
-                  No items found matching your filters
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedCategory("all");
-                  }}
-                  className="text-primary hover:text-primary-700 underline"
-                >
-                  Clear filters
-                </button>
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-indigo-100 sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
               </div>
-            ) : (
-              "No stock items found in this warehouse."
-            )}
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {/* Mobile scroll indicator */}
-            <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
-              ← Swipe to see more →
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-slate-500">Total Amount</p>
+                <p className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">
+                  {totalAmount.toLocaleString()}{" "}
+                  <span className="hidden sm:inline">MMK</span>
+                </p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left min-w-[1000px]">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
-                      <span className="hidden sm:inline">Product Name</span>
-                      <span className="sm:hidden">Name</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
-                      <span className="hidden sm:inline">Product Code</span>
-                      <span className="sm:hidden">Code</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
-                      Category
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
-                      Qty
-                    </th>
-                    {/* <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
+        {/* Stock Items Table */}
+        <div className="bg-white rounded-xl shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="p-4 border-b bg-slate-50 flex-shrink-0">
+            <h2 className="font-semibold text-slate-800">Stock Items</h2>
+          </div>
+
+          {loading ? (
+            <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
+              Loading stock items...
+            </div>
+          ) : stockItems.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
+              {searchTerm || selectedCategory !== "all" ? (
+                <div>
+                  <p className="font-medium mb-2">
+                    No items found matching your filters
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedCategory("all");
+                    }}
+                    className="text-primary hover:text-primary-700 underline"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                "No stock items found in this warehouse."
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {/* Mobile scroll indicator */}
+              <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
+                ← Swipe to see more →
+              </div>
+
+              {/* Table container with horizontal scroll on mobile */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left min-w-[1000px]">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
+                        <span className="hidden sm:inline">Product Name</span>
+                        <span className="sm:hidden">Name</span>
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
+                        <span className="hidden sm:inline">Product Code</span>
+                        <span className="sm:hidden">Code</span>
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
+                        Category
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
+                        Qty
+                      </th>
+                      {/* <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
                       <span className="hidden sm:inline">Available</span>
                       <span className="sm:hidden">Avail</span>
                     </th> */}
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
-                      <span className="hidden sm:inline">Price</span>
-                      <span className="sm:hidden">$</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
-                      <span className="hidden sm:inline">Total</span>
-                      <span className="sm:hidden">T</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
-                      <span className="hidden sm:inline">Status</span>
-                      <span className="sm:hidden">S</span>
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
-                      <span className="hidden sm:inline">Actions</span>
-                      <span className="sm:hidden">A</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {stockItems.map((item) => (
-                    <tr key={item._id} className="hover:bg-slate-50">
-                      <td className="px-2 sm:px-4 py-3 font-medium text-slate-800">
-                        <div
-                          className="max-w-[150px] sm:max-w-none truncate"
-                          title={item.inventoryId.productName}
-                        >
-                          {item.inventoryId.productName}
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 text-slate-600">
-                        <span className="bg-slate-100 px-2 py-1 rounded text-xs font-mono">
-                          {item.inventoryId.productCode}
-                        </span>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
-                          {item.inventoryId.category}
-                        </span>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 text-right font-bold text-slate-800 text-xs sm:text-sm">
-                        {item.quantity}
-                      </td>
-                      {/* <td className="px-2 sm:px-4 py-3 text-right text-slate-600 text-xs sm:text-sm">
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
+                        <span className="hidden sm:inline">Price</span>
+                        <span className="sm:hidden">$</span>
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600 text-right">
+                        <span className="hidden sm:inline">Total</span>
+                        <span className="sm:hidden">T</span>
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
+                        <span className="hidden sm:inline">Status</span>
+                        <span className="sm:hidden">S</span>
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
+                        <span className="hidden sm:inline">Actions</span>
+                        <span className="sm:hidden">A</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {stockItems.map((item) => (
+                      <tr key={item._id} className="hover:bg-slate-50">
+                        <td className="px-2 sm:px-4 py-3 font-medium text-slate-800">
+                          <div
+                            className="max-w-[150px] sm:max-w-none truncate"
+                            title={item.inventoryId.productName}
+                          >
+                            {item.inventoryId.productName}
+                          </div>
+                        </td>
+                        <td className="px-2 sm:px-4 py-3 text-slate-600">
+                          <span className="bg-slate-100 px-2 py-1 rounded text-xs font-mono">
+                            {item.inventoryId.productCode}
+                          </span>
+                        </td>
+                        <td className="px-2 sm:px-4 py-3">
+                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
+                            {item.inventoryId.category}
+                          </span>
+                        </td>
+                        <td className="px-2 sm:px-4 py-3 text-right font-bold text-slate-800 text-xs sm:text-sm">
+                          {item.quantity}
+                        </td>
+                        {/* <td className="px-2 sm:px-4 py-3 text-right text-slate-600 text-xs sm:text-sm">
                         {item.availableQuantity}
                       </td> */}
-                      <td className="px-2 sm:px-4 py-3 text-right font-medium text-slate-700 text-xs sm:text-sm">
-                        {(item.inventoryId.sellingPrice || 0).toLocaleString()}{" "}
-                        <span className="hidden sm:inline">MMK</span>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 text-right font-bold text-slate-800 text-xs sm:text-sm">
-                        {(
-                          item.quantity * (item.inventoryId.sellingPrice || 0)
-                        ).toLocaleString()}{" "}
-                        <span className="hidden sm:inline">MMK</span>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        {item.isLowStock ? (
-                          <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
-                            <AlertTriangle className="w-3 h-3" />{" "}
-                            <span className="hidden sm:inline">Low Stock</span>
-                            <span className="sm:hidden">Low</span>
-                          </span>
-                        ) : item.quantity === 0 ? (
-                          <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
-                            <span className="hidden sm:inline">
-                              Out of Stock
+                        <td className="px-2 sm:px-4 py-3 text-right font-medium text-slate-700 text-xs sm:text-sm">
+                          {(item.inventoryId.sellingPrice || 0).toLocaleString()}{" "}
+                          <span className="hidden sm:inline">MMK</span>
+                        </td>
+                        <td className="px-2 sm:px-4 py-3 text-right font-bold text-slate-800 text-xs sm:text-sm">
+                          {(
+                            item.quantity * (item.inventoryId.sellingPrice || 0)
+                          ).toLocaleString()}{" "}
+                          <span className="hidden sm:inline">MMK</span>
+                        </td>
+                        <td className="px-2 sm:px-4 py-3">
+                          {item.isLowStock ? (
+                            <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
+                              <AlertTriangle className="w-3 h-3" />{" "}
+                              <span className="hidden sm:inline">Low Stock</span>
+                              <span className="sm:hidden">Low</span>
                             </span>
-                            <span className="sm:hidden">Out</span>
-                          </span>
-                        ) : (
-                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                            <span className="hidden sm:inline">In Stock</span>
-                            <span className="sm:hidden">In</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 sm:px-4 py-3">
-                        {userRole === "owner" && (
+                          ) : item.quantity === 0 ? (
+                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
+                              <span className="hidden sm:inline">
+                                Out of Stock
+                              </span>
+                              <span className="sm:hidden">Out</span>
+                            </span>
+                          ) : (
+                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                              <span className="hidden sm:inline">In Stock</span>
+                              <span className="sm:hidden">In</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 sm:px-4 py-3">
                           <div className="flex items-center gap-1 sm:gap-2">
                             <button
-                              onClick={() => openTransferModal("storefront", item)}
-                              disabled={item.quantity == 0}
-                              className="text-xs bg-blue-50 text-primary-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-blue-100 border border-blue-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleViewDetails(item.inventoryId._id)}
+                              className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-indigo-100 border border-indigo-200 font-medium transition-colors"
                             >
-                              <ArrowRightLeft className="w-3 h-3" />{" "}
-                              <span className="hidden sm:inline">Transfer</span>
-                              <span className="sm:hidden">T</span>
+                              Check
                             </button>
-                            <button
-                              onClick={() =>
-                                openAdjustmentModal(item, "increase")
-                              }
-                              className="text-xs bg-green-50 text-green-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-green-100 border border-green-200 font-medium transition-colors flex items-center gap-1"
-                              title="Increase Stock"
-                            >
-                              <TrendingUp className="w-3 h-3" /> +
-                            </button>
-                            <button
-                              onClick={() =>
-                                openAdjustmentModal(item, "decrease")
-                              }
-                              disabled={item.quantity === 0}
-                              className="text-xs bg-red-50 text-red-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-red-100 border border-red-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Decrease Stock"
-                            >
-                              <TrendingDown className="w-3 h-3" /> -
-                            </button>
+                            {userRole === "owner" && (
+                              <>
+                                {/* <button
+                                  onClick={() => openTransferModal("storefront", { ...item, _id: item.inventoryId._id })}
+                                  disabled={item.quantity == 0}
+                                  className="text-xs bg-blue-50 text-primary-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-blue-100 border border-blue-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <ArrowRightLeft className="w-3 h-3" />{" "}
+                                  <span className="hidden sm:inline">Transfer</span>
+                                  <span className="sm:hidden">T</span>
+                                </button> */}
+                                <button
+                                  onClick={() =>
+                                    openAdjustmentModal({ ...item, _id: item.inventoryId._id }, "increase")
+                                  }
+                                  className="text-xs bg-green-50 text-green-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-green-100 border border-green-200 font-medium transition-colors flex items-center gap-1"
+                                  title="Increase Stock"
+                                >
+                                  <TrendingUp className="w-3 h-3" /> +
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    openAdjustmentModal({ ...item, _id: item.inventoryId._id }, "decrease")
+                                  }
+                                  disabled={item.quantity === 0}
+                                  className="text-xs bg-red-50 text-red-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-red-100 border border-red-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Decrease Stock"
+                                >
+                                  <TrendingDown className="w-3 h-3" /> -
+                                </button>
+                              </>
+                            )}
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-4 py-4 border-t bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-slate-500 order-2 sm:order-1">
-                  Showing{" "}
-                  <span className="font-medium">{stockItems.length}</span> of{" "}
-                  <span className="font-medium">{totalItems}</span> items
-                </div>
-                <div className="flex items-center gap-2 order-1 sm:order-2">
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(1, prev - 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="p-2 border rounded-lg bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Previous Page"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-4 py-4 border-t bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-slate-500 order-2 sm:order-1">
+                    Showing{" "}
+                    <span className="font-medium">{stockItems.length}</span> of{" "}
+                    <span className="font-medium">{totalItems}</span> items
+                  </div>
+                  <div className="flex items-center gap-2 order-1 sm:order-2">
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
                       }
+                      disabled={currentPage === 1}
+                      className="p-2 border rounded-lg bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Previous Page"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
 
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`w-10 h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-all ${
-                            currentPage === pageNum
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-10 h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-all ${currentPage === pageNum
                               ? "bg-primary text-white border-primary shadow-sm"
                               : "bg-white text-slate-600 hover:bg-slate-50 border-slate-200"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
+                              }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="p-2 border rounded-lg bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Next Page"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="p-2 border rounded-lg bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Next Page"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
 
       {/* Transfer Modal */}
       {isTransferModalOpen && (
@@ -1240,11 +1289,10 @@ export const WarehouseDetail: React.FC = () => {
 
               {/* Adjustment Type Info */}
               <div
-                className={`p-3 rounded-lg ${
-                  adjustmentType === "increase"
-                    ? "bg-green-50 border border-green-200"
-                    : "bg-red-50 border border-red-200"
-                }`}
+                className={`p-3 rounded-lg ${adjustmentType === "increase"
+                  ? "bg-green-50 border border-green-200"
+                  : "bg-red-50 border border-red-200"
+                  }`}
               >
                 <p className="text-sm font-medium">
                   {adjustmentType === "increase"
@@ -1307,11 +1355,10 @@ export const WarehouseDetail: React.FC = () => {
                 <button
                   onClick={handleSubmitAdjustment}
                   disabled={isAdjusting || adjustmentQuantity <= 0}
-                  className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2 ${
-                    adjustmentType === "increase"
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-red-600 hover:bg-red-700"
-                  }`}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2 ${adjustmentType === "increase"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-red-600 hover:bg-red-700"
+                    }`}
                 >
                   {isAdjusting ? (
                     <>
@@ -1335,6 +1382,46 @@ export const WarehouseDetail: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        isOpen={isDetailModalOpen}
+        loading={loadingDetail}
+        product={selectedProductDetail}
+        restrictLocationType="warehouse"
+        restrictLocationId={id}
+        onTransfer={(targetType, locationBatch) => {
+          setIsDetailModalOpen(false);
+          openTransferModal(targetType, {
+            _id: locationBatch.locationId,
+            inventoryId: {
+              _id: selectedProductDetail?._id || "",
+              productName: selectedProductDetail?.productName || "",
+              productCode: selectedProductDetail?.productCode || "",
+              category: selectedProductDetail?.category || "",
+              sellingPrice: selectedProductDetail?.sellingPrice || 0,
+            } as any,
+            warehouseId: {
+              _id: id!,
+              locationName: warehouseName,
+              locationCode: warehouseCode,
+            } as any,
+            quantity: locationBatch.quantity,
+            availableQuantity: locationBatch.quantity,
+            batchNumber: locationBatch.batchNumber,
+            expiryDate: locationBatch.expiryDate,
+            manufacturingDate: locationBatch.manufacturingDate,
+            isLowStock: false,
+            lastUpdated: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedProductDetail(null);
+          setLoadingDetail(false);
+        }}
+      />
     </div>
   );
 };

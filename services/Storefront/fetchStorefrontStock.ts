@@ -35,6 +35,9 @@ export interface StorefrontStockItem {
   createdAt: string;
   updatedAt: string;
   availableQuantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  manufacturingDate?: string;
 }
 
 interface FetchStorefrontStockResponse {

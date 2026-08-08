@@ -3,12 +3,16 @@ import axios from "../axios";
 export interface TransferLineItem {
   productCode: string;
   quantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  manufacturingDate?: string;
   notes?: string;
 }
 
 export interface CreateWarehouseTransferPayload {
-  sourceType: "Warehouse";
-  sourceWarehouseId: string;
+  sourceType: "Warehouse" | "Storefront";
+  sourceWarehouseId?: string;
+  sourceStorefrontId?: string;
   destinationStorefrontId?: string;
   destinationWarehouseId?: string;
   lineItems: TransferLineItem[];

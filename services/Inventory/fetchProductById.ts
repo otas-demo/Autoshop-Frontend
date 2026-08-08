@@ -8,6 +8,9 @@ export interface ProductLocation {
   locationType: string;
   status: string;
   quantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  manufacturingDate?: string;
   lastUpdated: string;
 }
 
@@ -56,6 +59,9 @@ export interface ProductDetail {
   __v: number;
   profitMargin: number;
   profitAmount: number;
+  nearestExpiryDate?: string | null;
+  isExpired?: boolean;
+  isExpiringSoon?: boolean;
   stockAvailability: StockAvailability;
 }
 

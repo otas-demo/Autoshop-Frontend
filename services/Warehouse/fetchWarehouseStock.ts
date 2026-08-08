@@ -28,6 +28,9 @@ export interface WarehouseStockItem {
   inventoryId: WarehouseStockInventory;
   warehouseId: WarehouseStockWarehouse;
   quantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  manufacturingDate?: string;
   isLowStock: boolean;
   lastUpdated: string;
   createdAt: string;

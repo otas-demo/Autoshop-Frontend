@@ -97,31 +97,28 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="flex px-4 py-2 gap-5">
           <button
             onClick={() => setActiveTab("about")}
-            className={`px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === "about"
-                ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                : "text-slate-600 hover:text-slate-800"
-            }`}
+            className={`px-4 py-3 text-sm font-medium transition-colors ${activeTab === "about"
+              ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+              : "text-slate-600 hover:text-slate-800"
+              }`}
           >
             {t("inventory.aboutProduct")}
           </button>
           <button
             onClick={() => setActiveTab("quantity")}
-            className={`px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === "quantity"
-                ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                : "text-slate-600 hover:text-slate-800"
-            }`}
+            className={`px-4 py-3 text-sm font-medium transition-colors ${activeTab === "quantity"
+              ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+              : "text-slate-600 hover:text-slate-800"
+              }`}
           >
             Product Quantity
           </button>
           <button
             onClick={() => setActiveTab("batches")}
-            className={`px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === "batches"
-                ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                : "text-slate-600 hover:text-slate-800"
-            }`}
+            className={`px-4 py-3 text-sm font-medium transition-colors ${activeTab === "batches"
+              ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+              : "text-slate-600 hover:text-slate-800"
+              }`}
           >
             Batches & Expiries
           </button>
@@ -162,13 +159,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                   {/* Expiry Alert Card (If applicable) */}
                   {product.nearestExpiryDate && (
-                    <div className={`p-4 rounded-lg border flex items-center gap-3 ${
-                      getExpiryStatus(product.nearestExpiryDate) === ExpiryStatus.EXPIRED
-                        ? "bg-red-50 border-red-200 text-red-900"
-                        : getExpiryStatus(product.nearestExpiryDate) === ExpiryStatus.EXPIRING_SOON
+                    <div className={`p-4 rounded-lg border flex items-center gap-3 ${getExpiryStatus(product.nearestExpiryDate) === ExpiryStatus.EXPIRED
+                      ? "bg-red-50 border-red-200 text-red-900"
+                      : getExpiryStatus(product.nearestExpiryDate) === ExpiryStatus.EXPIRING_SOON
                         ? "bg-yellow-50 border-yellow-200 text-yellow-900"
                         : "bg-green-50 border-green-200 text-green-900"
-                    }`}>
+                      }`}>
                       <Calendar className="w-5 h-5 text-slate-500" />
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Nearest Expiry Date</p>
@@ -326,21 +322,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <div className="flex gap-5">
                       <button
                         onClick={() => setStockTab("warehouse")}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                          stockTab === "warehouse"
-                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                            : "text-slate-600 hover:text-slate-800"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${stockTab === "warehouse"
+                          ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                          : "text-slate-600 hover:text-slate-800"
+                          }`}
                       >
                         {t("inventory.warehouses")}
                       </button>
                       <button
                         onClick={() => setStockTab("storefront")}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                          stockTab === "storefront"
-                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                            : "text-slate-600 hover:text-slate-800"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${stockTab === "storefront"
+                          ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                          : "text-slate-600 hover:text-slate-800"
+                          }`}
                       >
                         {t("inventory.storefronts")}
                       </button>
@@ -379,12 +373,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             product.stockAvailability.warehouses.locations
                               .filter((loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
                               .forEach((loc) => {
-                               if (mergedLocationsMap.has(loc.locationId)) {
-                                 mergedLocationsMap.get(loc.locationId)!.quantity += loc.quantity;
-                               } else {
-                                 mergedLocationsMap.set(loc.locationId, { ...loc });
-                               }
-                             });
+                                if (mergedLocationsMap.has(loc.locationId)) {
+                                  mergedLocationsMap.get(loc.locationId)!.quantity += loc.quantity;
+                                } else {
+                                  mergedLocationsMap.set(loc.locationId, { ...loc });
+                                }
+                              });
                             return Array.from(mergedLocationsMap.values()).map((location) => (
                               <div
                                 key={location.locationId}
@@ -441,12 +435,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             product.stockAvailability.storefronts.locations
                               .filter((loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
                               .forEach((loc) => {
-                               if (mergedLocationsMap.has(loc.locationId)) {
-                                 mergedLocationsMap.get(loc.locationId)!.quantity += loc.quantity;
-                               } else {
-                                 mergedLocationsMap.set(loc.locationId, { ...loc });
-                               }
-                             });
+                                if (mergedLocationsMap.has(loc.locationId)) {
+                                  mergedLocationsMap.get(loc.locationId)!.quantity += loc.quantity;
+                                } else {
+                                  mergedLocationsMap.set(loc.locationId, { ...loc });
+                                }
+                              });
                             return Array.from(mergedLocationsMap.values()).map((location) => (
                               <div
                                 key={location.locationId}
@@ -496,21 +490,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <div className="flex gap-5">
                       <button
                         onClick={() => setStockTab("warehouse")}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                          stockTab === "warehouse"
-                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                            : "text-slate-600 hover:text-slate-800"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${stockTab === "warehouse"
+                          ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                          : "text-slate-600 hover:text-slate-800"
+                          }`}
                       >
                         Warehouse Batches
                       </button>
                       <button
                         onClick={() => setStockTab("storefront")}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                          stockTab === "storefront"
-                            ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
-                            : "text-slate-600 hover:text-slate-800"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${stockTab === "storefront"
+                          ? "bg-[#FEFEB0] text-slate-800 rounded-2xl"
+                          : "text-slate-600 hover:text-slate-800"
+                          }`}
                       >
                         Storefront Batches
                       </button>
@@ -537,14 +529,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                 <p className="text-xs text-slate-600 mb-1">
                                   {location.locationAddress || "-"}
                                 </p>
-                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                                  <span className="bg-[#2216a8]/10 text-[#2216a8] font-bold px-2 py-0.5 rounded">
+                                <div className="flex px-3 rounded-xl py-2 bg-[#2216a8]/10 flex-wrap items-center justify-center gap-2 mt-2 text-xs">
+                                  <span className=" text-[#2216a8] font-bold">
                                     Batch: {location.batchNumber || "__LEGACY__"}
                                   </span>
                                   {location.expiryDate && (
-                                    <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                                    <span className=" text-orange-700 flex items-center gap-1">
                                       Expiry: {formatExpiryDate(location.expiryDate)}
-                                      {getExpiryStatusBadge(location.expiryDate)}
+                                      {/* {getExpiryStatusBadge(location.expiryDate)} */}
                                     </span>
                                   )}
                                 </div>
@@ -556,16 +548,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                   </span>
                                 </div>
                                 {onTransfer && location.quantity > 0 && (
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-2">
                                     <button
                                       onClick={() => onTransfer("storefront", location)}
-                                      className="text-[10px] bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 font-medium transition-colors"
+                                      className="text-xs bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
                                     >
                                       To Store
                                     </button>
                                     <button
                                       onClick={() => onTransfer("warehouse", location)}
-                                      className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 font-medium transition-colors"
+                                      className="text-xs bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
                                     >
                                       To Whse
                                     </button>
@@ -618,16 +610,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                   </span>
                                 </div>
                                 {onTransfer && location.quantity > 0 && (
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-2">
                                     <button
                                       onClick={() => onTransfer("storefront", location)}
-                                      className="text-[10px] bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 font-medium transition-colors"
+                                      className="text-xs bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
                                     >
                                       To Store
                                     </button>
                                     <button
                                       onClick={() => onTransfer("warehouse", location)}
-                                      className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 font-medium transition-colors"
+                                      className="text-xs bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
                                     >
                                       To Whse
                                     </button>

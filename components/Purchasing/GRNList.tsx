@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Eye,
@@ -27,6 +27,7 @@ interface GRNListProps {
   onStatusChange?: (page?: number, limit?: number) => void;
   onTransferGRN?: (grn: GRNData) => void;
   pagination: PaginationData;
+  loading?: boolean;
 }
 
 export const GRNList: React.FC<GRNListProps> = ({
@@ -36,11 +37,20 @@ export const GRNList: React.FC<GRNListProps> = ({
   onStatusChange,
   onTransferGRN,
   pagination,
+  loading = false,
 }) => {
   const [grnFilter, setGrnFilter] = useState<"pending" | "completed">(
-    "pending"
+    () => {
+      const saved = sessionStorage.getItem("grnFilter");
+      return (saved as "pending" | "completed") || "pending";
+    }
   );
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    sessionStorage.setItem("grnFilter", grnFilter);
+    onStatusChange?.(pagination.currentPage, pagination.itemsPerPage);
+  }, [grnFilter]);
 
   const handleUpdateStatus = async (grnId: string, newStatus: string) => {
     setUpdatingId(grnId);
@@ -193,7 +203,15 @@ export const GRNList: React.FC<GRNListProps> = ({
         </button>
       </div>
 
-      {filteredGRNs.length === 0 ? (
+      {loading ? (
+        /* Loading State Card */
+        <div className="py-12 bg-white rounded-xl border border-gray-100 flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-4 border-[#2216a8] border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 font-bold text-xs">
+            {isMy ? "ပစ္စည်းလက်ခံစာရင်းများ ရယူနေပါသည်..." : "Loading goods received notes..."}
+          </p>
+        </div>
+      ) : filteredGRNs.length === 0 ? (
         /* Empty State Card matching the design */
         <div className="py-12 bg-white rounded-xl border border-gray-100 flex items-center justify-center">
           <div className="bg-[#f0effb]/70 border border-indigo-100 rounded-3xl p-8 w-full max-w-sm mx-auto flex flex-col items-center justify-center gap-3">

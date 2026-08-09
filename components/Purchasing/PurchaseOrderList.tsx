@@ -35,6 +35,7 @@ interface PurchaseOrderListProps {
   pagination: PaginationData;
   deletedPagination: PaginationData;
   onCreateGRN?: (po: ApiPurchaseOrder) => void;
+  loading?: boolean;
 }
 
 export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
@@ -47,10 +48,14 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   pagination,
   deletedPagination,
   onCreateGRN,
+  loading = false,
 }) => {
   const { t, language } = useLanguage();
   const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">(
-    "pending",
+    () => {
+      const saved = sessionStorage.getItem("poFilter");
+      return (saved as "pending" | "arrived" | "deleted") || "pending";
+    }
   );
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [poToDelete, setPoToDelete] = useState<ApiPurchaseOrder | null>(null);
@@ -60,6 +65,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   const displayList = poFilter === "deleted" ? deletedPOList : poList;
 
   useEffect(() => {
+    sessionStorage.setItem("poFilter", poFilter);
     if (poFilter === "deleted") {
       loadDeletedPurchases(
         deletedPagination.currentPage,
@@ -302,7 +308,15 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
         </button>
       </div>
 
-      {displayList.length === 0 ? (
+      {loading ? (
+        /* Loading State Card */
+        <div className="py-12 bg-white rounded-xl border border-gray-100 flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-4 border-[#2216a8] border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 font-bold text-xs">
+            {isMy ? "ကုန်ပစ္စည်းမှာယူမှုစာရင်းများ ရယူနေပါသည်..." : "Loading purchase orders..."}
+          </p>
+        </div>
+      ) : displayList.length === 0 ? (
         /* Empty State Card matching the design */
         <div className="py-12 bg-white rounded-xl border border-gray-100 flex items-center justify-center">
           <div className="bg-[#f0effb]/70 border border-indigo-100 rounded-3xl p-8 w-full max-w-sm mx-auto flex flex-col items-center justify-center gap-3">

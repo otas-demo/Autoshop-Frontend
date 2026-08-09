@@ -604,7 +604,7 @@ export const WarehouseDetail: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 items-center ">
-            {userRole === "owner" && (
+            {/* {userRole === "owner" && (
               <>
                 <button
                   onClick={() => openTransferModal("storefront")}
@@ -625,7 +625,29 @@ export const WarehouseDetail: React.FC = () => {
                   <span className="sm:hidden">Warehouse</span>
                 </button>
               </>
-            )}
+            )} */}
+            {/* {userRole === "owner" && (
+              <>
+                <button
+                  onClick={() => openTransferModal("storefront")}
+                  disabled={stockItems.length === 0}
+                  className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Transfer to Storefront</span>
+                  <span className="sm:hidden">Storefront</span>
+                </button>
+                <button
+                  onClick={() => openTransferModal("warehouse")}
+                  disabled={stockItems.length === 0}
+                  className="flex h-auto sm:h-10 items-center gap-2 px-3 py-2 sm:px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Transfer to Warehouse</span>
+                  <span className="sm:hidden">Warehouse</span>
+                </button>
+              </>
+            )} */}
 
             <button
               onClick={loadWarehouseStock}

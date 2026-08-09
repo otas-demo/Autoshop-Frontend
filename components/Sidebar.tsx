@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   ChevronDown,
   Languages,
+  BarChart3,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { removeAuthToken } from "../services/axios";
@@ -98,6 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       items: [
         { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
         { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
+        { path: "/purchasing-report", label: t("sidebar.purchasingReport"), icon: BarChart3 },
         { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
       ],
     },
@@ -117,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
   const hasPermission = (path: string) => {
     if (path === "/accounts" && userRole !== "owner") return false;
     if (
-      ["/purchasing", "/inventory", "/warehouse", "/suppliers"].includes(path) &&
+      ["/purchasing", "/inventory", "/warehouse", "/suppliers", "/purchasing-report"].includes(path) &&
       userRole !== "admin" &&
       userRole !== "owner"
     ) {

@@ -82,6 +82,7 @@ export const en = {
     creditSales: "Customers",
     expenses: "Expenses",
     reports: "Reports",
+    purchasingReport: "Purchasing Report",
     accountManagement: "Account Management",
     dailyReports: "Daily Reports",
     settings: "Settings",

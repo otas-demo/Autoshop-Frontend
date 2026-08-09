@@ -60,7 +60,7 @@ export const AIFloatingIcon: React.FC = () => {
     >
       {/* Background track indicator appearing when sliding */}
       {translateY > 5 && (
-        <div 
+        <div
           className="absolute left-1/2 -top-10 -translate-x-1/2 bg-indigo-950/80 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap pointer-events-none transition-opacity duration-150"
           style={{ opacity: Math.min(1, translateY / 50) }}
         >
@@ -74,22 +74,21 @@ export const AIFloatingIcon: React.FC = () => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onClick={handleClick}
-        className={`bg-[#2216a8] text-white px-6 py-2 rounded-b-[1.75rem] shadow-lg flex flex-col items-center justify-center cursor-grab active:cursor-grabbing transition-shadow hover:shadow-indigo-500/20 hover:shadow-xl border-x border-b border-indigo-500/30 ${
-          isDragging ? "cursor-grabbing scale-102" : "hover:brightness-110"
-        }`}
+        className={`bg-[#2216a8] text-white px-6 py-2 rounded-b-[1.75rem] shadow-lg flex flex-col items-center justify-center cursor-grab active:cursor-grabbing transition-shadow hover:shadow-indigo-500/20 hover:shadow-xl border-x border-b border-indigo-500/30 ${isDragging ? "cursor-grabbing scale-102" : "hover:brightness-110"
+          }`}
         style={{ minWidth: "160px" }}
       >
-        <div className="flex items-center gap-2">
-          {/* Logo / Chat Icon */}
+        {/* <div className="flex items-center gap-2">
+         
           <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
             <Bot className="w-4 h-4 text-white" />
           </div>
-          {/* Text Title */}
+        
           <div className="flex flex-col items-start leading-none">
             <span className="text-[10px] font-black tracking-widest text-indigo-200">AUTO</span>
             <span className="text-xs font-black tracking-wide text-white">SHOP</span>
           </div>
-        </div>
+        </div> */}
 
         {/* Subtitle */}
         <span className="text-[10px] font-medium tracking-wide mt-1 text-white/90">

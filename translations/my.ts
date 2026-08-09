@@ -83,6 +83,7 @@ export const my = {
     creditSales: "Customer စာရင်း",
     expenses: "ကုန်ကျစရိတ်",
     reports: "အရောင်းမှတ်တမ်း",
+    purchasingReport: "ဝယ်ယူမှုအစီရင်ခံစာ",
     accountManagement: "အကောင့်များ",
     dailyReports: "နေ့စဉ်မှတ်တမ်း",
     settings: "ဆက်တင်များ",

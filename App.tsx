@@ -15,6 +15,7 @@ import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { Inventory } from "./pages/Inventory";
 import { Purchasing } from "./pages/Purchasing";
+import { POReport } from "./pages/POReport";
 import { Credits } from "./pages/Credits";
 import { CreditDetail } from "./pages/CreditDetail";
 import { Expenses } from "./pages/Expenses";
@@ -184,6 +185,14 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Reports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/purchasing-report"
+            element={
+              <ProtectedRoute>
+                <POReport />
               </ProtectedRoute>
             }
           />

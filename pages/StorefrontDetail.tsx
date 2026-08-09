@@ -607,7 +607,7 @@ export const StorefrontDetail: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 items-center ">
-            {userRole === "owner" && (
+            {/* {userRole === "owner" && (
               <>
                 <button
                   onClick={() => openTransferModal("storefront")}
@@ -628,7 +628,7 @@ export const StorefrontDetail: React.FC = () => {
                   <span className="sm:hidden">Warehouse</span>
                 </button>
               </>
-            )}
+            )} */}
 
             <button
               onClick={loadStorefrontStock}

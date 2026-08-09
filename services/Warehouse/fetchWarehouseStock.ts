@@ -61,6 +61,7 @@ export const fetchWarehouseStock = async (
   limit: number = 100,
   category?: string,
   search?: string,
+  batchNumber?: string,
 ): Promise<FetchWarehouseStockResponse> => {
   try {
     const params = new URLSearchParams();
@@ -69,6 +70,7 @@ export const fetchWarehouseStock = async (
     params.append("limit", limit.toString());
     if (category && category !== "all") params.append("category", category);
     if (search && search.trim()) params.append("search", search.trim());
+    if (batchNumber && batchNumber.trim()) params.append("batchNumber", batchNumber.trim());
 
     const url = `/warehouse?${params.toString()}`;
     const response = await axios.get(url);

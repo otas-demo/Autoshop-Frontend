@@ -85,7 +85,8 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
     lineItemId: string,
     goodQuantity: number,
     badQuantity: number,
-    notes: string
+    notes: string,
+    expiryDate: string | null
   ) => {
     if (!grnId) return;
 
@@ -97,6 +98,7 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
           goodQuantity,
           badQuantity,
           notes,
+          expiryDate,
         },
       ]);
 
@@ -216,7 +218,7 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                 <thead className="bg-slate-50 border-b">
                   <tr>
                     <th className="p-3 text-left">Product</th>
-                    <th className="p-3 text-left">SKU</th>
+                    {/* <th className="p-3 text-left">SKU</th> */}
                     <th className="p-3 text-center">Received</th>
                     <th className="p-3 text-center">Good</th>
                     <th className="p-3 text-center">Bad</th>
@@ -236,10 +238,15 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                         <div className="text-xs text-slate-500">
                           {item.inventoryId?.productCode || "-"}
                         </div>
+                        {item.expiryDate && (
+                          <div className="text-[11px] text-orange-600 font-semibold mt-0.5">
+                            Expiry: {new Date(item.expiryDate).toLocaleDateString()}
+                          </div>
+                        )}
                       </td>
-                      <td className="p-3 text-slate-600">
+                      {/* <td className="p-3 text-slate-600">
                         {item.inventoryId?.SKU || "-"}
-                      </td>
+                      </td> */}
                       <td className="p-3 text-center font-medium">
                         {item.receivedQuantity}
                       </td>
@@ -265,13 +272,15 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                         {item.totalPrice.toLocaleString()}
                       </td>
                       <td className="p-3 text-center">
-                        <button
-                          onClick={() => handleUpdateLineItem(item)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Update Line Item"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        {grn.status?.toLowerCase() === "pending" && (
+                          <button
+                            onClick={() => handleUpdateLineItem(item)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Update Line Item"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

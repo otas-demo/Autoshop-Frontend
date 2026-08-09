@@ -15,6 +15,7 @@ interface LineItem {
   unitPrice: number;
   totalPrice: number;
   notes?: string;
+  expiryDate?: string;
 }
 
 interface UpdateLineItemModalProps {
@@ -25,7 +26,8 @@ interface UpdateLineItemModalProps {
     lineItemId: string,
     goodQuantity: number,
     badQuantity: number,
-    notes: string
+    notes: string,
+    expiryDate: string | null
   ) => Promise<void>;
   updating: boolean;
 }
@@ -40,12 +42,14 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
   const [goodQuantity, setGoodQuantity] = useState(0);
   const [badQuantity, setBadQuantity] = useState(0);
   const [notes, setNotes] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
 
   React.useEffect(() => {
     if (lineItem) {
       setGoodQuantity(lineItem.goodQuantity);
       setBadQuantity(lineItem.badQuantity);
       setNotes(lineItem.notes || "");
+      setExpiryDate(lineItem.expiryDate ? lineItem.expiryDate.split("T")[0] : "");
     }
   }, [lineItem]);
 
@@ -67,7 +71,13 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
 
   const handleSave = async () => {
     if (!lineItem) return;
-    await onSave(lineItem._id, goodQuantity, badQuantity, notes);
+    await onSave(
+      lineItem._id,
+      goodQuantity,
+      badQuantity,
+      notes,
+      expiryDate ? expiryDate : null
+    );
   };
 
   const handleClose = () => {
@@ -142,6 +152,20 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
               disabled={updating}
             />
           </div>
+        </div>
+
+        {/* Expiry Date */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Expiry Date
+          </label>
+          <input
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white text-slate-800"
+            disabled={updating}
+          />
         </div>
 
         {/* Notes */}

@@ -5,6 +5,7 @@ import { createProduct } from "../services/Inventory/createProduct";
 import { updateProduct } from "../services/Inventory/updateProduct";
 import { updateProductStatus } from "../services/Inventory/updateProductStatus";
 import { fetchProducts } from "../services/Inventory/fetchProducts";
+import { fetchCategories } from "../services/Inventory/fetchCategories";
 import { transferInventoryToWarehouse } from "../services/Inventory/transferInventoryToWarehouse";
 import { transferInventoryToStorefront } from "../services/Inventory/transferInventoryToStorefront";
 import { fetchWarehouseProfiles } from "../services/Warehouse/fetchWarehouseProfiles";
@@ -73,6 +74,12 @@ export const Inventory: React.FC = () => {
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [categories, setCategories] = useState<string[]>([]);
+
   // Import Excel State
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportExcelResponse | null>(
@@ -125,11 +132,17 @@ export const Inventory: React.FC = () => {
   };
 
   // Fetch products from API
-  const loadProducts = async () => {
+  const loadProducts = async (page: number = currentPage, limit: number = itemsPerPage) => {
     setIsFetching(true);
     setError(null);
     try {
-      const response = await fetchProducts();
+      const response = await fetchProducts(
+        page,
+        limit,
+        selectedCategory,
+        selectedStatus,
+        searchQuery
+      );
       if (response.success && response.data) {
         // Store full API products for subcategory extraction
         // Cast to ApiProduct[] since API returns full product data, not mapped Product type
@@ -137,14 +150,9 @@ export const Inventory: React.FC = () => {
         setApiProducts(apiData);
         const mappedProducts = apiData.map(mapApiProductToProduct);
         setProducts(mappedProducts);
-        // Only show success toast if products were loaded (not on initial load)
-        if (products.length > 0) {
-          toast.success(
-            t("inventory.loadedProducts").replace(
-              "{count}",
-              mappedProducts.length.toString(),
-            ),
-          );
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages);
+          setCurrentPage(response.pagination.currentPage);
         }
       } else {
         const errorMsg = t("inventory.failedToLoadInvalid");
@@ -169,11 +177,27 @@ export const Inventory: React.FC = () => {
     }
   };
 
-  // Fetch products on component mount
+  const loadCategories = async () => {
+    try {
+      const response = await fetchCategories();
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    }
+  };
+
+  // Fetch products whenever pagination, filter, or search changes
   useEffect(() => {
-    loadProducts();
+    loadProducts(currentPage, itemsPerPage);
+  }, [currentPage, itemsPerPage, selectedCategory, selectedStatus, searchQuery]);
+
+  // Fetch static profiles and categories on component mount
+  useEffect(() => {
     loadWarehouses();
     loadStorefronts();
+    loadCategories();
   }, []);
 
   const loadWarehouses = async () => {
@@ -494,35 +518,7 @@ export const Inventory: React.FC = () => {
   };
 
   // Filter products based on selected category, status, and search query
-  const filteredProducts = products
-    .filter(
-      (p) => selectedCategory === "All" || p.category === selectedCategory,
-    )
-    .filter(
-      (p) => selectedStatus === "all" || p.status === selectedStatus,
-    )
-    .filter((p) => {
-      if (!searchQuery.trim()) return true;
-
-      const query = searchQuery.toLowerCase().trim();
-      const apiProduct = apiProducts.find((ap) => (ap.id || ap._id) === p.id);
-
-      // Search in product name
-      if (p.name.toLowerCase().includes(query)) return true;
-
-      // Search in barcode
-      if (
-        apiProduct?.barcode &&
-        apiProduct.barcode.toLowerCase().includes(query)
-      )
-        return true;
-
-      // Search in product code
-      if (p.productCode && p.productCode.toLowerCase().includes(query))
-        return true;
-
-      return false;
-    });
+  const filteredProducts = products;
 
   // Selection handlers
   const handleSelectionChange = (productId: string, selected: boolean) => {
@@ -789,7 +785,10 @@ export const Inventory: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder={t("inventory.searchbar")}
             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
@@ -807,7 +806,10 @@ export const Inventory: React.FC = () => {
               {(["all", "active", "inactive"] as const).map((status) => (
                 <button
                   key={status}
-                  onClick={() => setSelectedStatus(status)}
+                  onClick={() => {
+                    setSelectedStatus(status);
+                    setCurrentPage(1);
+                  }}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                     selectedStatus === status
                       ? "bg-[#2216a8] text-white shadow-sm"
@@ -832,11 +834,14 @@ export const Inventory: React.FC = () => {
             <div className="relative min-w-[220px]">
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
               >
                 <option value="All">{t("inventory.allCategories")}</option>
-                {Array.from(new Set(products.map((p) => p.category))).map((cat) => (
+                {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -881,6 +886,14 @@ export const Inventory: React.FC = () => {
               onSelectionChange={handleSelectionChange}
               onSelectAll={handleSelectAll}
               showSelectBoxes={showSelectBoxes}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={(limit) => {
+                setItemsPerPage(limit);
+                setCurrentPage(1);
+              }}
             />
           </div>
         )}

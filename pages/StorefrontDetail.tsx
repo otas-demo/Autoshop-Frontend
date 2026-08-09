@@ -95,6 +95,7 @@ export const StorefrontDetail: React.FC = () => {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [transferType, setTransferType] = useState<"storefront" | "warehouse">("warehouse");
   const [transferItems, setTransferItems] = useState<TransferFormItem[]>([]);
+  const [batchStockItems, setBatchStockItems] = useState<StorefrontStockItem[]>([]);
   const [selectedStorefrontId, setSelectedStorefrontId] = useState("");
   const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
   const [transferDate, setTransferDate] = useState("");
@@ -119,6 +120,26 @@ export const StorefrontDetail: React.FC = () => {
       setTransferQtyDrafts({});
     }
   }, [isTransferModalOpen]);
+
+  useEffect(() => {
+    const loadBatchStockItems = async () => {
+      const firstItem = transferItems[0];
+      if (firstItem && firstItem.batchNumber && id) {
+        try {
+          const res = await fetchStorefrontStock(id, 1, 1000, undefined, undefined, firstItem.batchNumber);
+          if (res.success && res.data) {
+            setBatchStockItems(res.data);
+          }
+        } catch (error) {
+          console.error("Failed to load batch stock items", error);
+        }
+      } else {
+        setBatchStockItems([]);
+      }
+    };
+
+    loadBatchStockItems();
+  }, [transferItems[0]?.batchNumber, id]);
 
   const loadCategories = async () => {
     try {
@@ -362,17 +383,40 @@ export const StorefrontDetail: React.FC = () => {
     setIsTransferModalOpen(true);
   };
 
-  const addTransferItem = () => {
+  const addTransferItem = async () => {
     const usedCodes = transferItems.map((i) => i.productCode);
-    const availableProducts = stockItems.filter(
+    const requiredBatch = transferItems.length > 0 ? transferItems[0].batchNumber : null;
+
+    let baseItems = stockItems;
+    let fetchedFromBatch = false;
+
+    // If there is a requiredBatch, fetch all items with that batch from the API directly (not limited by pagination)
+    if (requiredBatch && id) {
+      try {
+        const res = await fetchStorefrontStock(id, 1, 1000, undefined, undefined, requiredBatch);
+        if (res.success && res.data) {
+          baseItems = res.data;
+          setBatchStockItems(res.data);
+          fetchedFromBatch = true;
+        }
+      } catch (error) {
+        console.error("Failed to load batch stock items", error);
+      }
+    }
+
+    const availableProducts = baseItems.filter(
       (item) =>
         !usedCodes.includes(item.inventoryId.productCode) &&
-        getTransferMaxQuantity(item) > 0,
+        getTransferMaxQuantity(item) > 0 &&
+        // If fetched from batch API, API already filtered by batch — skip client-side batch check
+        (fetchedFromBatch || requiredBatch === null || item.batchNumber === requiredBatch),
     );
 
     if (availableProducts.length === 0) {
       toast.error(
-        "No more products available to add. All products may have 0 quantity or are already selected.",
+        requiredBatch
+          ? `No more products available with the same batch number "${requiredBatch}" to add.`
+          : "No more products available to add.",
       );
       return;
     }
@@ -388,7 +432,8 @@ export const StorefrontDetail: React.FC = () => {
         quantity: 1,
         maxQuantity: maxQuantity,
         notes: "",
-        batchNumber: firstAvailable.batchNumber,
+        // Use requiredBatch if fetched from batch API (batchNumber field may not be in response)
+        batchNumber: fetchedFromBatch ? requiredBatch : firstAvailable.batchNumber,
         expiryDate: firstAvailable.expiryDate,
         manufacturingDate: firstAvailable.manufacturingDate,
       },
@@ -534,10 +579,19 @@ export const StorefrontDetail: React.FC = () => {
     const usedCodes = transferItems
       .map((i) => i.productCode)
       .filter((code) => code !== currentCode);
-    return stockItems.filter(
+    
+    const requiredBatch = transferItems.length > 1 ? transferItems[0].batchNumber : null;
+
+    // If requiredBatch is set, use batchStockItems (API already filtered by batch)
+    const usingBatchItems = requiredBatch && batchStockItems.length > 0;
+    const baseItems = usingBatchItems ? batchStockItems : stockItems;
+
+    return baseItems.filter(
       (item) =>
         !usedCodes.includes(item.inventoryId.productCode) &&
-        getTransferMaxQuantity(item) > 0,
+        getTransferMaxQuantity(item) > 0 &&
+        // If using batch API results, batchNumber check is already done server-side
+        (usingBatchItems || requiredBatch === null || item.batchNumber === requiredBatch),
     );
   };
 

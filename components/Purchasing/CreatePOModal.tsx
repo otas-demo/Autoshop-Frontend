@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { Modal } from "../Modal";
 import { Supplier, Product, PurchaseOrderItem } from "../../types";
 import { createPurchase } from "../../services/Purchase/createPurchase";
@@ -107,7 +107,16 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   };
 
   const removePOItem = (index: number) => {
+    const itemToRemove = poItems[index];
     setPOItems((prev) => prev.filter((_, i) => i !== index));
+    if (
+      itemToRemove &&
+      (itemToRemove.productId === poSelectedProduct ||
+        itemToRemove.name === productSearchQuery)
+    ) {
+      setPOSelectedProduct("");
+      setProductSearchQuery("");
+    }
   };
 
   const submitPO = async () => {
@@ -185,12 +194,24 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
               <div className="mb-2 relative" ref={productDropdownRef}>
                 <input
                   type="text"
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full border rounded p-2 pr-8 text-sm"
                   placeholder="Type to search and select product..."
                   value={productSearchQuery}
                   onChange={(e) => handleProductInputChange(e.target.value)}
                   onFocus={() => setShowProductDropdown(true)}
                 />
+                {productSearchQuery && (
+                  <button
+                    onClick={() => {
+                      setProductSearchQuery("");
+                      setPOSelectedProduct("");
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded-full hover:bg-gray-100 transition-all cursor-pointer"
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
                 {showProductDropdown && (
                   <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto shadow-lg">
                     {filteredProducts.length > 0 ? (
@@ -257,7 +278,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
             <table className="w-full text-sm text-left min-w-[500px]">
               <thead className="bg-slate-50">
                 <tr className="border-b">
-                  <th className="py-2 px-1">Item</th>
+                  <th className="py-2 px-1 w-48">Item</th>
                   <th className="py-2 px-1">Qty</th>
                   <th className="py-2 px-1">Unit Price</th>
                   <th className="py-2 px-1">Cost Price</th>
@@ -267,13 +288,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
               <tbody>
                 {poItems.map((item, i) => (
                   <tr key={i} className="border-b">
-                    <td className="py-2">{item.name}</td>
-                    <td className="py-2">{item.qty}</td>
-                    <td className="py-2">{item.costPrice.toLocaleString()}</td>
-                    <td className="py-2">
+                    <td className="py-2 px-1">{item.name}</td>
+                    <td className="py-2 px-1">{item.qty}</td>
+                    <td className="py-2 px-1">{item.costPrice.toLocaleString()}</td>
+                    <td className="py-2 px-1">
                       {(item.costPrice * item.qty).toLocaleString()}
                     </td>
-                    <td className="py-2">
+                    <td className="py-2 px-1">
                       <button
                         onClick={() => removePOItem(i)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"

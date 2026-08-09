@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Product } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 import { formatExpiryDate, getExpiryStatus, ExpiryStatus } from "../../utils/expiryUtils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface InventoryTableProps {
   products: Product[];
@@ -15,6 +16,11 @@ interface InventoryTableProps {
   onSelectionChange?: (productId: string, selected: boolean) => void;
   onSelectAll?: (selected: boolean) => void;
   showSelectBoxes?: boolean;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
+  onItemsPerPageChange: (limit: number) => void;
 }
 
 export const InventoryTable: React.FC<InventoryTableProps> = ({
@@ -26,6 +32,11 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   onSelectionChange,
   onSelectAll,
   showSelectBoxes = false,
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
+  onItemsPerPageChange,
 }) => {
   const { t } = useLanguage();
 
@@ -80,7 +91,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Unit</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Cost</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Price</th>
-              <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Expiry</th>
               <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Status</th>
               <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
             </tr>
@@ -88,7 +98,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           <tbody className="divide-y divide-gray-100">
             {products.map((p, index) => {
               const isSelected = selectedProductIds.includes(p.id);
-              const expiryStatus = getExpiryStatus(p.nearestExpiryDate);
 
               return (
                 <tr key={p.id} className="hover:bg-slate-50/40 transition-colors">
@@ -105,7 +114,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     </td>
                   )}
                   <td className="px-3 py-4 text-center text-slate-500 font-medium text-xs sm:text-sm">
-                    {String(index + 1).padStart(2, "0")}
+                    {String((currentPage - 1) * itemsPerPage + index + 1).padStart(2, "0")}
                   </td>
                   <td className="px-3 py-4 text-slate-600 font-semibold text-xs sm:text-sm">
                     {p.productCode}
@@ -131,26 +140,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   </td>
                   <td className="px-3 py-4 text-slate-800 font-bold text-xs sm:text-sm">
                     {p.sellingPrice.toLocaleString()} <span className="text-[10px] text-slate-500 font-bold ml-1">MMK</span>
-                  </td>
-                  <td className="px-3 py-4 text-center">
-                    {expiryStatus === ExpiryStatus.EXPIRED && (
-                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
-                        Expired ({formatExpiryDate(p.nearestExpiryDate)})
-                      </span>
-                    )}
-                    {expiryStatus === ExpiryStatus.EXPIRING_SOON && (
-                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">
-                        Soon ({formatExpiryDate(p.nearestExpiryDate)})
-                      </span>
-                    )}
-                    {expiryStatus === ExpiryStatus.VALID && (
-                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">
-                        {formatExpiryDate(p.nearestExpiryDate)}
-                      </span>
-                    )}
-                    {expiryStatus === ExpiryStatus.NONE && (
-                      <span className="text-slate-400">-</span>
-                    )}
                   </td>
                   <td className="px-3 py-4 text-center">
                     {onStatusToggle && userRole === "owner" ? (
@@ -202,6 +191,62 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 border-t bg-slate-50">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-600">Show</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                onItemsPerPageChange(Number(e.target.value));
+              }}
+              className="text-sm border rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-sm text-slate-600">entries</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => onPageChange(page)}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
+                    page === currentPage
+                      ? "bg-slate-800 text-white"
+                      : "text-slate-600 hover:bg-slate-50 border bg-white"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

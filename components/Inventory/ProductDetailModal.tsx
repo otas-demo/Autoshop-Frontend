@@ -536,7 +536,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                   {location.expiryDate && (
                                     <span className=" text-orange-700 flex items-center gap-1">
                                       Expiry: {formatExpiryDate(location.expiryDate)}
-                                      {/* {getExpiryStatusBadge(location.expiryDate)} */}
                                     </span>
                                   )}
                                 </div>
@@ -591,7 +590,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                 <p className="text-xs text-slate-600 mb-1">
                                   {location.locationAddress || "-"}
                                 </p>
-                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                                   <span className="bg-[#2216a8]/10 text-[#2216a8] font-bold px-2 py-0.5 rounded">
                                     Batch: {location.batchNumber || "__LEGACY__"}
                                   </span>

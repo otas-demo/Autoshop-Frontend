@@ -136,11 +136,10 @@ export const GRNList: React.FC<GRNListProps> = ({
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  page === currentPage
+                className={`px-3 py-1 rounded-lg text-sm font-medium ${page === currentPage
                     ? "bg-slate-800 text-white"
                     : "text-slate-600 hover:bg-slate-50 border"
-                }`}
+                  }`}
               >
                 {page}
               </button>
@@ -183,21 +182,19 @@ export const GRNList: React.FC<GRNListProps> = ({
       <div className="flex gap-3">
         <button
           onClick={() => setGrnFilter("pending")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-            grnFilter === "pending"
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${grnFilter === "pending"
               ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
               : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-          }`}
+            }`}
         >
           {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
         </button>
         <button
           onClick={() => setGrnFilter("completed")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-            grnFilter === "completed"
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${grnFilter === "completed"
               ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
               : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-          }`}
+            }`}
         >
           {isMy ? "စာရင်း လက်ခံပြီး" : "Completed"}
         </button>
@@ -245,7 +242,7 @@ export const GRNList: React.FC<GRNListProps> = ({
                   <th className="p-4">Condition Status</th>
                   <th className="p-4">Total Amount</th>
                   <th className="p-4">Status</th>
-                  <th className="p-4">Note</th>
+                  {/* <th className="p-4">Note</th> */}
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -290,9 +287,9 @@ export const GRNList: React.FC<GRNListProps> = ({
                         {grn.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="p-4 text-slate-500 truncate max-w-xs">
+                    {/* <td className="p-4 text-slate-500 truncate max-w-xs">
                       {grn.notes || "-"}
-                    </td>
+                    </td> */}
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <button

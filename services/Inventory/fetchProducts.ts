@@ -5,15 +5,35 @@ interface FetchProductsResponse {
   success: boolean;
   message: string;
   data: Product[];
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
 }
 
 /**
  * Fetch products from API
  * @returns {Promise<FetchProductsResponse>} Response from API with products data
  */
-export const fetchProducts = async (): Promise<FetchProductsResponse> => {
+export const fetchProducts = async (
+  page?: number,
+  limit?: number,
+  category?: string,
+  status?: string,
+  search?: string
+): Promise<FetchProductsResponse> => {
   try {
-    const response = await axios.get("/inventory");
+    const response = await axios.get("/inventory", {
+      params: { 
+        page, 
+        limit,
+        category: category && category !== "All" ? category : undefined,
+        status: status && status !== "all" ? status : undefined,
+        search: search || undefined
+      },
+    });
 
     return response.data;
   } catch (error) {

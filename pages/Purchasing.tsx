@@ -20,6 +20,8 @@ export const Purchasing: React.FC = () => {
     poList,
     deletedPOList,
     poLoading,
+    poFilter,
+    setPoFilter,
     poPagination,
     deletedPoPagination,
     isCreateModalOpen,
@@ -134,6 +136,8 @@ export const Purchasing: React.FC = () => {
                 deletedPagination={deletedPoPagination}
                 onCreateGRN={handleCreateGRNFromPO}
                 loading={poLoading}
+                poFilter={poFilter}
+                setPoFilter={setPoFilter}
               />
               <CreatePOModal
                 isOpen={isCreateModalOpen}

@@ -8,6 +8,7 @@ import {
   Trash2,
   RotateCcw,
   FileText,
+  Check,
 } from "lucide-react";
 import { ApiPurchaseOrder, Supplier } from "../../types";
 import { updatePurchaseStatus } from "../../services/Purchase/updatePurchaseStatus";
@@ -36,6 +37,8 @@ interface PurchaseOrderListProps {
   deletedPagination: PaginationData;
   onCreateGRN?: (po: ApiPurchaseOrder) => void;
   loading?: boolean;
+  poFilter: "pending" | "arrived" | "deleted";
+  setPoFilter: (filter: "pending" | "arrived" | "deleted") => void;
 }
 
 export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
@@ -49,14 +52,10 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   deletedPagination,
   onCreateGRN,
   loading = false,
+  poFilter,
+  setPoFilter,
 }) => {
   const { t, language } = useLanguage();
-  const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">(
-    () => {
-      const saved = sessionStorage.getItem("poFilter");
-      return (saved as "pending" | "arrived" | "deleted") || "pending";
-    }
-  );
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [poToDelete, setPoToDelete] = useState<ApiPurchaseOrder | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -240,11 +239,10 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                     handlePageChange(page);
                   }
                 }}
-                className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  page === currentPage
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-600 hover:bg-slate-50 border"
-                }`}
+                className={`px-3 py-1 rounded-lg text-sm font-medium ${page === currentPage
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-600 hover:bg-slate-50 border"
+                  }`}
               >
                 {page}
               </button>
@@ -278,31 +276,28 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
       <div className="flex gap-3">
         <button
           onClick={() => setPoFilter("pending")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-            poFilter === "pending"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-          }`}
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "pending"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            }`}
         >
           {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
         </button>
         <button
           onClick={() => setPoFilter("arrived")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-            poFilter === "arrived"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-          }`}
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "arrived"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            }`}
         >
           {isMy ? "ပစ္စည်း ရောက်ပြီ" : "Arrived"}
         </button>
         <button
           onClick={() => setPoFilter("deleted")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-            poFilter === "deleted"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-          }`}
+          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "deleted"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            }`}
         >
           {isMy ? "ဖျက်လိုက်သော စာရင်း" : "Deleted"}
         </button>
@@ -348,7 +343,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                   <th className="p-4">Supplier</th>
                   <th className="p-4">Total Amount</th>
                   <th className="p-4">Status</th>
-                  <th className="p-4">Note</th>
+                  {/* <th className="p-4">Note</th> */}
                   <th className="p-4">Total Remaining</th>
                   <th className="p-4">Actions</th>
                 </tr>
@@ -372,18 +367,17 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
-                            po.status === "pending"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-green-100 text-green-700"
-                          }`}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-black ${po.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-green-100 text-green-700"
+                            }`}
                         >
                           {po.status.toUpperCase()}
                         </span>
                       </td>
-                      <td className="p-4 text-slate-500 truncate max-w-xs">
+                      {/* <td className="p-4 text-slate-500 truncate max-w-xs">
                         {po.note}
-                      </td>
+                      </td> */}
                       <td className="p-4 font-bold text-slate-800">{po.totalRemainingQuantity}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
@@ -415,9 +409,9 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                                   onClick={() =>
                                     handleUpdateStatus(po._id, "arrived")
                                   }
-                                  className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors cursor-pointer"
+                                  className="flex items-center gap-1 text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors cursor-pointer"
                                 >
-                                  {isMy ? "ရောက်ရှိကြောင်းမှတ်သားမယ်" : "Mark Arrived"}
+                                  <Check className="w-3.5 h-3.5" /> {isMy ? "ရောက်ပြီ" : "Mark Arrived"}
                                 </button>
                               )}
                               {(po.status === "arrived" ||

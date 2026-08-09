@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { 
-  fetchPurchaseReport, 
-  PurchaseReportOverall, 
-  PurchaseReportStatus, 
-  PurchaseReportSupplier, 
-  PurchaseReportProduct 
+import {
+  fetchPurchaseReport,
+  PurchaseReportOverall,
+  PurchaseReportStatus,
+  PurchaseReportSupplier,
+  PurchaseReportProduct
 } from "../services/Reports/fetchPurchaseReport";
-import { 
-  BarChart3, 
-  DollarSign, 
-  FileText, 
-  Loader2, 
-  Package, 
-  ShieldCheck, 
-  TrendingUp, 
+import {
+  BarChart3,
+  DollarSign,
+  FileText,
+  Loader2,
+  Package,
+  ShieldCheck,
+  TrendingUp,
   Truck,
   RefreshCw
 } from "lucide-react";
@@ -34,13 +34,14 @@ export const POReport: React.FC = () => {
   const [statusBreakdown, setStatusBreakdown] = useState<PurchaseReportStatus[]>([]);
   const [supplierBreakdown, setSupplierBreakdown] = useState<PurchaseReportSupplier[]>([]);
   const [productBreakdown, setProductBreakdown] = useState<PurchaseReportProduct[]>([]);
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   useEffect(() => {
     // Set default date range to last 30 days
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - 30);
-    
+
     setStartDate(start);
     setEndDate(end);
   }, []);
@@ -99,6 +100,7 @@ export const POReport: React.FC = () => {
   };
 
   const pendingPOCount = statusBreakdown.find(s => s._id?.toLowerCase() === "pending")?.count || 0;
+  const arrivedPOCount = statusBreakdown.find(s => s._id?.toLowerCase() === "arrived")?.count || 0;
 
   const handleDateRangeChange = (start: Date | null, end: Date | null) => {
     setStartDate(start);
@@ -172,7 +174,7 @@ export const POReport: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Total POs Created
+                    Total PO Created
                   </p>
                   <p className="text-lg font-black text-slate-800 mt-1">
                     {overall.count.toLocaleString()}{" "}
@@ -181,18 +183,18 @@ export const POReport: React.FC = () => {
                 </div>
               </div>
 
-              {/* Average Order Value */}
+              {/* Total Arrived Orders */}
               <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
                 <div className="p-3 bg-indigo-50 rounded-xl">
-                  <TrendingUp className="w-5 h-5 text-[#2216a8]" />
+                  <ShieldCheck className="w-5 h-5 text-[#2216a8]" />
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Average Order Value
+                    Total Arrived Orders
                   </p>
                   <p className="text-lg font-black text-slate-800 mt-1">
-                    {Math.round(overall.averageAmount).toLocaleString()}{" "}
-                    <span className="text-xs font-semibold text-slate-400">MMK</span>
+                    {arrivedPOCount.toLocaleString()}{" "}
+                    <span className="text-xs font-semibold text-slate-400">Orders</span>
                   </p>
                 </div>
               </div>
@@ -204,7 +206,7 @@ export const POReport: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Pending POs
+                    Pending PO
                   </p>
                   <p className="text-lg font-black text-slate-800 mt-1">
                     {pendingPOCount}{" "}
@@ -253,7 +255,7 @@ export const POReport: React.FC = () => {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-slate-50 text-slate-500 border-b">
-                        <th className="p-3 text-left">Code</th>
+                        {/* <th className="p-3 text-left">Code</th> */}
                         <th className="p-3 text-left">Supplier Name</th>
                         <th className="p-3 text-center">Total Orders</th>
                         <th className="p-3 text-right">Total Amount</th>
@@ -269,7 +271,7 @@ export const POReport: React.FC = () => {
                       ) : (
                         supplierBreakdown.map((supplier) => (
                           <tr key={supplier.supplierId} className="hover:bg-slate-50/50 transition">
-                            <td className="p-3 font-mono text-slate-600 font-medium">{supplier.supplierCode}</td>
+                            {/* <td className="p-3 font-mono text-slate-600 font-medium">{supplier.supplierCode}</td> */}
                             <td className="p-3 font-semibold text-slate-800">{supplier.supplierName}</td>
                             <td className="p-3 text-center font-semibold text-slate-700">{supplier.count}</td>
                             <td className="p-3 text-right font-bold text-slate-800">{supplier.totalAmount.toLocaleString()} MMK</td>
@@ -284,14 +286,25 @@ export const POReport: React.FC = () => {
 
             {/* Top Products Table */}
             <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
-                <Package className="w-4 h-4 text-[#2216a8]" />
-                Top Purchased Products
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-[#2216a8]" />
+                  {showAllProducts ? "All Purchased Products" : "Top Purchased Products"}
+                </h3>
+                {productBreakdown.length > 10 && (
+                  <button
+                    onClick={() => setShowAllProducts(!showAllProducts)}
+                    className="text-xs font-bold text-[#2216a8] hover:underline px-3 py-1.5 rounded-full border border-indigo-100 bg-indigo-50/30 hover:bg-indigo-50 transition cursor-pointer"
+                  >
+                    {showAllProducts ? "Show Top 10" : "Show All Products"}
+                  </button>
+                )}
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-slate-50 text-slate-500 border-b">
+                      <th className="p-3 text-left">No</th>
                       <th className="p-3 text-left">Product Code</th>
                       <th className="p-3 text-left">Product Name</th>
                       <th className="p-3 text-center">Quantity Purchased</th>
@@ -306,8 +319,9 @@ export const POReport: React.FC = () => {
                         </td>
                       </tr>
                     ) : (
-                      productBreakdown.map((product) => (
+                      (showAllProducts ? productBreakdown : productBreakdown.slice(0, 10)).map((product, index) => (
                         <tr key={product._id} className="hover:bg-slate-50/50 transition">
+                          <td className="p-3 font-mono text-slate-600 font-medium">{index + 1}</td>
                           <td className="p-3 font-mono text-slate-600 font-medium">{product.productCode || "-"}</td>
                           <td className="p-3 font-semibold text-slate-800">{product.productName}</td>
                           <td className="p-3 text-center">

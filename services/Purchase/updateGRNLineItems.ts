@@ -5,6 +5,7 @@ interface LineItemUpdate {
   goodQuantity: number;
   badQuantity: number;
   notes?: string;
+  expiryDate?: string | null;
 }
 
 interface UpdateGRNLineItemsRequest {

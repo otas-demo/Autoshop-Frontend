@@ -500,7 +500,9 @@ export const AccountManagement: React.FC = () => {
               disabled={loading}
               className="px-5 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-[#f0efff] hover:bg-indigo-100 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               <span>{t("accountManagement.refresh")}</span>
             </button>
           </div>
@@ -519,7 +521,7 @@ export const AccountManagement: React.FC = () => {
                   {t("accountManagement.totalAccounts")}
                 </p>
                 <p className="text-lg font-bold text-slate-800 mt-1">
-                  {accounts.length.toLocaleString()} MMK
+                  {accounts.length.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -534,7 +536,7 @@ export const AccountManagement: React.FC = () => {
                   {t("accountManagement.activeAccounts")}
                 </p>
                 <p className="text-lg font-bold text-slate-800 mt-1">
-                  {activeCount.toLocaleString()} MMK
+                  {activeCount.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -549,7 +551,7 @@ export const AccountManagement: React.FC = () => {
                   {t("accountManagement.deactivatedAccounts")}
                 </p>
                 <p className="text-lg font-bold text-slate-800 mt-1">
-                  {deletedCount.toLocaleString()} MMK
+                  {deletedCount.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -595,7 +597,8 @@ export const AccountManagement: React.FC = () => {
                   <option value="all">{t("accountManagement.allRoles")}</option>
                   {uniqueRoles.map((role) => (
                     <option key={String(role)} value={String(role)}>
-                      {String(role).charAt(0).toUpperCase() + String(role).slice(1)}
+                      {String(role).charAt(0).toUpperCase() +
+                        String(role).slice(1)}
                     </option>
                   ))}
                 </select>
@@ -605,9 +608,15 @@ export const AccountManagement: React.FC = () => {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="all">{t("accountManagement.allStatus")}</option>
-                  <option value="active">{t("accountManagement.active")}</option>
-                  <option value="deleted">{t("accountManagement.inactive")}</option>
+                  <option value="all">
+                    {t("accountManagement.allStatus")}
+                  </option>
+                  <option value="active">
+                    {t("accountManagement.active")}
+                  </option>
+                  <option value="deleted">
+                    {t("accountManagement.inactive")}
+                  </option>
                 </select>
               </div>
             </div>
@@ -622,7 +631,9 @@ export const AccountManagement: React.FC = () => {
           ) : filteredAccounts.length === 0 ? (
             <div className="bg-white rounded-xl border p-12 text-center">
               <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">{t("accountManagement.noAccounts")}</p>
+              <p className="text-slate-500">
+                {t("accountManagement.noAccounts")}
+              </p>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border overflow-hidden">
@@ -658,7 +669,10 @@ export const AccountManagement: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {filteredAccounts.map((account, index) => (
-                      <tr key={account._id} className="hover:bg-slate-50/50 transition-colors">
+                      <tr
+                        key={account._id}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
                         <td className="px-6 py-4 font-semibold text-slate-400 text-xs">
                           {String(index + 1).padStart(2, "0")}
                         </td>
@@ -668,7 +682,8 @@ export const AccountManagement: React.FC = () => {
                         <td className="px-6 py-4">
                           <span className={getRoleColor(account.role)}>
                             {account.role
-                              ? account.role.charAt(0).toUpperCase() + account.role.slice(1).toLowerCase()
+                              ? account.role.charAt(0).toUpperCase() +
+                                account.role.slice(1).toLowerCase()
                               : ""}
                           </span>
                         </td>
@@ -679,7 +694,8 @@ export const AccountManagement: React.FC = () => {
                                 {account.locationId.locationName}
                               </p>
                               <p className="text-xs text-slate-400 font-medium mt-0.5">
-                                {account.locationId.locationCode} • {account.locationId.type}
+                                {account.locationId.locationCode} •{" "}
+                                {account.locationId.type}
                               </p>
                             </div>
                           ) : (
@@ -688,9 +704,7 @@ export const AccountManagement: React.FC = () => {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          {getStatusBadge(account)}
-                        </td>
+                        <td className="px-6 py-4">{getStatusBadge(account)}</td>
                         {/* <td className="px-6 py-4 text-slate-600 text-xs font-semibold">
                           <div className="flex items-center gap-1.5">
                             <AlertCircle className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -725,11 +739,18 @@ export const AccountManagement: React.FC = () => {
                                   disabled={restoringAccountId === account._id}
                                   className="border border-green-500 text-green-600 hover:bg-green-50 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                                 >
-                                  {restoringAccountId === account._id ? "..." : t("accountManagement.restore")}
+                                  {restoringAccountId === account._id
+                                    ? "..."
+                                    : t("accountManagement.restore")}
                                 </button>
                                 <button
-                                  onClick={() => handleOpenHardDeleteModal(account)}
-                                  disabled={isHardDeleting && accountToHardDelete?._id === account._id}
+                                  onClick={() =>
+                                    handleOpenHardDeleteModal(account)
+                                  }
+                                  disabled={
+                                    isHardDeleting &&
+                                    accountToHardDelete?._id === account._id
+                                  }
                                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                                 >
                                   {t("accountManagement.hardDelete")}
@@ -768,7 +789,8 @@ export const AccountManagement: React.FC = () => {
               <form onSubmit={handleUpdateAccount} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                    {language === "my" ? "အကောင့် နာမည်" : "Account Name"} <span className="text-red-500">*</span>
+                    {language === "my" ? "အကောင့် နာမည်" : "Account Name"}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -793,7 +815,10 @@ export const AccountManagement: React.FC = () => {
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
                       value={editFormData.role}
                       onChange={(e) =>
-                        setEditFormData({ ...editFormData, role: e.target.value })
+                        setEditFormData({
+                          ...editFormData,
+                          role: e.target.value,
+                        })
                       }
                     >
                       <option value="">Select Role</option>
@@ -851,7 +876,9 @@ export const AccountManagement: React.FC = () => {
                     ) : (
                       <>
                         <Edit className="w-4 h-4" />{" "}
-                        <span>{language === "my" ? "ပြင်ဆင်မည်" : "Update Account"}</span>
+                        <span>
+                          {language === "my" ? "ပြင်ဆင်မည်" : "Update Account"}
+                        </span>
                       </>
                     )}
                   </button>
@@ -881,8 +908,8 @@ export const AccountManagement: React.FC = () => {
               <div className="p-6 space-y-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <p className="text-sm text-red-800">
-                    Are you sure you want to deactivate this account? This action
-                    will prevent the user from accessing the system.
+                    Are you sure you want to deactivate this account? This
+                    action will prevent the user from accessing the system.
                   </p>
                 </div>
 
@@ -972,9 +999,10 @@ export const AccountManagement: React.FC = () => {
                         ⚠️ WARNING: This action cannot be undone!
                       </p>
                       <p className="text-sm text-red-800">
-                        You are about to permanently delete this account from the
-                        system. This will remove all associated data and cannot be
-                        reversed. Please make sure you want to proceed.
+                        You are about to permanently delete this account from
+                        the system. This will remove all associated data and
+                        cannot be reversed. Please make sure you want to
+                        proceed.
                       </p>
                     </div>
                   </div>
@@ -1009,7 +1037,9 @@ export const AccountManagement: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Status:</span>
-                    <span className="font-medium text-red-600">Deactivated</span>
+                    <span className="font-medium text-red-600">
+                      Deactivated
+                    </span>
                   </div>
                 </div>
 
@@ -1073,7 +1103,8 @@ export const AccountManagement: React.FC = () => {
               <form onSubmit={handleCreateAccount} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                    {getModalLabel("name")} <span className="text-red-500">*</span>
+                    {getModalLabel("name")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1093,7 +1124,8 @@ export const AccountManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                    {getModalLabel("role")} <span className="text-red-500">*</span>
+                    {getModalLabel("role")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
@@ -1137,29 +1169,29 @@ export const AccountManagement: React.FC = () => {
                           {locationProfiles.filter(
                             (loc) => loc.type === "storefront",
                           ).length > 0 && (
-                              <optgroup label="Storefronts">
-                                {locationProfiles
-                                  .filter((loc) => loc.type === "storefront")
-                                  .map((loc) => (
-                                    <option key={loc._id} value={loc._id}>
-                                      {loc.locationName} ({loc.locationCode})
-                                    </option>
-                                  ))}
-                              </optgroup>
-                            )}
+                            <optgroup label="Storefronts">
+                              {locationProfiles
+                                .filter((loc) => loc.type === "storefront")
+                                .map((loc) => (
+                                  <option key={loc._id} value={loc._id}>
+                                    {loc.locationName} ({loc.locationCode})
+                                  </option>
+                                ))}
+                            </optgroup>
+                          )}
                           {locationProfiles.filter(
                             (loc) => loc.type === "warehouse",
                           ).length > 0 && (
-                              <optgroup label="Warehouses">
-                                {locationProfiles
-                                  .filter((loc) => loc.type === "warehouse")
-                                  .map((loc) => (
-                                    <option key={loc._id} value={loc._id}>
-                                      {loc.locationName} ({loc.locationCode})
-                                    </option>
-                                  ))}
-                              </optgroup>
-                            )}
+                            <optgroup label="Warehouses">
+                              {locationProfiles
+                                .filter((loc) => loc.type === "warehouse")
+                                .map((loc) => (
+                                  <option key={loc._id} value={loc._id}>
+                                    {loc.locationName} ({loc.locationCode})
+                                  </option>
+                                ))}
+                            </optgroup>
+                          )}
                           {locationProfiles.length > 0 &&
                             locationProfiles.filter(
                               (loc) => loc.type === "storefront",
@@ -1178,14 +1210,16 @@ export const AccountManagement: React.FC = () => {
                   </div>
                   {locationProfiles.length === 0 && (
                     <p className="text-xs text-slate-500 mt-1">
-                      No locations found. Please check if locations are available.
+                      No locations found. Please check if locations are
+                      available.
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                    {getModalLabel("password")} <span className="text-red-500">*</span>
+                    {getModalLabel("password")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1217,7 +1251,8 @@ export const AccountManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                    {getModalLabel("confirmPassword")} <span className="text-red-500">*</span>
+                    {getModalLabel("confirmPassword")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1235,7 +1270,9 @@ export const AccountManagement: React.FC = () => {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showConfirmPassword ? (
@@ -1271,11 +1308,15 @@ export const AccountManagement: React.FC = () => {
                   >
                     {isCreating ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> {language === "my" ? "သိမ်းဆည်းနေသည်..." : "Creating..."}
+                        <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                        {language === "my"
+                          ? "သိမ်းဆည်းနေသည်..."
+                          : "Creating..."}
                       </>
                     ) : (
                       <>
-                        <Plus className="w-4 h-4" /> <span>{getModalLabel("submit")}</span>
+                        <Plus className="w-4 h-4" />{" "}
+                        <span>{getModalLabel("submit")}</span>
                       </>
                     )}
                   </button>

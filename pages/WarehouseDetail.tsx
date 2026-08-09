@@ -23,6 +23,7 @@ import {
   fetchWarehouseStock,
   WarehouseStockItem,
 } from "../services/Warehouse/fetchWarehouseStock";
+import { fetchExpiringStock } from "../services/Warehouse/fetchExpiringStock";
 import { fetchWarehouseProfiles } from "../services/Warehouse/fetchWarehouseProfiles";
 import { fetchCategories } from "../services/Inventory/fetchCategories";
 import {
@@ -82,6 +83,8 @@ export const WarehouseDetail: React.FC = () => {
   const [totalProduct, setTotalProduct] = useState(0);
   const [totalproductQuantity, setTotalproductQuantity] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [showExpiringOnly, setShowExpiringOnly] = useState(false);
+  const [expiryDays, setExpiryDays] = useState(30);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -143,7 +146,7 @@ export const WarehouseDetail: React.FC = () => {
 
   useEffect(() => {
     loadWarehouseStock();
-  }, [id, currentPage, itemsPerPage, selectedCategory, searchTerm]);
+  }, [id, currentPage, itemsPerPage, selectedCategory, searchTerm, showExpiringOnly, expiryDays]);
 
   useEffect(() => {
     loadCategories();
@@ -177,46 +180,71 @@ export const WarehouseDetail: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetchWarehouseStock(
-        id,
-        currentPage,
-        itemsPerPage,
-        selectedCategory,
-        searchTerm,
-      );
-      // console.log(response);
-      if (response.success) {
-        if (response.summary) {
-          setTotalProduct(response.summary.totalProducts);
-          setTotalproductQuantity(response.summary.totalQuantity);
-          setTotalAmount(response.summary.totalAmount);
-        }
-
-        setStockItems(response.data);
-
-        // Update pagination info
-        if (response.pagination) {
-          setTotalPages(response.pagination.totalPages);
-          setTotalItems(response.pagination.totalItems);
-          setCurrentPage(response.pagination.currentPage);
-        }
-
-        // Update warehouse info from first item if not provided via state
-        if (response.data.length > 0 && !warehouseInfo) {
-          const firstItem = response.data[0];
-          setWarehouseName(
-            firstItem.warehouseId.locationName ||
-            firstItem.warehouseId.warehouseName ||
-            "Warehouse",
-          );
-          setWarehouseCode(
-            firstItem.warehouseId.locationCode ||
-            firstItem.warehouseId.warehouseCode ||
-            "",
-          );
+      if (showExpiringOnly) {
+        const response = await fetchExpiringStock(id, expiryDays);
+        if (response.success) {
+          let data = response.data;
+          if (selectedCategory && selectedCategory !== "all") {
+            data = data.filter(item => item.inventoryId?.category === selectedCategory);
+          }
+          if (searchTerm && searchTerm.trim()) {
+            const term = searchTerm.toLowerCase();
+            data = data.filter(item => 
+              item.inventoryId?.productName?.toLowerCase().includes(term) ||
+              item.inventoryId?.productCode?.toLowerCase().includes(term) ||
+              item.batchNumber?.toLowerCase().includes(term)
+            );
+          }
+          setStockItems(data);
+          setTotalProduct(data.length);
+          setTotalproductQuantity(data.reduce((sum, item) => sum + item.quantity, 0));
+          setTotalAmount(data.reduce((sum, item) => sum + (item.quantity * (item.inventoryId?.sellingPrice || 0)), 0));
+          setTotalPages(1);
+          setTotalItems(data.length);
+        } else {
+          toast.error(response.message || "Failed to load expiring stock");
         }
       } else {
-        toast.error(response.message || "Failed to load warehouse stock");
+        const response = await fetchWarehouseStock(
+          id,
+          currentPage,
+          itemsPerPage,
+          selectedCategory,
+          searchTerm,
+        );
+        if (response.success) {
+          if (response.summary) {
+            setTotalProduct(response.summary.totalProducts);
+            setTotalproductQuantity(response.summary.totalQuantity);
+            setTotalAmount(response.summary.totalAmount);
+          }
+
+          setStockItems(response.data);
+
+          // Update pagination info
+          if (response.pagination) {
+            setTotalPages(response.pagination.totalPages);
+            setTotalItems(response.pagination.totalItems);
+            setCurrentPage(response.pagination.currentPage);
+          }
+
+          // Update warehouse info from first item if not provided via state
+          if (response.data.length > 0 && !warehouseInfo) {
+            const firstItem = response.data[0];
+            setWarehouseName(
+              firstItem.warehouseId.locationName ||
+              firstItem.warehouseId.warehouseName ||
+              "Warehouse",
+            );
+            setWarehouseCode(
+              firstItem.warehouseId.locationCode ||
+              firstItem.warehouseId.warehouseCode ||
+              "",
+            );
+          }
+        } else {
+          toast.error(response.message || "Failed to load warehouse stock");
+        }
       }
     } catch (error) {
       console.error("Error loading warehouse stock:", error);
@@ -696,14 +724,46 @@ export const WarehouseDetail: React.FC = () => {
               </div>
             </div>
 
+            {/* Expiry Filter */}
+            <div className="sm:w-64">
+              <button
+                type="button"
+                onClick={() => setShowExpiringOnly(!showExpiringOnly)}
+                className={`w-full px-4 py-2 border rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer ${
+                  showExpiringOnly 
+                    ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100" 
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <AlertTriangle className="w-4 h-4" />
+                {showExpiringOnly ? "Showing Expiring Soon" : "Filter Expiring Soon"}
+              </button>
+            </div>
+
+            {showExpiringOnly && (
+              <div className="sm:w-32">
+                <select
+                  value={expiryDays}
+                  onChange={(e) => setExpiryDays(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none font-semibold text-red-700 bg-red-50 border-red-200 cursor-pointer"
+                >
+                  <option value={15}>15 Days</option>
+                  <option value={30}>30 Days</option>
+                  <option value={60}>60 Days</option>
+                  <option value={90}>90 Days</option>
+                </select>
+              </div>
+            )}
+
             {/* Clear Filters */}
-            {(searchTerm || selectedCategory !== "all") && (
+            {(searchTerm || selectedCategory !== "all" || showExpiringOnly) && (
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setSelectedCategory("all");
+                  setShowExpiringOnly(false);
                 }}
-                className="px-3 py-2 sm:px-4 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 text-sm sm:text-base"
+                className="px-3 py-2 sm:px-4 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 text-sm sm:text-base cursor-pointer"
               >
                 <X className="w-4 h-4" />
                 <span className="hidden sm:inline">Clear Filters</span>
@@ -713,7 +773,7 @@ export const WarehouseDetail: React.FC = () => {
           </div>
 
           {/* Filter Results Summary */}
-          {(searchTerm || selectedCategory !== "all") && (
+          {(searchTerm || selectedCategory !== "all" || showExpiringOnly) && (
             <div className="mt-3 text-sm text-slate-500">
               Showing {stockItems.length} of {totalItems} items
             </div>
@@ -878,6 +938,11 @@ export const WarehouseDetail: React.FC = () => {
                           <span className="bg-slate-100 px-2 py-1 rounded text-xs font-mono">
                             {item.inventoryId.productCode}
                           </span>
+                          {item.batchNumber && item.batchNumber !== "__LEGACY__" && (
+                            <div className="text-[10px] text-indigo-600 mt-1 font-semibold">
+                              Batch: {item.batchNumber}
+                            </div>
+                          )}
                         </td>
                         <td className="px-2 sm:px-4 py-3">
                           <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
@@ -901,24 +966,42 @@ export const WarehouseDetail: React.FC = () => {
                           <span className="hidden sm:inline">MMK</span>
                         </td>
                         <td className="px-2 sm:px-4 py-3">
-                          {item.isLowStock ? (
-                            <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
-                              <AlertTriangle className="w-3 h-3" />{" "}
-                              <span className="hidden sm:inline">Low Stock</span>
-                              <span className="sm:hidden">Low</span>
-                            </span>
-                          ) : item.quantity === 0 ? (
-                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
-                              <span className="hidden sm:inline">
-                                Out of Stock
-                              </span>
-                              <span className="sm:hidden">Out</span>
-                            </span>
+                          {item.expiryDate ? (
+                            <div className="flex flex-col gap-1">
+                              {getExpiryStatus(item.expiryDate) === ExpiryStatus.EXPIRED ? (
+                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit border border-red-200">
+                                  Expired ({formatExpiryDate(item.expiryDate)})
+                                </span>
+                              ) : getExpiryStatus(item.expiryDate) === ExpiryStatus.EXPIRING_SOON ? (
+                                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit border border-yellow-200">
+                                  Expiring Soon ({formatExpiryDate(item.expiryDate)})
+                                </span>
+                              ) : (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit border border-green-200">
+                                  Valid ({formatExpiryDate(item.expiryDate)})
+                                </span>
+                              )}
+                            </div>
                           ) : (
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                              <span className="hidden sm:inline">In Stock</span>
-                              <span className="sm:hidden">In</span>
-                            </span>
+                            item.isLowStock ? (
+                              <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
+                                <AlertTriangle className="w-3 h-3" />{" "}
+                                <span className="hidden sm:inline">Low Stock</span>
+                                <span className="sm:hidden">Low</span>
+                              </span>
+                            ) : item.quantity === 0 ? (
+                              <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
+                                <span className="hidden sm:inline">
+                                  Out of Stock
+                                </span>
+                                <span className="sm:hidden">Out</span>
+                              </span>
+                            ) : (
+                              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                                <span className="hidden sm:inline">In Stock</span>
+                                <span className="sm:hidden">In</span>
+                              </span>
+                            )
                           )}
                         </td>
                         <td className="px-2 sm:px-4 py-3">

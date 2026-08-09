@@ -41,6 +41,7 @@ export interface Product {
   nearestExpiryDate?: string | null;
   isExpired?: boolean;
   isExpiringSoon?: boolean;
+  unitOfMeasure?: string;
 }
 
 export interface CartItem extends Product {

@@ -77,6 +77,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Code</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Name</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
+              <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Unit</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Cost</th>
               <th className="px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Price</th>
               <th className="px-3 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Expiry</th>
@@ -119,6 +120,11 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   </td>
                   <td className="px-3 py-4 text-slate-500 text-xs sm:text-sm">
                     {p.category}
+                  </td>
+                  <td className="px-3 py-4 text-slate-600 font-medium text-xs sm:text-sm">
+                    <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 text-xs">
+                      {p.unitOfMeasure || "piece"}
+                    </span>
                   </td>
                   <td className="px-3 py-4 text-slate-800 font-bold text-xs sm:text-sm">
                     {p.costPrice.toLocaleString()} <span className="text-[10px] text-slate-500 font-bold ml-1">MMK</span>

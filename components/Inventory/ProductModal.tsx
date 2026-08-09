@@ -228,6 +228,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         return isMm ? "ပစ္စည်း အမှတ်တံဆိပ် (မထည့်လည်းရ)" : "Product Brand (Optional)";
       case "brandPlaceholder":
         return isMm ? "ပစ္စည်းကုတ် နံပါတ်ထည့်ပေးပါ" : "Enter brand name";
+      case "unitOfMeasure":
+        return isMm ? "တိုင်းတာမှုယူနစ် (ဥပမာ - piece, pack, box)" : "Unit of Measure (e.g. piece, pack, box)";
+      case "unitOfMeasurePlaceholder":
+        return isMm ? "တိုင်းတာမှုယူနစ် ရိုက်ထည့်ပါ" : "Enter unit of measure";
       case "buyingPrice":
         return isMm ? "ဝယ်ယူဈေးနှုန်း:" : "Buying Price";
       case "buyingPricePlaceholder":
@@ -378,6 +382,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               value={formData.brand}
               onChange={(e) => updateFormData({ brand: e.target.value })}
               placeholder={getLabel("brandPlaceholder")}
+            />
+          </div>
+
+          {/* Unit of Measure */}
+          <div className="col-span-1">
+            <label className="block text-sm font-bold text-slate-800 mb-1.5">
+              {getLabel("unitOfMeasure")}
+            </label>
+            <input
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+              value={formData.unitOfMeasure || ""}
+              onChange={(e) => updateFormData({ unitOfMeasure: e.target.value })}
+              placeholder={getLabel("unitOfMeasurePlaceholder")}
             />
           </div>
 

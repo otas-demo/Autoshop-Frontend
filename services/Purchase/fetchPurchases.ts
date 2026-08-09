@@ -20,13 +20,14 @@ interface FetchPurchasesParams {
   limit?: number;
   isDeleted?: boolean;
   status?: "pending" | "arrived";
+  supplierId?: string;
 }
 
 export const fetchPurchases = async (
   params?: FetchPurchasesParams
 ): Promise<FetchPurchasesResponse> => {
   try {
-    const { page = 1, limit = 10, isDeleted, status } = params || {};
+    const { page = 1, limit = 10, isDeleted, status, supplierId } = params || {};
     let url = `/purchase?page=${page}&limit=${limit}`;
 
     if (isDeleted !== undefined) {
@@ -35,6 +36,10 @@ export const fetchPurchases = async (
 
     if (status) {
       url += `&status=${status}`;
+    }
+
+    if (supplierId) {
+      url += `&supplierId=${supplierId}`;
     }
 
     const response = await axios.get(url);

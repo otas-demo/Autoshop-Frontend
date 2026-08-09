@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Plus,
@@ -13,6 +14,7 @@ import {
   Archive,
   Search,
   RefreshCw,
+  Eye,
 } from "lucide-react";
 import { createSupplier } from "../services/Supplier/createSupplier";
 import { updateSupplier } from "../services/Supplier/updateSupplier";
@@ -32,6 +34,7 @@ interface SupplierFormData {
 
 export const Suppliers: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -358,7 +361,15 @@ export const Suppliers: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {filteredSuppliers.map((supplier, index) => (
-                    <tr key={supplier.id || supplier._id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr
+                      key={supplier.id || supplier._id}
+                      onClick={() => {
+                        if (!supplier.isDeleted) {
+                          navigate(`/suppliers/${supplier.id || supplier._id}`);
+                        }
+                      }}
+                      className="hover:bg-slate-50/40 transition-colors cursor-pointer"
+                    >
                       {/* No */}
                       <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
                         {String(index + 1).padStart(2, "0")}
@@ -408,16 +419,28 @@ export const Suppliers: React.FC = () => {
                           {userRole === "owner" && (
                             <>
                               {!supplier.isDeleted && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenEdit(supplier);
-                                  }}
-                                  className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
-                                  title={t("common.edit")}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
+                                <>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/suppliers/${supplier.id || supplier._id}`);
+                                    }}
+                                    className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
+                                    title={t("common.view")}
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenEdit(supplier);
+                                    }}
+                                    className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
+                                    title={t("common.edit")}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                </>
                               )}
                               {supplier.isDeleted ? (
                                 <>

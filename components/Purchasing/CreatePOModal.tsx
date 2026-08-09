@@ -244,7 +244,17 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     className="w-full border rounded p-2 text-sm"
                     placeholder="Qty"
                     value={poQty === 0 ? "" : poQty}
-                    onChange={(e) => setPOQty(e.target.value === "" ? 0 : Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? 0 : Number(e.target.value);
+                      if (val >= 0) {
+                        setPOQty(val);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "-" || e.key === "e" || e.key === "E" || e.key === "+") {
+                        e.preventDefault();
+                      }
+                    }}
                     min="1"
                   />
                   <button

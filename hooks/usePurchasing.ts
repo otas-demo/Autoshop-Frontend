@@ -21,12 +21,7 @@ export const usePurchasing = () => {
   const [poList, setPOList] = useState<ApiPurchaseOrder[]>([]);
   const [deletedPOList, setDeletedPOList] = useState<ApiPurchaseOrder[]>([]);
   const [poLoading, setPoLoading] = useState(false);
-  const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">(
-    () => {
-      const saved = sessionStorage.getItem("poFilter");
-      return (saved as "pending" | "arrived" | "deleted") || "pending";
-    }
-  );
+  const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">("pending");
   const [poPagination, setPoPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -42,10 +37,6 @@ export const usePurchasing = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
   const [isPODetailModalOpen, setIsPODetailModalOpen] = useState(false);
-
-  useEffect(() => {
-    sessionStorage.setItem("poFilter", poFilter);
-  }, [poFilter]);
 
   // GRN State
   const [grnList, setGRNList] = useState<GRNData[]>([]);

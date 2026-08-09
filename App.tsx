@@ -20,6 +20,7 @@ import { Credits } from "./pages/Credits";
 import { CreditDetail } from "./pages/CreditDetail";
 import { Expenses } from "./pages/Expenses";
 import { Suppliers } from "./pages/Suppliers";
+import { SupplierDetail } from "./pages/SupplierDetail";
 import { Orders } from "./pages/Orders";
 import { CreditOrders } from "./pages/CreditOrders";
 import { AccountManagement } from "./pages/AccountManagement";
@@ -129,6 +130,14 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Suppliers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/suppliers/:id"
+            element={
+              <ProtectedRoute>
+                <SupplierDetail />
               </ProtectedRoute>
             }
           />

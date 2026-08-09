@@ -193,7 +193,7 @@ export const StorefrontDetail: React.FC = () => {
           }
           if (searchTerm && searchTerm.trim()) {
             const term = searchTerm.toLowerCase();
-            data = data.filter(item => 
+            data = data.filter(item =>
               item.inventoryId?.productName?.toLowerCase().includes(term) ||
               item.inventoryId?.productCode?.toLowerCase().includes(term) ||
               item.batchNumber?.toLowerCase().includes(term)
@@ -579,7 +579,7 @@ export const StorefrontDetail: React.FC = () => {
     const usedCodes = transferItems
       .map((i) => i.productCode)
       .filter((code) => code !== currentCode);
-    
+
     const requiredBatch = transferItems.length > 1 ? transferItems[0].batchNumber : null;
 
     // If requiredBatch is set, use batchStockItems (API already filtered by batch)
@@ -772,11 +772,10 @@ export const StorefrontDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowExpiringOnly(!showExpiringOnly)}
-                className={`w-full px-4 py-2 border rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer ${
-                  showExpiringOnly 
-                    ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100" 
-                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer ${showExpiringOnly
+                  ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  }`}
               >
                 <AlertTriangle className="w-4 h-4" />
                 {showExpiringOnly ? "Showing Expiring Soon" : "Filter Expiring Soon"}
@@ -979,10 +978,10 @@ export const StorefrontDetail: React.FC = () => {
                         <span className="hidden sm:inline">Status</span>
                         <span className="sm:hidden">S</span>
                       </th>
-                      <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
+                      {/* <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
                         <span className="hidden sm:inline">Updated</span>
                         <span className="sm:hidden">U</span>
-                      </th>
+                      </th> */}
                       <th className="px-2 sm:px-4 py-3 font-medium text-slate-600">
                         <span className="hidden sm:inline">Actions</span>
                         <span className="sm:hidden">A</span>
@@ -1073,7 +1072,7 @@ export const StorefrontDetail: React.FC = () => {
                             )
                           )}
                         </td>
-                        <td className="px-2 sm:px-4 py-3 text-slate-500 text-xs">
+                        {/* <td className="px-2 sm:px-4 py-3 text-slate-500 text-xs">
                           <span className="hidden sm:inline">
                             {new Date(item.lastUpdated).toLocaleDateString()}{" "}
                             {new Date(item.lastUpdated).toLocaleTimeString([], {
@@ -1084,7 +1083,7 @@ export const StorefrontDetail: React.FC = () => {
                           <span className="sm:hidden">
                             {new Date(item.lastUpdated).toLocaleDateString()}
                           </span>
-                        </td>
+                        </td> */}
                         <td className="px-2 sm:px-4 py-3">
                           <div className="flex items-center gap-1 sm:gap-2">
                             <button
@@ -1095,7 +1094,7 @@ export const StorefrontDetail: React.FC = () => {
                             </button>
                             {userRole === "owner" && (
                               <>
-                                <button
+                                {/* <button
                                   onClick={() => openTransferModal("warehouse", item)}
                                   disabled={item.quantity === 0}
                                   className="text-xs bg-blue-50 text-primary-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-blue-100 border border-blue-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1103,7 +1102,7 @@ export const StorefrontDetail: React.FC = () => {
                                   <ArrowRightLeft className="w-3 h-3" />{" "}
                                   <span className="hidden sm:inline">Transfer</span>
                                   <span className="sm:hidden">T</span>
-                                </button>
+                                </button>  */}
                                 <button
                                   onClick={() =>
                                     openAdjustmentModal(item, "increase")

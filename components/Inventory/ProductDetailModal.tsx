@@ -306,16 +306,38 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </div>
 
                   {/* Total Quantity Summary */}
-                  <div className="bg-[#FEFEB0] p-6 rounded-lg border-2 border-[#FEFEB0]">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[16px] font-medium text-[#585800]">
-                        {t("inventory.productTotalQuantity")}
-                      </p>
-                      <p className="text-4xl font-bold text-slate-800">
-                        {product.stockAvailability.totalQuantity.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+                  {(() => {
+                    // If viewing from a specific storefront, show that location's quantity
+                    let displayQuantity = product.stockAvailability.totalQuantity;
+                    let displayLabel = t("inventory.productTotalQuantity");
+
+                    if (restrictLocationType === "storefront" && restrictLocationId) {
+                      const locationQty = product.stockAvailability.storefronts.locations
+                        .filter((loc) => String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
+                        .reduce((sum, loc) => sum + loc.quantity, 0);
+                      displayQuantity = locationQty;
+                      displayLabel = "Storefront Quantity";
+                    } else if (restrictLocationType === "warehouse" && restrictLocationId) {
+                      const locationQty = product.stockAvailability.warehouses.locations
+                        .filter((loc) => String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
+                        .reduce((sum, loc) => sum + loc.quantity, 0);
+                      displayQuantity = locationQty;
+                      displayLabel = "Warehouse Quantity";
+                    }
+
+                    return (
+                      <div className="bg-[#FEFEB0] p-6 rounded-lg border-2 border-[#FEFEB0]">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[16px] font-medium text-[#585800]">
+                            {displayLabel}
+                          </p>
+                          <p className="text-4xl font-bold text-slate-800">
+                            {displayQuantity.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Stock Tabs */}
                   {!restrictLocationType && (
@@ -343,6 +365,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                   {/* Warehouse Summary Cards */}
                   {stockTab === "warehouse" &&
+                    !restrictLocationType &&
                     product.stockAvailability.warehouses.count > 0 && (
                       <>
                         <div className="grid grid-cols-2 gap-4">
@@ -406,6 +429,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                   {/* Storefront Summary Cards */}
                   {stockTab === "storefront" &&
+                    !restrictLocationType &&
                     product.stockAvailability.storefronts.count > 0 && (
                       <>
                         <div className="grid grid-cols-2 gap-4">
@@ -468,6 +492,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                   {/* Empty States */}
                   {stockTab === "warehouse" &&
+                    !restrictLocationType &&
                     product.stockAvailability.warehouses.count === 0 && (
                       <div className="text-center py-8 text-slate-500">
                         <Warehouse className="w-12 h-12 mx-auto mb-2 text-slate-300" />
@@ -476,6 +501,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     )}
 
                   {stockTab === "storefront" &&
+                    !restrictLocationType &&
                     product.stockAvailability.storefronts.count === 0 && (
                       <div className="text-center py-8 text-slate-500">
                         <Store className="w-12 h-12 mx-auto mb-2 text-slate-300" />

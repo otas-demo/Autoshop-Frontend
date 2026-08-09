@@ -133,9 +133,9 @@ export const Suppliers: React.FC = () => {
     } catch (error: any) {
       toast.error(
         error.message ||
-          (editingId
-            ? t("suppliers.failedToUpdate")
-            : t("suppliers.failedToCreate")),
+        (editingId
+          ? t("suppliers.failedToUpdate")
+          : t("suppliers.failedToCreate")),
       );
     } finally {
       setIsSubmitting(false);
@@ -216,8 +216,8 @@ export const Suppliers: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
-        
+      <div className="bg-white min-h-[96vh] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -301,11 +301,10 @@ export const Suppliers: React.FC = () => {
                 setShowDeleted(false);
                 setSearch("");
               }}
-              className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                !showDeleted
+              className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${!showDeleted
                   ? "bg-white text-[#2216a8] shadow-sm"
                   : "text-slate-600 hover:text-slate-850"
-              }`}
+                }`}
             >
               {t("suppliers.active")}
             </button>
@@ -314,11 +313,10 @@ export const Suppliers: React.FC = () => {
                 setShowDeleted(true);
                 setSearch("");
               }}
-              className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                showDeleted
+              className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${showDeleted
                   ? "bg-white text-[#2216a8] shadow-sm"
                   : "text-slate-600 hover:text-slate-850"
-              }`}
+                }`}
             >
               <Archive className="w-3.5 h-3.5" />
               <span>{t("suppliers.inactive")}</span>
@@ -582,9 +580,9 @@ export const Suppliers: React.FC = () => {
         message={
           supplierToDelete
             ? t("suppliers.confirmDeactivateMessage").replace(
-                "{name}",
-                supplierToDelete.supplierName,
-              )
+              "{name}",
+              supplierToDelete.supplierName,
+            )
             : t("suppliers.confirmDeactivate")
         }
         confirmText={t("suppliers.deactivate")}
@@ -606,9 +604,9 @@ export const Suppliers: React.FC = () => {
         message={
           supplierToPermanentlyDelete
             ? t("suppliers.confirmDeleteMessage").replace(
-                "{name}",
-                supplierToPermanentlyDelete.supplierName,
-              )
+              "{name}",
+              supplierToPermanentlyDelete.supplierName,
+            )
             : t("suppliers.confirmDelete")
         }
         confirmText={t("suppliers.delete")}
@@ -619,8 +617,8 @@ export const Suppliers: React.FC = () => {
         isLoading={
           supplierToPermanentlyDelete
             ? processingId ===
-              (supplierToPermanentlyDelete.id ||
-                supplierToPermanentlyDelete._id)
+            (supplierToPermanentlyDelete.id ||
+              supplierToPermanentlyDelete._id)
             : false
         }
       />

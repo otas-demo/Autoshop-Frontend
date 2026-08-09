@@ -276,8 +276,8 @@ export const Expenses: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
-        
+      <div className="bg-white min-h-[96vh] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -288,7 +288,7 @@ export const Expenses: React.FC = () => {
               {t("expenses.subtitle")}
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={loadExpenses}
@@ -354,317 +354,317 @@ export const Expenses: React.FC = () => {
         </div>
 
         <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
-        {loading ? (
-          <div className="p-8 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
-            <p>{t("expenses.loading")}</p>
-          </div>
-        ) : filteredExpenses.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            <PieChart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p>{t("expenses.noExpenses")}</p>
-          </div>
-        ) : (
-          <div>
-            {/* Table container with horizontal scroll on mobile */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-              <table className="w-full text-sm text-left min-w-[900px]">
-                <thead className="text-slate-500">
-                  <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
-                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Date</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Location</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Notes</th>
-                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Recorded By</th>
-                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Amount</th>
-                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {filteredExpenses.map((expense, index) => (
-                    <tr key={expense._id} className="hover:bg-slate-50/40 transition-colors">
-                      {/* No */}
-                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
-                        {String(index + 1).padStart(2, "0")}
-                      </td>
-
-                      {/* Date */}
-                      <td className="px-4 py-4 text-slate-600 text-xs font-medium whitespace-nowrap">
-                        {new Date(expense.date).toLocaleDateString("en-US")}{" "}
-                        {new Date(expense.date).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-
-                      {/* Category */}
-                      <td className="px-4 py-4">
-                        <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full font-bold capitalize">
-                          {expense.category}
-                        </span>
-                      </td>
-
-                      {/* Location */}
-                      <td className="px-4 py-4">
-                        {expense.locationId ? (
-                          <>
-                            <div className="font-semibold text-slate-800 text-xs sm:text-sm">
-                              {expense.locationId.locationName}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-medium">
-                              {expense.locationId.locationCode}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-slate-400 font-medium text-xs">
-                            {t("expenses.noLocation")}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Notes */}
-                      <td className="px-4 py-4 text-slate-500 text-xs font-medium max-w-xs truncate" title={expense.notes || ""}>
-                        {expense.notes || "-"}
-                      </td>
-
-                      {/* Recorded By */}
-                      <td className="px-4 py-4">
-                        {expense.adminId ? (
-                          <>
-                            <div className="font-semibold text-slate-800 text-xs sm:text-sm">
-                              {expense.adminId.name}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-medium capitalize">
-                              {expense.adminId.role}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-slate-400 font-medium text-xs">-</span>
-                        )}
-                      </td>
-
-                      {/* Amount */}
-                      <td className="px-4 py-4 text-right font-bold text-red-600 text-xs sm:text-sm whitespace-nowrap">
-                        {expense.amount.toLocaleString()}{" "}
-                        <span className="text-[10px] text-slate-400 font-medium">MMK</span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleOpenEdit(expense)}
-                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
-                          >
-                            {t("common.edit")}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(expense)}
-                            className="px-4 py-1.5 text-xs font-semibold rounded-full bg-red-600 hover:bg-red-700 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
-                          >
-                            {t("common.delete") || "Delete"}
-                          </button>
-                        </div>
-                      </td>
+          {loading ? (
+            <div className="p-8 text-center text-slate-500">
+              <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+              <p>{t("expenses.loading")}</p>
+            </div>
+          ) : filteredExpenses.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              <PieChart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p>{t("expenses.noExpenses")}</p>
+            </div>
+          ) : (
+            <div>
+              {/* Table container with horizontal scroll on mobile */}
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+                <table className="w-full text-sm text-left min-w-[900px]">
+                  <thead className="text-slate-500">
+                    <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Date</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Category</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Location</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Notes</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Recorded By</th>
+                      <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Amount</th>
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {filteredExpenses.map((expense, index) => (
+                      <tr key={expense._id} className="hover:bg-slate-50/40 transition-colors">
+                        {/* No */}
+                        <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                          {String(index + 1).padStart(2, "0")}
+                        </td>
 
-      {/* Add Expense Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
-              <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-[#2216a8]" />
-                {editingId
-                  ? t("expenses.editExpense")
-                  : t("expenses.newExpense")}
-              </h2>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+                        {/* Date */}
+                        <td className="px-4 py-4 text-slate-600 text-xs font-medium whitespace-nowrap">
+                          {new Date(expense.date).toLocaleDateString("en-US")}{" "}
+                          {new Date(expense.date).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("expenses.category")}{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    required
-                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                  >
-                    <option value="electricity">
-                      {t("expenses.electricity")}
-                    </option>
-                    <option value="water">{t("expenses.water")}</option>
-                    <option value="utilities">{t("expenses.utilities")}</option>
-                    <option value="salary">{t("expenses.salary")}</option>
-                    <option value="maintenance">
-                      {t("expenses.maintenance")}
-                    </option>
-                    <option value="rent">{t("expenses.rent")}</option>
-                    <option value="other">{t("expenses.other")}</option>
-                  </select>
-                  <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                        {/* Category */}
+                        <td className="px-4 py-4">
+                          <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full font-bold capitalize">
+                            {expense.category}
+                          </span>
+                        </td>
+
+                        {/* Location */}
+                        <td className="px-4 py-4">
+                          {expense.locationId ? (
+                            <>
+                              <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                                {expense.locationId.locationName}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-medium">
+                                {expense.locationId.locationCode}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-slate-400 font-medium text-xs">
+                              {t("expenses.noLocation")}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Notes */}
+                        <td className="px-4 py-4 text-slate-500 text-xs font-medium max-w-xs truncate" title={expense.notes || ""}>
+                          {expense.notes || "-"}
+                        </td>
+
+                        {/* Recorded By */}
+                        <td className="px-4 py-4">
+                          {expense.adminId ? (
+                            <>
+                              <div className="font-semibold text-slate-800 text-xs sm:text-sm">
+                                {expense.adminId.name}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-medium capitalize">
+                                {expense.adminId.role}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-slate-400 font-medium text-xs">-</span>
+                          )}
+                        </td>
+
+                        {/* Amount */}
+                        <td className="px-4 py-4 text-right font-bold text-red-600 text-xs sm:text-sm whitespace-nowrap">
+                          {expense.amount.toLocaleString()}{" "}
+                          <span className="text-[10px] text-slate-400 font-medium">MMK</span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleOpenEdit(expense)}
+                              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                            >
+                              {t("common.edit")}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(expense)}
+                              className="px-4 py-1.5 text-xs font-semibold rounded-full bg-red-600 hover:bg-red-700 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                            >
+                              {t("common.delete") || "Delete"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Add Expense Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                  <PieChart className="w-5 h-5 text-[#2216a8]" />
+                  {editingId
+                    ? t("expenses.editExpense")
+                    : t("expenses.newExpense")}
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
               </div>
 
-              {userRole !== "cashier" && (
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                    Location <span className="text-red-500">*</span>
+                    {t("expenses.category")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
                       required
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
-                      value={formData.locationId}
+                      value={formData.category}
                       onChange={(e) =>
-                        setFormData({ ...formData, locationId: e.target.value })
+                        setFormData({ ...formData, category: e.target.value })
                       }
                     >
-                      <option value="">Select Location</option>
-                      {locations.map((location) => (
-                        <option key={location._id} value={location._id}>
-                          {location.locationName} ({location.locationCode})
-                        </option>
-                      ))}
+                      <option value="electricity">
+                        {t("expenses.electricity")}
+                      </option>
+                      <option value="water">{t("expenses.water")}</option>
+                      <option value="utilities">{t("expenses.utilities")}</option>
+                      <option value="salary">{t("expenses.salary")}</option>
+                      <option value="maintenance">
+                        {t("expenses.maintenance")}
+                      </option>
+                      <option value="rent">{t("expenses.rent")}</option>
+                      <option value="other">{t("expenses.other")}</option>
                     </select>
                     <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("expenses.amount")} (MMK){" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  step="0.01"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
-                  placeholder="0"
-                  value={formData.amount || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      amount: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
+                {userRole !== "cashier" && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                      Location <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        required
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
+                        value={formData.locationId}
+                        onChange={(e) =>
+                          setFormData({ ...formData, locationId: e.target.value })
+                        }
+                      >
+                        <option value="">Select Location</option>
+                        {locations.map((location) => (
+                          <option key={location._id} value={location._id}>
+                            {location.locationName} ({location.locationCode})
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
 
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("expenses.date")} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
-                  value={formData.date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date: e.target.value })
-                  }
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {t("expenses.amount")} (MMK){" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                    placeholder="0"
+                    value={formData.amount || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        amount: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1.5">
-                  {t("expenses.notesOptional")}
-                </label>
-                <textarea
-                  rows={2}
-                  maxLength={500}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white resize-none"
-                  placeholder={t("expenses.notesPlaceholder")}
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {t("expenses.date")} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date: e.target.value })
+                    }
+                  />
+                </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
-                >
-                  {t("common.cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-600/10 transition-all disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />{" "}
-                      {editingId
-                        ? t("expenses.updating")
-                        : t("expenses.creating")}
-                    </>
-                  ) : editingId ? (
-                    t("expenses.updateExpense")
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />{" "}
-                      <span>
-                        {t("expenses.createExpense")}
-                      </span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    {t("expenses.notesOptional")}
+                  </label>
+                  <textarea
+                    rows={2}
+                    maxLength={500}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white resize-none"
+                    placeholder={t("expenses.notesPlaceholder")}
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="px-6 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-bold transition-all cursor-pointer"
+                  >
+                    {t("common.cancel")}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-600/10 transition-all disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                        {editingId
+                          ? t("expenses.updating")
+                          : t("expenses.creating")}
+                      </>
+                    ) : editingId ? (
+                      t("expenses.updateExpense")
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />{" "}
+                        <span>
+                          {t("expenses.createExpense")}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={!!expenseToDelete}
-        title={t("expenses.deleteExpense") || "Delete Expense"}
-        message={
-          expenseToDelete
-            ? t("expenses.confirmDeleteMessage")?.replace(
-              "{amount}",
-              expenseToDelete.amount.toLocaleString(),
-            ) ||
-            `Are you sure you want to delete this expense of ${expenseToDelete.amount.toLocaleString()} MMK? This action cannot be undone.`
-            : t("expenses.confirmDelete") ||
-            "Are you sure you want to delete this expense?"
-        }
-        confirmText={t("common.delete") || "Delete"}
-        cancelText={t("common.cancel") || "Cancel"}
-        confirmButtonColor="red"
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setExpenseToDelete(null)}
-        isLoading={isDeleting}
-      />
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={!!expenseToDelete}
+          title={t("expenses.deleteExpense") || "Delete Expense"}
+          message={
+            expenseToDelete
+              ? t("expenses.confirmDeleteMessage")?.replace(
+                "{amount}",
+                expenseToDelete.amount.toLocaleString(),
+              ) ||
+              `Are you sure you want to delete this expense of ${expenseToDelete.amount.toLocaleString()} MMK? This action cannot be undone.`
+              : t("expenses.confirmDelete") ||
+              "Are you sure you want to delete this expense?"
+          }
+          confirmText={t("common.delete") || "Delete"}
+          cancelText={t("common.cancel") || "Cancel"}
+          confirmButtonColor="red"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setExpenseToDelete(null)}
+          isLoading={isDeleting}
+        />
+      </div>
     </div>
-  </div>
   );
 };

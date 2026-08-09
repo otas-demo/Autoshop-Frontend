@@ -28,6 +28,17 @@ export interface PurchaseReportProduct {
   totalCost: number;
 }
 
+export interface LowQuantityProduct {
+  _id: string;
+  productName: string;
+  productCode: string;
+  reorderPoint: number;
+  totalQuantity: number;
+  unitOfMeasure: string;
+  buyingPrice: number;
+  sellingPrice: number;
+}
+
 export interface PurchaseReportResponse {
   success: boolean;
   message?: string;
@@ -36,12 +47,22 @@ export interface PurchaseReportResponse {
     statusBreakdown: PurchaseReportStatus[];
     supplierBreakdown: PurchaseReportSupplier[];
     productBreakdown: PurchaseReportProduct[];
+    lowQuantityProducts?: LowQuantityProduct[];
+    lowQuantityPagination?: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+    };
   };
 }
 
 export const fetchPurchaseReport = async (
   startDate?: string | null,
-  endDate?: string | null
+  endDate?: string | null,
+  lowStockThreshold?: number,
+  lowStockPage?: number,
+  lowStockLimit?: number
 ): Promise<PurchaseReportResponse> => {
   try {
     let url = "/purchase/report";
@@ -52,6 +73,15 @@ export const fetchPurchaseReport = async (
     }
     if (endDate) {
       params.append("endDate", endDate);
+    }
+    if (lowStockThreshold !== undefined) {
+      params.append("lowStockThreshold", String(lowStockThreshold));
+    }
+    if (lowStockPage !== undefined) {
+      params.append("lowStockPage", String(lowStockPage));
+    }
+    if (lowStockLimit !== undefined) {
+      params.append("lowStockLimit", String(lowStockLimit));
     }
 
     if (params.toString()) {
@@ -70,6 +100,13 @@ export const fetchPurchaseReport = async (
         statusBreakdown: [],
         supplierBreakdown: [],
         productBreakdown: [],
+        lowQuantityProducts: [],
+        lowQuantityPagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: 10,
+        },
       },
     };
   }

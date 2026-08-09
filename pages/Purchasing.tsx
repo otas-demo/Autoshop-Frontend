@@ -54,8 +54,8 @@ export const Purchasing: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
-        
+      <div className="bg-white min-h-[96vh] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -63,8 +63,8 @@ export const Purchasing: React.FC = () => {
               {isMy ? "ပစ္စည်း အမှာစာရင်း" : "Purchasing Records"}
             </h1>
             <p className="text-xs text-slate-400 mt-1.5 font-bold">
-              {isMy 
-                ? "ဆိုင်အတွက် ပစ္စည်းတွေ မှာမယ် , မှာထားတဲ့ ပစ္စည်းစာရင်းတွေစစ်မယ်" 
+              {isMy
+                ? "ဆိုင်အတွက် ပစ္စည်းတွေ မှာမယ် , မှာထားတဲ့ ပစ္စည်းစာရင်းတွေစစ်မယ်"
                 : "Order items for shop, check list of ordered items"}
             </p>
           </div>
@@ -74,22 +74,20 @@ export const Purchasing: React.FC = () => {
         <div className="flex gap-1 sm:gap-4 border-b border-gray-100 overflow-x-auto pb-px">
           <button
             onClick={() => setActiveTab("po")}
-            className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === "po"
+            className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${activeTab === "po"
                 ? "border-b-2 border-[#2216a8] text-[#2216a8]"
                 : "text-slate-400 hover:text-slate-600"
-            }`}
+              }`}
           >
             <FileText className="w-4 h-4" />
             <span>{isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders"}</span>
           </button>
           <button
             onClick={() => setActiveTab("grn")}
-            className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === "grn"
+            className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${activeTab === "grn"
                 ? "border-b-2 border-[#2216a8] text-[#2216a8]"
                 : "text-slate-400 hover:text-slate-600"
-            }`}
+              }`}
           >
             <PackageCheck className="w-4 h-4" />
             <span>{isMy ? "ပစ္စည်းလက်ခံ စာရင်းများ" : "Goods Received Notes"}</span>
@@ -99,7 +97,7 @@ export const Purchasing: React.FC = () => {
         {/* Active Tab Content Title and Action Button */}
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-black text-slate-800">
-            {activeTab === "po" 
+            {activeTab === "po"
               ? (isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders List")
               : (isMy ? "ပစ္စည်းလက်ခံ စာရင်းများ" : "Goods Received Notes List")
             }

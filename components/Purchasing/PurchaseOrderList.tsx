@@ -59,6 +59,9 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [poToDelete, setPoToDelete] = useState<ApiPurchaseOrder | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [restoreModalOpen, setRestoreModalOpen] = useState(false);
+  const [poToRestore, setPoToRestore] = useState<ApiPurchaseOrder | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Use the filtered data from API instead of client-side filtering
   const displayList = poFilter === "deleted" ? deletedPOList : poList;
@@ -138,15 +141,17 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
     setPoToDelete(null);
   };
 
-  const handleRestore = async (po: ApiPurchaseOrder) => {
-    if (
-      !window.confirm(`Are you sure you want to restore PO ${po.poNumber}?`)
-    ) {
-      return;
-    }
+  const handleRestore = (po: ApiPurchaseOrder) => {
+    setPoToRestore(po);
+    setRestoreModalOpen(true);
+  };
 
+  const confirmRestore = async () => {
+    if (!poToRestore) return;
+
+    setIsRestoring(true);
     try {
-      const res = await restorePurchase(po._id);
+      const res = await restorePurchase(poToRestore._id);
       if (res.success) {
         toast.success("Purchase order restored successfully");
         loadPurchases(pagination.currentPage, pagination.itemsPerPage);
@@ -154,13 +159,22 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
           deletedPagination.currentPage,
           deletedPagination.itemsPerPage,
         );
+        setRestoreModalOpen(false);
+        setPoToRestore(null);
       } else {
         toast.error(res.message || "Failed to restore purchase order");
       }
     } catch (error: any) {
       console.error("Failed to restore purchase order", error);
       toast.error(error.message || "Failed to restore purchase order");
+    } finally {
+      setIsRestoring(false);
     }
+  };
+
+  const cancelRestore = () => {
+    setRestoreModalOpen(false);
+    setPoToRestore(null);
   };
 
   const handleDeletedPageChange = (page: number) => {
@@ -458,6 +472,19 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
         isLoading={isDeleting}
+      />
+
+      {/* Restore Confirmation Modal */}
+      <ConfirmModal
+        isOpen={restoreModalOpen}
+        title="Restore Purchase Order"
+        message={`Are you sure you want to restore PO ${poToRestore?.poNumber}?`}
+        confirmText="Restore"
+        cancelText="Cancel"
+        confirmButtonColor="green"
+        onConfirm={confirmRestore}
+        onCancel={cancelRestore}
+        isLoading={isRestoring}
       />
     </div>
   );

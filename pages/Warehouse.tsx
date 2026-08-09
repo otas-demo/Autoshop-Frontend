@@ -233,8 +233,8 @@ export const Warehouse: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
-        
+      <div className="bg-white min-h-[96vh] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -245,7 +245,7 @@ export const Warehouse: React.FC = () => {
               {t("warehouse.profiles")} and core storage facilities
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => {
@@ -542,11 +542,10 @@ export const Warehouse: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2 ml-2">
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                            profile.status === "active"
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${profile.status === "active"
                               ? "bg-green-50 text-green-700 border border-green-200"
                               : "bg-red-50 text-red-700 border border-red-200"
-                          }`}
+                            }`}
                         >
                           {profile.status}
                         </span>

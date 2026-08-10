@@ -65,7 +65,7 @@ export const POOverallTab: React.FC<POOverallTabProps> = ({
           </div>
           <div>
             <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-              Total Arrived Orders
+              Total Arrived PO
             </p>
             <p className="text-lg font-black text-slate-800 mt-1">
               {arrivedPOCount.toLocaleString()}{" "}

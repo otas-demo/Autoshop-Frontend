@@ -67,20 +67,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       label: t("sidebar.salesGroup"),
       icon: ShoppingBag,
       items: [
-        // { path: "/pos", label: t("sidebar.checkout"), icon: ShoppingCart },
+        { path: "/pos", label: t("sidebar.checkout"), icon: ShoppingCart },
         { path: "/storefront", label: t("sidebar.storefront"), icon: Store },
-        // { path: "/orders", label: t("sidebar.orders"), icon: Receipt },
+        { path: "/orders", label: t("sidebar.orders"), icon: Receipt },
       ],
     },
-    // {
-    //   id: "credits",
-    //   label: t("sidebar.creditsGroup"),
-    //   icon: Users,
-    //   items: [
-    //     { path: "/credit-orders", label: t("sidebar.creditOrder"), icon: CreditCard },
-    //     { path: "/credits", label: t("sidebar.creditSales"), icon: Users },
-    //   ],
-    // },
+    {
+      id: "credits",
+      label: t("sidebar.creditsGroup"),
+      icon: Users,
+      items: [
+        { path: "/credit-orders", label: t("sidebar.creditOrder"), icon: CreditCard },
+        { path: "/credits", label: t("sidebar.creditSales"), icon: Users },
+      ],
+    },
     {
       id: "inventory",
       label: t("sidebar.inventoryGroup"),
@@ -98,9 +98,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       icon: PieChart,
       items: [
         { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
-        // { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
+        { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
         { path: "/purchasing-report", label: t("sidebar.purchasingReport"), icon: BarChart3 },
-        // { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
+        { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
       ],
     },
     {
@@ -225,8 +225,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                           }
                         }}
                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 group ${hasActiveItem
-                            ? "bg-[#2216a8] text-white shadow-md shadow-indigo-600/10"
-                            : "text-gray-400 hover:bg-gray-50 hover:text-[#2216a8]"
+                          ? "bg-[#2216a8] text-white shadow-md shadow-indigo-600/10"
+                          : "text-gray-400 hover:bg-gray-50 hover:text-[#2216a8]"
                           }`}
                       >
                         <GroupIcon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${hasActiveItem ? "text-white" : "text-gray-400 group-hover:text-[#2216a8]"
@@ -251,8 +251,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                                   to={item.path}
                                   onClick={onClose}
                                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all font-medium text-left cursor-pointer ${isActive
-                                      ? "bg-[#2216a8]/10 text-[#2216a8]"
-                                      : "text-gray-500 hover:text-[#2216a8] hover:bg-slate-50"
+                                    ? "bg-[#2216a8]/10 text-[#2216a8]"
+                                    : "text-gray-500 hover:text-[#2216a8] hover:bg-slate-50"
                                     }`}
                                 >
                                   <ItemIcon className={`w-4 h-4 ${isActive ? "text-[#2216a8]" : "text-gray-400"}`} />
@@ -274,8 +274,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                     <button
                       onClick={() => toggleGroup(group.id)}
                       className={`flex items-center justify-between w-full px-4 py-2.5 rounded-xl transition-all duration-200 group font-medium text-sm ${hasActiveItem
-                          ? "bg-indigo-50/50 text-[#2216a8]"
-                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                        ? "bg-indigo-50/50 text-[#2216a8]"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
                         }`}
                     >
                       <div className="flex items-center">
@@ -305,8 +305,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                               to={item.path}
                               onClick={onClose}
                               className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 group ${isActive
-                                  ? "bg-[#2216a8] text-white shadow-sm"
-                                  : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                                ? "bg-[#2216a8] text-white shadow-sm"
+                                : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                                 }`}
                             >
                               <ItemIcon className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 mr-3 ${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"

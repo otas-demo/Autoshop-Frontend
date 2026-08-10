@@ -452,6 +452,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                               type="date"
                               className="w-full border rounded-lg p-2 text-sm focus:ring-blue-500"
                               value={item.expiryDate || ""}
+                              min={new Date().toISOString().split("T")[0]}
                               onChange={(e) =>
                                 updateGRNItem(
                                   index,

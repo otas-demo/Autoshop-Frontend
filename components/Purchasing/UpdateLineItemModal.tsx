@@ -163,6 +163,7 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
             type="date"
             value={expiryDate}
             onChange={(e) => setExpiryDate(e.target.value)}
+            min={new Date().toISOString().split("T")[0]}
             className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white text-slate-800"
             disabled={updating}
           />

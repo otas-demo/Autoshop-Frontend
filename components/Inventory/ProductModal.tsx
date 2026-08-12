@@ -215,7 +215,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       case "carCode":
         return isMm ? "ဘားကုဒ် နံပါတ်" : "Barode Number";
       case "carCodePlaceholder":
-        return isMm ? "ကားကုဒ် နံပါတ်ထည့်ပေးပါ" : "Enter car code";
+        return isMm ? "ဘားကုဒ် နံပါတ်ထည့်ပေးပါ" : "Enter barode number";
       case "productCode":
         return isMm ? "ပစ္စည်းကုဒ် နံပါတ်" : "Product Code Number";
       case "productCodePlaceholder":
@@ -227,7 +227,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       case "brand":
         return isMm ? "ပစ္စည်း အမှတ်တံဆိပ် (မထည့်လည်းရ)" : "Product Brand (Optional)";
       case "brandPlaceholder":
-        return isMm ? "ပစ္စည်းကုတ် နံပါတ်ထည့်ပေးပါ" : "Enter brand name";
+        return isMm ? "ပစ္စည်းအမှတ်တံဆိပ်ထည့်ပေးပါ" : "Enter brand name";
       case "unitOfMeasure":
         return isMm ? "တိုင်းတာမှုယူနစ် (ဥပမာ - piece, pack, box)" : "Unit of Measure (e.g. piece, pack, box)";
       case "unitOfMeasurePlaceholder":

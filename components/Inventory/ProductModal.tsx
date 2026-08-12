@@ -213,7 +213,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       case "productNamePlaceholder":
         return isMm ? "ပစ္စည်း နာမည်ထည့်ပေးပါ" : "Enter product name";
       case "carCode":
-        return isMm ? "ကားကုဒ် နံပါတ်" : "Car Code Number";
+        return isMm ? "ဘားကုဒ် နံပါတ်" : "Barode Number";
       case "carCodePlaceholder":
         return isMm ? "ကားကုဒ် နံပါတ်ထည့်ပေးပါ" : "Enter car code";
       case "productCode":
@@ -260,7 +260,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-[#f7f6f2] p-8 rounded-3xl w-full max-w-2xl my-8 shadow-2xl relative max-h-[95vh] overflow-y-auto border border-white/40">
-        
+
         {/* Header with Close Button */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-black text-slate-800">

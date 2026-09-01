@@ -9,13 +9,20 @@ import {
   RotateCcw,
   FileText,
   Check,
+  CreditCard,
+  Calendar,
+  AlertTriangle,
+  Clock,
+  DollarSign,
 } from "lucide-react";
 import { ApiPurchaseOrder, Supplier } from "../../types";
 import { updatePurchaseStatus } from "../../services/Purchase/updatePurchaseStatus";
 import { softDeletePurchase } from "../../services/Purchase/softDeletePurchase";
 import { restorePurchase } from "../../services/Purchase/restorePurchase";
+import { recordPurchasePayment } from "../../services/Purchase/recordPurchasePayment";
 import { toast } from "sonner";
 import { ConfirmModal } from "../Common/ConfirmModal";
+import { Modal } from "../Modal";
 import { useLanguage } from "../../context/LanguageContext";
 
 interface PaginationData {
@@ -39,6 +46,7 @@ interface PurchaseOrderListProps {
   loading?: boolean;
   poFilter: "pending" | "arrived" | "deleted";
   setPoFilter: (filter: "pending" | "arrived" | "deleted") => void;
+  tableHeight?: string;
 }
 
 export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
@@ -54,6 +62,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   loading = false,
   poFilter,
   setPoFilter,
+  tableHeight,
 }) => {
   const { t, language } = useLanguage();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -62,6 +71,76 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   const [restoreModalOpen, setRestoreModalOpen] = useState(false);
   const [poToRestore, setPoToRestore] = useState<ApiPurchaseOrder | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+
+  // Quick Payment Modal States
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [poForPayment, setPoForPayment] = useState<ApiPurchaseOrder | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "kpay" | "wave" | "bank_transfer" | "other"
+  >("cash");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+
+  const handleOpenPayment = (po: ApiPurchaseOrder) => {
+    setPoForPayment(po);
+    const remaining = Math.max(0, po.totalAmount - (po.paidAmount || 0));
+    setPaymentAmount(remaining);
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    setPaymentModalOpen(true);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!poForPayment) return;
+    if (paymentAmount <= 0) {
+      toast.error("Payment amount must be greater than 0");
+      return;
+    }
+    const remaining = Math.max(
+      0,
+      poForPayment.totalAmount - (poForPayment.paidAmount || 0)
+    );
+    if (paymentAmount > remaining) {
+      toast.error(
+        `Payment amount cannot exceed remaining debt (${remaining.toLocaleString()} MMK)`
+      );
+      return;
+    }
+
+    setIsRecordingPayment(true);
+    try {
+      const res = await recordPurchasePayment(poForPayment._id, {
+        paidAmount: paymentAmount,
+        paymentMethod,
+        notes: paymentNotes,
+      });
+
+      if (res.success) {
+        toast.success("Payment recorded successfully!");
+        setPaymentModalOpen(false);
+        setPoForPayment(null);
+        if (poFilter === "deleted") {
+          loadDeletedPurchases(
+            deletedPagination.currentPage,
+            deletedPagination.itemsPerPage
+          );
+        } else {
+          loadPurchases(
+            pagination.currentPage,
+            pagination.itemsPerPage,
+            poFilter
+          );
+        }
+      } else {
+        toast.error(res.message || "Failed to record payment");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to record payment");
+    } finally {
+      setIsRecordingPayment(false);
+    }
+  };
 
   // Use the filtered data from API instead of client-side filtering
   const displayList = poFilter === "deleted" ? deletedPOList : poList;
@@ -347,7 +426,20 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="h-[calc(100vh-450px)] overflow-y-auto">
+          <div
+            className={`overflow-y-auto ${
+              tableHeight &&
+              (tableHeight.startsWith("h-") || tableHeight.startsWith("max-h-"))
+                ? tableHeight
+                : ""
+            }`}
+            style={
+              !tableHeight ||
+              (!tableHeight.startsWith("h-") && !tableHeight.startsWith("max-h-"))
+                ? { height: tableHeight || "calc(100vh - 350px)" }
+                : undefined
+            }
+          >
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 border-b sticky top-0 z-10 text-slate-700 text-xs font-bold">
                 <tr>
@@ -356,6 +448,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                   <th className="p-4">Date</th>
                   <th className="p-4">Supplier</th>
                   <th className="p-4">Total Amount</th>
+                  <th className="p-4">Payment & Debt</th>
                   <th className="p-4">Status</th>
                   {/* <th className="p-4">Note</th> */}
                   <th className="p-4">Total Remaining</th>
@@ -364,6 +457,17 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
               </thead>
               <tbody className="divide-y text-slate-600 font-medium">
                 {displayList.map((po, idx) => {
+                  const isCredit = po.paymentType === "credit";
+                  const remainingDebt = isCredit
+                    ? Math.max(0, po.totalAmount - (po.paidAmount || 0))
+                    : 0;
+                  const isOverdue = Boolean(
+                    isCredit &&
+                    po.dueDate &&
+                    new Date(po.dueDate) < new Date() &&
+                    po.paymentStatus !== "paid"
+                  );
+
                   return (
                     <tr key={po._id} className="hover:bg-slate-50">
                       <td className="p-4 text-center text-slate-400">
@@ -379,6 +483,53 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       <td className="p-4 font-bold text-slate-800">
                         {po.totalAmount.toLocaleString()}
                       </td>
+
+                      {/* Payment & Debt Column */}
+                      <td className="p-4">
+                        {isCredit ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {isOverdue ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700 flex items-center gap-1 border border-red-200">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  {isMy ? "ရက်ကျော်လွန်" : "OVERDUE"}
+                                </span>
+                              ) : po.paymentStatus === "paid" ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                  {isMy ? "အပြေချေပြီး" : "PAID"}
+                                </span>
+                              ) : po.paymentStatus === "partially_paid" ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200">
+                                  {isMy ? "တပိုင်းဆပ်" : "PARTIAL"}
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200">
+                                  {isMy ? "မဆပ်ရသေး" : "UNPAID"}
+                                </span>
+                              )}
+                            </div>
+
+                            {po.paymentStatus !== "paid" && (
+                              <div className="text-[11px] font-bold text-slate-700">
+                                <span className="text-slate-400 font-medium">{isMy ? "ကျန်ငွေ: " : "Bal: "}</span>
+                                <span className="text-amber-700">{remainingDebt.toLocaleString()} MMK</span>
+                              </div>
+                            )}
+
+                            {po.dueDate && (
+                              <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                <span>Due: {new Date(po.dueDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
+                            {isMy ? "အပြေချေ (PAID)" : "PAID IN FULL"}
+                          </span>
+                        )}
+                      </td>
+
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] font-black ${po.status === "pending"
@@ -394,7 +545,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       </td> */}
                       <td className="p-4 font-bold text-slate-800">{po.totalRemainingQuantity}</td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {poFilter === "deleted" ? (
                             <>
                               <button
@@ -418,6 +569,17 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                               >
                                 <Eye className="w-3.5 h-3.5" /> {isMy ? "ကြည့်ရန်" : "View"}
                               </button>
+                              {/* Quick Pay Button */}
+                              {isCredit && po.paymentStatus !== "paid" && (
+                                <button
+                                  onClick={() => handleOpenPayment(po)}
+                                  className="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-2.5 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                  title="Record Payment"
+                                >
+                                  <CreditCard className="w-3.5 h-3.5" />
+                                  <span>{isMy ? "ငွေဆပ်မယ်" : "Pay"}</span>
+                                </button>
+                              )}
                               {po.status === "pending" && (
                                 <button
                                   onClick={() =>
@@ -486,6 +648,136 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
         onCancel={cancelRestore}
         isLoading={isRestoring}
       />
+
+      {/* Quick Payment Modal */}
+      <Modal
+        isOpen={paymentModalOpen}
+        onClose={() => {
+          setPaymentModalOpen(false);
+          setPoForPayment(null);
+        }}
+        title={`Record Payment - ${poForPayment?.poNumber || ""}`}
+      >
+        {poForPayment && (
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="flex justify-between text-xs font-semibold text-slate-600">
+                <span>{isMy ? "စုစုပေါင်း ကုန်ကျငွေ:" : "Total PO Amount:"}</span>
+                <span className="font-bold text-slate-800">
+                  {poForPayment.totalAmount.toLocaleString()} MMK
+                </span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-slate-600">
+                <span>{isMy ? "ပေးချေပြီးငွေ:" : "Total Paid:"}</span>
+                <span className="font-bold text-emerald-600">
+                  {(poForPayment.paidAmount || 0).toLocaleString()} MMK
+                </span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold pt-2 border-t border-slate-200">
+                <span className="text-amber-900 font-bold">
+                  {isMy ? "ပေးဆပ်ရန် ကျန်ငွေ:" : "Remaining Debt:"}
+                </span>
+                <span className="font-black text-sm text-amber-700">
+                  {Math.max(
+                    0,
+                    poForPayment.totalAmount - (poForPayment.paidAmount || 0)
+                  ).toLocaleString()}{" "}
+                  MMK
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-slate-600">
+                  {isMy ? "ယခုပေးဆပ်မည့်ငွေ (Payment Amount) *" : "Payment Amount *"}
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPaymentAmount(
+                      Math.max(
+                        0,
+                        poForPayment.totalAmount - (poForPayment.paidAmount || 0)
+                      )
+                    )
+                  }
+                  className="text-[11px] text-[#2216a8] font-bold hover:underline cursor-pointer"
+                >
+                  {isMy ? "အကြွေးအပြေဆပ်မည်" : "Pay Full Balance"}
+                </button>
+              </div>
+              <input
+                type="number"
+                min="1"
+                max={Math.max(
+                  0,
+                  poForPayment.totalAmount - (poForPayment.paidAmount || 0)
+                )}
+                value={paymentAmount || ""}
+                onChange={(e) => setPaymentAmount(Number(e.target.value) || 0)}
+                placeholder="Enter amount..."
+                className="w-full border rounded-lg p-2.5 text-sm font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">
+                {isMy ? "ပေးချေသည့် ပုံစံ (Payment Method)" : "Payment Method"}
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e: any) => setPaymentMethod(e.target.value)}
+                className="w-full border rounded-lg p-2.5 text-sm font-medium bg-white"
+              >
+                <option value="cash">Cash (လက်ငင်း)</option>
+                <option value="kpay">KBZ Pay</option>
+                <option value="wave">Wave Pay</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">
+                {isMy ? "မှတ်ချက် (Notes)" : "Notes"}
+              </label>
+              <textarea
+                rows={2}
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
+                placeholder="Add any payment notes..."
+                className="w-full border rounded-lg p-2 text-xs"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentModalOpen(false);
+                  setPoForPayment(null);
+                }}
+                className="flex-1 py-2.5 border rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                {isMy ? "မလုပ်တော့ပါ" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPayment}
+                disabled={isRecordingPayment || paymentAmount <= 0}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              >
+                {isRecordingPayment ? (
+                  <span>{isMy ? "လုပ်ဆောင်နေသည်..." : "Recording..."}</span>
+                ) : (
+                  <span>{isMy ? "ငွေပေးချေမှု အတည်ပြုမည်" : "Confirm Payment"}</span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

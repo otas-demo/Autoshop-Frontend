@@ -10,6 +10,10 @@ export interface CreatePurchasePayload {
   supplierId: string;
   note?: string;
   totalAmount: number;
+  paymentType?: "paid" | "credit";
+  paidAmount?: number;
+  dueDate?: string | null;
+  paymentMethod?: "cash" | "kpay" | "wave" | "bank_transfer" | "other";
 }
 
 interface CreatePurchaseResponse {

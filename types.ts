@@ -42,6 +42,7 @@ export interface Product {
   isExpired?: boolean;
   isExpiringSoon?: boolean;
   unitOfMeasure?: string;
+  supplierIds?: (string | Supplier)[];
 }
 
 export interface CartItem extends Product {
@@ -113,20 +114,43 @@ export interface PurchaseOrderProduct {
 
 export interface ApiPurchaseOrder {
   _id: string;
-  supplierId: string;
+  supplierId: any;
   products: PurchaseOrderProduct[];
   status: string;
   note: string;
   totalAmount: number;
+  paymentType?: "paid" | "credit";
+  paidAmount?: number;
+  paymentStatus?: "unpaid" | "partially_paid" | "paid";
+  dueDate?: string | null;
+  remainingBalance?: number;
+  isOverdue?: boolean;
   createdAt: string;
   updatedAt: string;
   __v?: number;
   id?: string;
   poNumber: string;
   totalRemainingQuantity?: number;
-  purchasedBy?: string;
+  purchasedBy?: any;
   isDeleted?: boolean;
   deletedAt?: string;
+}
+
+export interface PurchasePaymentRecord {
+  _id: string;
+  purchaseId: string;
+  supplierId?: any;
+  paidAmount: number;
+  paymentDate: string;
+  paymentMethod: "cash" | "kpay" | "wave" | "bank_transfer" | "other";
+  notes?: string | null;
+  recordedBy?: {
+    _id: string;
+    name: string;
+    role: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PurchaseOrderItem {

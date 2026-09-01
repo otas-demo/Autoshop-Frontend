@@ -22,7 +22,8 @@ export const fetchProducts = async (
   limit?: number,
   category?: string,
   status?: string,
-  search?: string
+  search?: string,
+  supplierId?: string
 ): Promise<FetchProductsResponse> => {
   try {
     const response = await axios.get("/inventory", {
@@ -31,7 +32,8 @@ export const fetchProducts = async (
         limit,
         category: category && category !== "All" ? category : undefined,
         status: status && status !== "all" ? status : undefined,
-        search: search || undefined
+        search: search || undefined,
+        supplierId: supplierId || undefined,
       },
     });
 

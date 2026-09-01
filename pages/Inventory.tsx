@@ -26,12 +26,13 @@ import {
   fetchProductById,
   ProductDetail,
 } from "../services/Inventory/fetchProductById";
-import { WarehouseProfile } from "../types";
-import { Building2, X, Loader2, Store, FileUp, RefreshCw, Plus, Search, ChevronDown } from "lucide-react";
+import { WarehouseProfile, Supplier } from "../types";
+import { Building2, X, Loader2, Store, FileUp, RefreshCw, Plus, Search, ChevronDown, Truck } from "lucide-react";
 import {
   importExcel,
   ImportExcelResponse,
 } from "../services/Inventory/importExcel";
+import { fetchSuppliers } from "../services/Supplier/fetchSuppliers";
 import { useRef } from "react";
 import { ImportResultModal } from "../components/Inventory/ImportResultModal";
 
@@ -79,6 +80,8 @@ export const Inventory: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [categories, setCategories] = useState<string[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("All");
 
   // Import Excel State
   const [isImporting, setIsImporting] = useState(false);
@@ -109,6 +112,7 @@ export const Inventory: React.FC = () => {
     status: "active",
     tags: [],
     note: "",
+    supplierIds: [],
   });
 
   // Map API product to local Product type
@@ -128,6 +132,7 @@ export const Inventory: React.FC = () => {
       nearestExpiryDate: (apiProduct as any).nearestExpiryDate || null,
       isExpired: (apiProduct as any).isExpired || false,
       isExpiringSoon: (apiProduct as any).isExpiringSoon || false,
+      supplierIds: apiProduct.supplierIds,
     };
   };
 
@@ -141,7 +146,8 @@ export const Inventory: React.FC = () => {
         limit,
         selectedCategory,
         selectedStatus,
-        searchQuery
+        searchQuery,
+        selectedSupplierId !== "All" ? selectedSupplierId : undefined
       );
       if (response.success && response.data) {
         // Store full API products for subcategory extraction
@@ -188,16 +194,28 @@ export const Inventory: React.FC = () => {
     }
   };
 
+  const loadSuppliers = async () => {
+    try {
+      const response = await fetchSuppliers();
+      if (response.success && response.data) {
+        setSuppliers(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading suppliers:", error);
+    }
+  };
+
   // Fetch products whenever pagination, filter, or search changes
   useEffect(() => {
     loadProducts(currentPage, itemsPerPage);
-  }, [currentPage, itemsPerPage, selectedCategory, selectedStatus, searchQuery]);
+  }, [currentPage, itemsPerPage, selectedCategory, selectedStatus, selectedSupplierId, searchQuery]);
 
   // Fetch static profiles and categories on component mount
   useEffect(() => {
     loadWarehouses();
     loadStorefronts();
     loadCategories();
+    loadSuppliers();
   }, []);
 
   const loadWarehouses = async () => {
@@ -249,6 +267,7 @@ export const Inventory: React.FC = () => {
       status: "active",
       tags: [],
       note: "",
+      supplierIds: [],
     });
     setError(null);
   };
@@ -343,6 +362,7 @@ export const Inventory: React.FC = () => {
         if (formData.tags && formData.tags.length > 0)
           apiPayload.tags = formData.tags;
         if (formData.note) apiPayload.note = formData.note;
+        if (formData.supplierIds) apiPayload.supplierIds = formData.supplierIds;
         if (formData.wholesalePrices && formData.wholesalePrices.length > 0) {
           apiPayload.wholesalePrices = formData.wholesalePrices.map(
             ({ quantity, price }) => ({ quantity, price }),
@@ -414,6 +434,7 @@ export const Inventory: React.FC = () => {
       if (formData.tags && formData.tags.length > 0)
         apiPayload.tags = formData.tags;
       if (formData.note) apiPayload.note = formData.note;
+      if (formData.supplierIds) apiPayload.supplierIds = formData.supplierIds;
       if (formData.wholesalePrices && formData.wholesalePrices.length > 0) {
         apiPayload.wholesalePrices = formData.wholesalePrices.map(
           ({ quantity, price }) => ({ quantity, price }),
@@ -468,6 +489,9 @@ export const Inventory: React.FC = () => {
       status: apiProduct?.status || "active",
       tags: apiProduct?.tags || [],
       note: apiProduct?.note || "",
+      supplierIds: (apiProduct?.supplierIds || []).map((s: any) =>
+        typeof s === "object" ? s._id || s.id : s
+      ),
     });
 
     setIsModalOpen(true);
@@ -826,28 +850,57 @@ export const Inventory: React.FC = () => {
             </div>
           </div>
 
-          {/* Category Dropdown Select */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-slate-500">
-              {t("inventory.filterByCategoryLabel")}
-            </span>
-            <div className="relative min-w-[220px]">
-              <select
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-              >
-                <option value="All">{t("inventory.allCategories")}</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          {/* Category & Supplier Dropdowns */}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Category Dropdown Select */}
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-bold text-slate-500">
+                {t("inventory.filterByCategoryLabel")}
+              </span>
+              <div className="relative min-w-[190px]">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3.5 pr-9 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-[#2216a8] transition-all appearance-none cursor-pointer"
+                >
+                  <option value="All">{t("inventory.allCategories")}</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Supplier Dropdown Select */}
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-[#2216a8]" />
+                <span>Supplier</span>
+              </span>
+              <div className="relative min-w-[190px]">
+                <select
+                  value={selectedSupplierId}
+                  onChange={(e) => {
+                    setSelectedSupplierId(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3.5 pr-9 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-[#2216a8] transition-all appearance-none cursor-pointer"
+                >
+                  <option value="All">Supplier အားလုံး (All)</option>
+                  {suppliers.map((sup) => (
+                    <option key={sup.id || sup._id} value={sup.id || sup._id}>
+                      {sup.supplierName}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
             </div>
           </div>
         </div>

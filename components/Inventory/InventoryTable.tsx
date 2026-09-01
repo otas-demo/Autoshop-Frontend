@@ -120,11 +120,34 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     {p.productCode}
                   </td>
                   <td className="px-3 py-4 text-slate-700 font-medium text-xs sm:text-sm">
-                    <div
-                      className="max-w-[150px] sm:max-w-none truncate"
-                      title={p.name}
-                    >
-                      {p.name}
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className="max-w-[150px] sm:max-w-none truncate font-semibold"
+                        title={p.name}
+                      >
+                        {p.name}
+                      </span>
+                      {p.supplierIds && p.supplierIds.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {p.supplierIds.slice(0, 2).map((sup: any, sIdx: number) => {
+                            const name =
+                              typeof sup === "object" ? sup.supplierName : sup;
+                            return (
+                              <span
+                                key={sIdx}
+                                className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-[#2216a8] border border-indigo-100/80"
+                              >
+                                {name}
+                              </span>
+                            );
+                          })}
+                          {p.supplierIds.length > 2 && (
+                            <span className="text-[10px] text-slate-400 font-bold self-center">
+                              +{p.supplierIds.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-3 py-4 text-slate-500 text-xs sm:text-sm">

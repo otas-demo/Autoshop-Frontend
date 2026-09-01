@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, X, ChevronDown } from "lucide-react";
-import { Product } from "../../types";
+import { Plus, Trash2, X, ChevronDown, Truck } from "lucide-react";
+import { Product, Supplier } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
+import { fetchSuppliers } from "../../services/Supplier/fetchSuppliers";
 
 // const UNIT_OF_MEASURE_OPTIONS = [
 //   "piece",
@@ -38,6 +39,7 @@ export interface ProductFormData {
   status?: string;
   tags?: string[];
   note?: string;
+  supplierIds?: string[];
 }
 
 export interface WholesalePriceTier {
@@ -68,6 +70,7 @@ export interface ApiProduct {
   status?: string;
   tags?: string[];
   note?: string;
+  supplierIds?: any[];
   stockWarehouse?: number;
   stockShop?: number;
 }
@@ -105,6 +108,23 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [tierDrafts, setTierDrafts] = useState<
     Record<string, Partial<{ quantity: string; price: string }>>
   >({});
+  const [availableSuppliers, setAvailableSuppliers] = useState<Supplier[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchSuppliers()
+        .then((res) => {
+          if (res && res.data) {
+            setAvailableSuppliers(res.data);
+          }
+        })
+        .catch((err) => console.error("Failed to load suppliers:", err));
+    }
+  }, [isOpen]);
+
+  const selectedSupplierIds: string[] = (formData.supplierIds || []).map((s: any) =>
+    typeof s === "object" ? s._id || s.id : s
+  );
   // const [subCategoryInput, setSubCategoryInput] = useState("");
   // const [subCategoryShowDropdown, setSubCategoryShowDropdown] = useState(false);
 
@@ -432,6 +452,91 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               }
               placeholder={getLabel("sellingPricePlaceholder")}
             />
+          </div>
+
+          {/* Suppliers Selection */}
+          <div className="col-span-2 bg-slate-50/80 border border-slate-200/80 p-4 rounded-2xl">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Truck className="w-4 h-4 text-[#2216a8]" />
+                <span>
+                  {language === "en"
+                    ? "Suppliers (Goods Providers)"
+                    : "ကုန်ပစ္စည်းတင်သွင်းသူများ (Suppliers)"}
+                </span>
+              </label>
+              <span className="text-xs text-slate-400 font-medium">
+                {language === "en" ? "Optional (Multiple)" : "တစ်ခုထက်မက ရွေးချယ်နိုင်သည်"}
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Dropdown to add a supplier */}
+              <select
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white cursor-pointer"
+                value=""
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && !selectedSupplierIds.includes(val)) {
+                    updateFormData({ supplierIds: [...selectedSupplierIds, val] });
+                  }
+                }}
+              >
+                <option value="">
+                  {language === "en"
+                    ? "-- Select a supplier to link --"
+                    : "-- Supplier ရွေးချယ်ချိတ်ဆက်ရန် --"}
+                </option>
+                {availableSuppliers
+                  .filter((s) => !selectedSupplierIds.includes(s._id || s.id))
+                  .map((s) => (
+                    <option key={s._id || s.id} value={s._id || s.id}>
+                      {s.supplierName} {s.contactNumber ? `(${s.contactNumber})` : ""}
+                    </option>
+                  ))}
+              </select>
+
+              {/* Selected Suppliers Badges */}
+              {selectedSupplierIds.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {selectedSupplierIds.map((id) => {
+                    const sup = availableSuppliers.find(
+                      (s) => (s._id || s.id) === id
+                    );
+                    const name = sup ? sup.supplierName : id;
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#f0effb] text-[#2216a8] border border-indigo-100 shadow-2xs"
+                      >
+                        <Truck className="w-3.5 h-3.5" />
+                        <span>{name}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateFormData({
+                              supplierIds: selectedSupplierIds.filter(
+                                (sid) => sid !== id
+                              ),
+                            })
+                          }
+                          className="hover:text-red-500 cursor-pointer p-0.5 rounded-full hover:bg-white/80 transition-colors"
+                          title="Remove supplier"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 font-medium">
+                  {language === "en"
+                    ? "No suppliers linked yet."
+                    : "Supplier ချိတ်ဆက်ထားခြင်း မရှိသေးပါ (မဖြစ်မနေ မဟုတ်ပါ)"}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Note */}

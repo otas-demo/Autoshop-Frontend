@@ -136,6 +136,7 @@ export const Purchasing: React.FC = () => {
                 loading={poLoading}
                 poFilter={poFilter}
                 setPoFilter={setPoFilter}
+                tableHeight="calc(100vh - 400px)"
               />
               <CreatePOModal
                 isOpen={isCreateModalOpen}
@@ -149,6 +150,20 @@ export const Purchasing: React.FC = () => {
                 onClose={() => setIsPODetailModalOpen(false)}
                 purchaseId={selectedPOId}
                 suppliers={suppliers}
+                onOrderUpdate={() => {
+                  if (poFilter === "deleted") {
+                    loadDeletedPurchases(
+                      deletedPoPagination.currentPage,
+                      deletedPoPagination.itemsPerPage
+                    );
+                  } else {
+                    loadPurchases(
+                      poPagination.currentPage,
+                      poPagination.itemsPerPage,
+                      poFilter === "arrived" ? "arrived" : "pending"
+                    );
+                  }
+                }}
               />
             </div>
           )}

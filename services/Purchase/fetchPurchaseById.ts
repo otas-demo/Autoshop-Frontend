@@ -18,11 +18,18 @@ export interface PurchaseProduct {
 
 export interface PurchaseDetail {
   _id: string;
-  supplierId: string;
+  poNumber?: string;
+  supplierId: any;
   products: PurchaseProduct[];
   status: string;
   note: string;
   totalAmount: number;
+  paymentType?: "paid" | "credit";
+  paidAmount?: number;
+  paymentStatus?: "unpaid" | "partially_paid" | "paid";
+  dueDate?: string | null;
+  remainingBalance?: number;
+  isOverdue?: boolean;
   purchasedBy: {
     _id: string;
     name: string;

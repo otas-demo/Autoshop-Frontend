@@ -7,6 +7,7 @@ import {
   Store,
   Warehouse,
   Calendar,
+  Truck,
 } from "lucide-react";
 import { ProductDetail } from "../../services/Inventory/fetchProductById";
 import { useLanguage } from "../../context/LanguageContext";
@@ -303,6 +304,35 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         {formatDate(product.updatedAt)}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Suppliers Section */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <p className="text-xs text-slate-600 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                      <Truck className="w-4 h-4 text-[#2216a8]" />
+                      <span>{t("suppliers.title") || "Suppliers"} (ကုန်ပစ္စည်းတင်သွင်းသူများ)</span>
+                    </p>
+                    {product.supplierIds && product.supplierIds.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {product.supplierIds.map((sup: any, idx: number) => {
+                          const name = typeof sup === "object" ? sup.supplierName : sup;
+                          const phone = typeof sup === "object" ? sup.contactNumber : null;
+                          return (
+                            <div
+                              key={sup._id || sup.id || idx}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs"
+                            >
+                              <span className="font-bold text-slate-800">{name}</span>
+                              {phone && <span className="text-slate-400 font-medium">({phone})</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">
+                        Supplier ချိတ်ဆက်ထားခြင်း မရှိသေးပါ
+                      </p>
+                    )}
                   </div>
 
                   {/* Total Quantity Summary */}

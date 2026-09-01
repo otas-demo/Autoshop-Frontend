@@ -62,6 +62,7 @@ export interface ProductDetail {
   nearestExpiryDate?: string | null;
   isExpired?: boolean;
   isExpiringSoon?: boolean;
+  supplierIds?: any[];
   stockAvailability: StockAvailability;
 }
 

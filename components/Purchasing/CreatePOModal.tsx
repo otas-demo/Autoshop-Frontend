@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, CreditCard, Calendar, DollarSign, Clock } from "lucide-react";
 import { Modal } from "../Modal";
 import { Supplier, Product, PurchaseOrderItem } from "../../types";
 import { createPurchase } from "../../services/Purchase/createPurchase";
@@ -11,6 +11,7 @@ interface CreatePOModalProps {
   suppliers: Supplier[];
   products: Product[];
   onSuccess: () => void;
+  defaultSupplierId?: string;
 }
 
 export const CreatePOModal: React.FC<CreatePOModalProps> = ({
@@ -19,10 +20,17 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   suppliers,
   products,
   onSuccess,
+  defaultSupplierId,
 }) => {
-  const [poSupplierId, setPOSupplierId] = useState("");
+  const [poSupplierId, setPOSupplierId] = useState(defaultSupplierId || "");
   const [poItems, setPOItems] = useState<PurchaseOrderItem[]>([]);
   const [poSelectedProduct, setPOSelectedProduct] = useState("");
+
+  useEffect(() => {
+    if (isOpen && defaultSupplierId) {
+      setPOSupplierId(defaultSupplierId);
+    }
+  }, [isOpen, defaultSupplierId]);
   const [poQty, setPOQty] = useState(1);
   const [poItemNote, setPOItemNote] = useState("");
   const [poNote, setPONote] = useState("");
@@ -31,11 +39,33 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const productDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Credit Purchase States
+  const [paymentType, setPaymentType] = useState<"paid" | "credit">("paid");
+  const [initialPaidAmount, setInitialPaidAmount] = useState<number>(0);
+  const [dueDate, setDueDate] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "kpay" | "wave" | "bank_transfer" | "other"
+  >("cash");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const filteredProducts = products.filter((product) =>
     product.productName
       ?.toLowerCase()
       .includes(productSearchQuery.toLowerCase()),
   );
+
+  const sortedFilteredProducts = [...filteredProducts].sort((a, b) => {
+    if (!poSupplierId) return 0;
+    const aSupplied = (a.supplierIds || []).some(
+      (s: any) => (typeof s === "object" ? s._id || s.id : s) === poSupplierId
+    );
+    const bSupplied = (b.supplierIds || []).some(
+      (s: any) => (typeof s === "object" ? s._id || s.id : s) === poSupplierId
+    );
+    if (aSupplied && !bSupplied) return -1;
+    if (!aSupplied && bSupplied) return 1;
+    return 0;
+  });
 
   const handleProductSelect = (productId: string, productName: string) => {
     setPOSelectedProduct(productId);
@@ -120,8 +150,12 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   };
 
   const submitPO = async () => {
-    if (!poSupplierId || poItems.length === 0) {
-      toast.error("Please select supplier and add at least one item");
+    if (!poSupplierId) {
+      toast.error("ကျေးဇူးပြု၍ Supplier (ကုန်ပစ္စည်းတင်သွင်းသူ) ကို ရွေးချယ်ပေးပါ");
+      return;
+    }
+    if (poItems.length === 0) {
+      toast.error("ကျေးဇူးပြု၍ ကုန်ပစ္စည်း အနည်းဆုံး ၁ မျိုး ထည့်သွင်းပေးပါ");
       return;
     }
 
@@ -131,6 +165,17 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       0,
     );
 
+    if (paymentType === "credit") {
+      if (initialPaidAmount > totalAmount) {
+        toast.error("ကြိုတင်ပေးငွေသည် စုစုပေါင်းကုန်ကျငွေထက် မကျော်လွန်နိုင်ပါ");
+        return;
+      }
+      if (!dueDate) {
+        toast.error("အကြွေးဆပ်ရမည့်ရက် (Due Date) ကို ထည့်သွင်းပေးပါ");
+        return;
+      }
+    }
+
     const payload = {
       products: poItems.map((item) => ({
         inventoryId: item.productId,
@@ -139,8 +184,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       supplierId: poSupplierId,
       note: poNote,
       totalAmount,
+      paymentType,
+      paidAmount: paymentType === "credit" ? initialPaidAmount : totalAmount,
+      dueDate: paymentType === "credit" && dueDate ? dueDate : null,
+      paymentMethod,
     };
 
+    setIsSubmitting(true);
     try {
       const response = await createPurchase(payload);
       if (response.success) {
@@ -148,6 +198,10 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
         setPOSupplierId("");
         setPOItems([]);
         setPONote("");
+        setPaymentType("paid");
+        setInitialPaidAmount(0);
+        setDueDate("");
+        setPaymentMethod("cash");
         onSuccess();
         onClose();
       } else {
@@ -158,6 +212,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       toast.error(
         error.message || "An error occurred while creating the Purchase Order",
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -167,15 +223,26 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">
-                Supplier Name
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>
+                  Supplier Name <span className="text-red-500">*</span>
+                </span>
+                {!poSupplierId && (
+                  <span className="text-[10px] text-amber-600 font-semibold">
+                    (ရွေးချယ်ရန် လိုအပ်သည်)
+                  </span>
+                )}
               </label>
               <select
-                className="w-full border rounded p-2"
+                className={`w-full border rounded-xl p-2.5 text-sm font-medium transition-all ${
+                  !poSupplierId
+                    ? "border-amber-400 bg-amber-50/20 text-slate-600 focus:border-amber-500"
+                    : "border-slate-200 bg-white text-slate-800 focus:border-[#2216a8]"
+                }`}
                 value={poSupplierId}
                 onChange={(e) => setPOSupplierId(e.target.value)}
               >
-                <option value="">Select Supplier</option>
+                <option value="">-- Select Supplier --</option>
                 {suppliers.map((supplier) => (
                   <option
                     key={supplier.id || supplier._id}
@@ -213,19 +280,40 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                   </button>
                 )}
                 {showProductDropdown && (
-                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto shadow-lg">
-                    {filteredProducts.length > 0 ? (
-                      filteredProducts.map((p) => (
-                        <div
-                          key={p._id}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                          onClick={() =>
-                            handleProductSelect(p._id, p.productName)
-                          }
-                        >
-                          {p.productName}
-                        </div>
-                      ))
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-xl mt-1 max-h-60 overflow-y-auto shadow-lg">
+                    {sortedFilteredProducts.length > 0 ? (
+                      sortedFilteredProducts.map((p) => {
+                        const isSupplied =
+                          Boolean(poSupplierId) &&
+                          (p.supplierIds || []).some(
+                            (s: any) =>
+                              (typeof s === "object" ? s._id || s.id : s) ===
+                              poSupplierId
+                          );
+                        return (
+                          <div
+                            key={p._id || p.id}
+                            className={`px-3.5 py-2.5 hover:bg-indigo-50/70 cursor-pointer text-sm flex items-center justify-between transition-colors ${
+                              isSupplied ? "bg-indigo-50/30" : ""
+                            }`}
+                            onClick={() =>
+                              handleProductSelect(
+                                p._id || p.id,
+                                p.productName || p.name
+                              )
+                            }
+                          >
+                            <span className="font-medium text-slate-800">
+                              {p.productName || p.name}
+                            </span>
+                            {isSupplied && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#f0effb] text-[#2216a8] border border-indigo-200/60">
+                                ဤ Supplier ၏ ပစ္စည်း
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })
                     ) : (
                       <div className="px-3 py-2 text-gray-500 text-sm">
                         No products found
@@ -337,22 +425,144 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
               </tbody>
             </table>
           </div>
+
+          {/* Payment Terms Section */}
+          <div className="mb-4 p-4 bg-[#f8fafc] border border-slate-200/80 rounded-2xl space-y-3.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#2216a8]" />
+                ငွေပေးချေမှုပုံစံ (Payment Terms)
+              </span>
+            </div>
+
+            {/* Theme Styled Segmented Buttons */}
+            <div className="grid grid-cols-2 gap-1.5 bg-slate-200/60 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentType("paid");
+                  setInitialPaidAmount(0);
+                  setDueDate("");
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  paymentType === "paid"
+                    ? "bg-[#2216a8] text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                အပြေချေ (Paid in Full)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentType("credit")}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  paymentType === "credit"
+                    ? "bg-[#2216a8] text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                အကြွေးဝယ်ယူမည် (Credit)
+              </button>
+            </div>
+
+            {paymentType === "credit" && (
+              <div className="space-y-3 pt-2 border-t border-slate-200/80">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      ကြိုတင်ပေးငွေ (Down Payment)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={poItems.reduce((sum, item) => sum + item.qty * item.costPrice, 0)}
+                      value={initialPaidAmount || ""}
+                      onChange={(e) => setInitialPaidAmount(Number(e.target.value) || 0)}
+                      placeholder="0 MMK"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                      ဆပ်ရမည့်ရက် (Due Date) *
+                    </label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                {initialPaidAmount > 0 && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      ကြိုတင်ပေးငွေ ပေးချေသည့်စနစ် (Payment Method)
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e: any) => setPaymentMethod(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] text-slate-800"
+                    >
+                      <option value="cash">Cash (လက်ငင်း)</option>
+                      <option value="kpay">KBZ Pay</option>
+                      <option value="wave">Wave Pay</option>
+                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Theme-styled Remaining Debt Box */}
+                <div className="bg-[#f0effb]/70 p-3 rounded-xl border border-indigo-100/80 flex justify-between items-center text-xs">
+                  <span className="font-bold text-slate-700">
+                    ကျန်ရှိမည့် အကြွေး (Remaining Debt):
+                  </span>
+                  <span className="font-black text-sm text-[#2216a8]">
+                    {Math.max(
+                      0,
+                      poItems.reduce((sum, item) => sum + item.qty * item.costPrice, 0) -
+                        (initialPaidAmount || 0)
+                    ).toLocaleString()}{" "}
+                    MMK
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
           {poNote && (
-            <div className="mb-4 p-3 bg-gray-50 border rounded text-sm">
-              <span className="font-semibold text-gray-600 block mb-1">
+            <div className="mb-4 p-3 bg-gray-50 border border-slate-200/80 rounded-xl text-sm">
+              <span className="font-semibold text-gray-600 block mb-1 text-xs">
                 Order Note:
               </span>
-              <p className="text-gray-800">{poNote}</p>
+              <p className="text-gray-800 text-xs">{poNote}</p>
+            </div>
+          )}
+          {!poSupplierId && (
+            <div className="mb-2 p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl text-[11px] text-amber-800 font-bold flex items-center justify-center gap-1.5">
+              <span>⚠️</span>
+              <span>ဘယ်ဘက်ခြမ်းရှိ Supplier Name ကို ရွေးချယ်ပေးရန် လိုအပ်ပါသည်</span>
             </div>
           )}
           <button
             onClick={submitPO}
-            disabled={poItems.length === 0 || !poSupplierId}
-            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+            disabled={isSubmitting}
+            className="w-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white py-3 rounded-xl font-bold text-sm cursor-pointer shadow-md shadow-indigo-600/10 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Create Purchase Order
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Creating Purchase Order...</span>
+              </>
+            ) : (
+              <span>Create Purchase Order</span>
+            )}
           </button>
-          <p className="text-xs text-slate-500 mt-2">
+          <p className="text-xs text-slate-400 mt-2 text-center">
             Note: PO does NOT update stock. Use GRN to receive goods.
           </p>
         </div>

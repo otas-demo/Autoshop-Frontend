@@ -71,9 +71,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
     { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
     { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
-    { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
-    { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
-    { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
+    // { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
+    // { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
+    // { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
     { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
   ];
 
@@ -119,11 +119,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
         <div className={`flex-1 bg-white border border-gray-200/70 rounded-3xl shadow-lg flex flex-col overflow-hidden relative justify-between transition-all duration-500 ${isCollapsed ? "px-2 py-4" : "p-4"
           }`}>
 
-          <div>
+          <div className="flex flex-col min-h-0 flex-1">
             {/* Header / Brand Logo */}
             <div
               onClick={toggleCollapse}
-              className="py-3 flex flex-col items-center justify-center border-b border-gray-100 cursor-pointer select-none"
+              className="py-3 flex-shrink-0 flex flex-col items-center justify-center border-b border-gray-100 cursor-pointer select-none"
             >
               <div className="text-[#2216a8] text-center">
                 <div className="flex flex-col items-center justify-center font-black leading-none transition-all duration-500 ease-in-out py-1">
@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
             </div>
 
             {/* Navigation List */}
-            <nav className="mt-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-17rem)] pr-0.5 no-scrollbar">
+            <nav className="mt-4 space-y-1.5 overflow-y-auto flex-1 min-h-0 pr-0.5 no-scrollbar">
               {visibleItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -171,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
           </div>
 
           {/* Bottom Actions Area */}
-          <div className="space-y-4">
+          <div className="pt-3 flex-shrink-0">
             {/* Collapse Sidebar Button */}
             <button
               onClick={toggleCollapse}
@@ -186,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
         </div>
 
         {/* User Profile Card at Bottom */}
-        <div className="relative mt-3">
+        <div className="relative mt-3 flex-shrink-0">
           {/* Popover Menu Backdrop overlay to dismiss */}
           {showMenu && (
             <div
@@ -198,7 +198,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
           {/* Popover Menu */}
           {showMenu && (
             <div
-              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed ? "left-0 w-48" : "left-0 right-0"
+              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed
+                  ? "lg:left-0 lg:right-auto right-0 w-52"
+                  : "left-0 right-0"
                 }`}
             >
               <div className="flex flex-col gap-1">
@@ -210,8 +212,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                   }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-500 hover:text-[#2216a8] hover:bg-slate-50 rounded-xl transition-all font-medium text-left cursor-pointer"
                 >
-                  <Languages className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-semibold">
+                  <Languages className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">
                     {language === "en" ? "မြန်မာ ဘာသာ" : "English"}
                   </span>
                 </button>
@@ -225,8 +227,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                   }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-500 hover:text-[#2216a8] hover:bg-slate-50 rounded-xl transition-all font-medium text-left cursor-pointer"
                 >
-                  <Settings className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-semibold">
+                  <Settings className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">
                     {language === "en" ? "Settings" : "ဆက်တင်များ"}
                   </span>
                 </button>
@@ -239,8 +241,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                   }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all font-medium text-left cursor-pointer"
                 >
-                  <LogOut className="w-5 h-5 text-red-400" />
-                  <span className="text-sm font-semibold">
+                  <LogOut className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">
                     {language === "en" ? "Log out" : "အကောင့်ထွက်မယ်"}
                   </span>
                 </button>

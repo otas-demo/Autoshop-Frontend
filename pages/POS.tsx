@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -113,6 +113,8 @@ export const POS: React.FC = () => {
   );
   const devices = detectDevice();
 
+  const isInitialMount = useRef(true);
+
   // Load storefronts and stock on mount
   useEffect(() => {
     loadInitialData();
@@ -122,6 +124,7 @@ export const POS: React.FC = () => {
     setLoading(true);
     try {
       // Load storefronts
+      let initialStorefrontId = "";
       const sfResponse = await fetchStorefrontProfiles();
       if (sfResponse.success && sfResponse.data) {
         const activeStorefronts = sfResponse.data.filter(
@@ -131,7 +134,8 @@ export const POS: React.FC = () => {
 
         // Auto-select first storefront
         if (activeStorefronts.length > 0) {
-          setSelectedStorefrontId(activeStorefronts[0]._id);
+          initialStorefrontId = activeStorefronts[0]._id;
+          setSelectedStorefrontId(initialStorefrontId);
         }
       }
 
@@ -141,8 +145,12 @@ export const POS: React.FC = () => {
         setCategories(catResponse.data);
       }
 
-      // Load stock items
-      await loadStockItems();
+      // Load stock items only for the selected storefront
+      if (initialStorefrontId) {
+        await loadStockItems(initialStorefrontId);
+      } else {
+        setAllStockItems([]);
+      }
     } catch (error) {
       // console.error("Error loading initial data:", error);
       toast.error(t("pos.failedToLoadData"));
@@ -170,7 +178,12 @@ export const POS: React.FC = () => {
   };
 
   useEffect(() => {
-    loadStockItems();
+    if (!selectedStorefrontId) return;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    loadStockItems(selectedStorefrontId);
   }, [selectedStorefrontId, search, selectedCategory, currentPage]);
 
   useEffect(() => {
@@ -207,10 +220,15 @@ export const POS: React.FC = () => {
     };
   }, [activeWholesalePopoverId]);
 
-  const loadStockItems = async () => {
+  const loadStockItems = async (storefrontId: string = selectedStorefrontId) => {
+    if (!storefrontId) {
+      setAllStockItems([]);
+      return;
+    }
+
     try {
       const response = await fetchStorefrontStock(
-        selectedStorefrontId,
+        storefrontId,
         currentPage,
         itemsPerPage,
         selectedCategory === "All" ? undefined : selectedCategory,
@@ -231,8 +249,9 @@ export const POS: React.FC = () => {
   };
 
   const handleRefresh = async () => {
+    if (!selectedStorefrontId) return;
     setLoading(true);
-    await loadStockItems();
+    await loadStockItems(selectedStorefrontId);
     setLoading(false);
     toast.success(t("pos.productsRefreshed"));
   };
@@ -608,6 +627,8 @@ export const POS: React.FC = () => {
     setSelectedStorefrontId(storefrontId);
     setCart([]); // Clear cart when switching storefronts
     setSelectedCategory("All");
+    setCurrentPage(1);
+    setSearch("");
   };
 
   if (loading) {

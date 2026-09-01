@@ -353,7 +353,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
           {/* Popover Menu */}
           {showMenu && (
             <div
-              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed ? "left-0 w-48" : "left-0 right-0"
+              className={`absolute bottom-full mb-2 bg-white border border-gray-200/70 rounded-2xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed
+                ? "lg:left-0 lg:right-auto right-0 w-52"
+                : "left-0 right-0"
                 }`}
             >
               <div className="flex flex-col gap-1">
@@ -365,8 +367,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                   }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-500 hover:text-[#2216a8] hover:bg-slate-50 rounded-xl transition-all font-medium text-left cursor-pointer"
                 >
-                  <Languages className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-semibold">
+                  <Languages className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">
                     {language === "en" ? "မြန်မာ ဘာသာ" : "English"}
                   </span>
                 </button>
@@ -380,8 +382,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                   }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-500 hover:text-[#2216a8] hover:bg-slate-50 rounded-xl transition-all font-medium text-left cursor-pointer"
                 >
-                  <Settings className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-semibold">
+                  <Settings className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">
                     {language === "en" ? "Settings" : "ဆက်တင်များ"}
                   </span>
                 </button>
@@ -394,8 +396,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                   }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all font-medium text-left cursor-pointer"
                 >
-                  <LogOut className="w-5 h-5 text-red-400" />
-                  <span className="text-sm font-semibold">
+                  <LogOut className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold whitespace-nowrap">
                     {language === "en" ? "Log out" : "အကောင့်ထွက်မယ်"}
                   </span>
                 </button>

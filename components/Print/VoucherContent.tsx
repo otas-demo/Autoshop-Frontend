@@ -52,9 +52,8 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
       <div className="voucher-container" data-paper={paperSize}>
         {/* Header */}
         <div className="text-center mb-2">
-          <img src={logo} alt="MMAH" className="mx-auto" />
-          <img src={address} alt="Address" className="mx-auto" />
-          {/* {shopBranding.logo ? (
+
+          {shopBranding.logo ? (
             <img
               src={shopBranding.logo}
               alt={shopBranding.shopName}
@@ -64,11 +63,11 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
             <div className="voucher-logo mx-auto flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 font-bold">
               {shopBranding.shopName.charAt(0)}
             </div>
-          )} */}
-          {/* <h2 className="voucher-shop-name font-bold text-slate-800 mt-2">
+          )}
+          <h2 className="voucher-shop-name font-bold text-slate-800 mt-2">
             {shopBranding.shopName}
           </h2>
-          */}
+
           {shopBranding.address && (
             <p className="voucher-address text-slate-600 mt-1 whitespace-pre-line">
               {shopBranding.address}
@@ -241,19 +240,19 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
       {(receiptData.customerName ||
         receiptData.customerPhone ||
         receiptData.customerAddress) && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
-          <p className="font-bold mb-1 text-sm">Customer Info:</p>
-          {receiptData.customerName && (
-            <p className="text-sm">Name: {receiptData.customerName}</p>
-          )}
-          {receiptData.customerPhone && (
-            <p className="text-sm">Phone: {receiptData.customerPhone}</p>
-          )}
-          {receiptData.customerAddress && (
-            <p className="text-sm">Address: {receiptData.customerAddress}</p>
-          )}
-        </div>
-      )}
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <p className="font-bold mb-1 text-sm">Customer Info:</p>
+            {receiptData.customerName && (
+              <p className="text-sm">Name: {receiptData.customerName}</p>
+            )}
+            {receiptData.customerPhone && (
+              <p className="text-sm">Phone: {receiptData.customerPhone}</p>
+            )}
+            {receiptData.customerAddress && (
+              <p className="text-sm">Address: {receiptData.customerAddress}</p>
+            )}
+          </div>
+        )}
 
       <div className="mb-6 sm:mb-8">
         <table className="voucher-table">

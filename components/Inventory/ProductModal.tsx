@@ -19,6 +19,13 @@ import { fetchSuppliers } from "../../services/Supplier/fetchSuppliers";
 //   "pair",
 // ];
 
+export interface UomConversion {
+  unit: string;
+  factor: number;
+  convertFrom: string;
+  isDefaultSellingUnit: boolean;
+}
+
 export interface ProductFormData {
   productName: string;
   productCode: string;
@@ -40,6 +47,7 @@ export interface ProductFormData {
   tags?: string[];
   note?: string;
   supplierIds?: string[];
+  uomConversions?: UomConversion[];
 }
 
 export interface WholesalePriceTier {
@@ -71,6 +79,7 @@ export interface ApiProduct {
   tags?: string[];
   note?: string;
   supplierIds?: any[];
+  uomConversions?: UomConversion[];
   stockWarehouse?: number;
   stockShop?: number;
 }
@@ -537,6 +546,153 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Unit Conversions Section */}
+          <div className="col-span-2 bg-slate-50/80 border border-slate-200/80 p-5 rounded-2xl mt-2">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-bold text-slate-800 uppercase">
+                {language === "en" ? "Unit Conversions" : "ယူနစ် ပြောင်းလဲခြင်းများ (Unit Conversions)"}
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentConversions = formData.uomConversions || [];
+                  updateFormData({
+                    uomConversions: [
+                      ...currentConversions,
+                      { unit: '', factor: 1, convertFrom: formData.unitOfMeasure || 'piece', isDefaultSellingUnit: false }
+                    ]
+                  });
+                }}
+                className="text-xs font-bold text-[#2216a8] hover:text-[#2216a8]/80 flex items-center gap-1 bg-white px-3 py-1.5 rounded-full border border-indigo-100 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {language === "en" ? "Add conversion" : "အသစ်ထည့်မည်"}
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">
+              {language === "en" 
+                ? `1 base unit (${formData.unitOfMeasure || 'piece'}) equals [factor] of each conversion unit`
+                : `မူလယူနစ် ၁ ခု (${formData.unitOfMeasure || 'piece'}) သည် ပြောင်းလဲမည့်ယူနစ်၏ [factor] ပမာဏနှင့် ညီမျှသည်`}
+            </p>
+
+            {(!formData.uomConversions || formData.uomConversions.length === 0) ? (
+              <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center gap-3">
+                <span className="text-sm font-medium text-slate-400">
+                  {language === "en" ? "No unit conversions yet" : "ယူနစ်ပြောင်းလဲခြင်းများ မရှိသေးပါ"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateFormData({
+                      uomConversions: [
+                        { unit: '', factor: 1, convertFrom: formData.unitOfMeasure || 'piece', isDefaultSellingUnit: false }
+                      ]
+                    });
+                  }}
+                  className="px-4 py-2 text-xs font-bold rounded-full bg-white border border-gray-200 text-slate-600 hover:bg-gray-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {language === "en" ? "Add first conversion" : "ပထမဆုံး ယူနစ် ထည့်မည်"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {formData.uomConversions.map((conv, idx) => {
+                  // The 'convertFrom' options include the baseUnit and any previously added conversion units in the list
+                  const baseUnit = formData.unitOfMeasure || 'piece';
+                  const previousUnits = [
+                    { value: baseUnit, label: `${baseUnit} (base)` },
+                    ...formData.uomConversions!.slice(0, idx)
+                      .filter(c => c.unit && c.unit.trim() !== '')
+                      .map(c => ({ value: c.unit, label: c.unit }))
+                  ];
+
+                  return (
+                    <div key={idx} className="flex flex-wrap md:flex-nowrap items-end gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-xs font-bold text-slate-600 mb-1">Unit</label>
+                        <input
+                          type="text"
+                          value={conv.unit}
+                          onChange={(e) => {
+                            const newConversions = [...formData.uomConversions!];
+                            newConversions[idx].unit = e.target.value;
+                            updateFormData({ uomConversions: newConversions });
+                          }}
+                          placeholder='e.g., "Box"'
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8]"
+                        />
+                      </div>
+                      <div className="w-[80px]">
+                        <label className="block text-xs font-bold text-slate-600 mb-1">Factor</label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="any"
+                          value={conv.factor}
+                          onChange={(e) => {
+                            const newConversions = [...formData.uomConversions!];
+                            newConversions[idx].factor = Number(e.target.value);
+                            updateFormData({ uomConversions: newConversions });
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8]"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-[140px]">
+                        <label className="block text-xs font-bold text-slate-600 mb-1">Convert From</label>
+                        <div className="relative">
+                          <select
+                            value={conv.convertFrom}
+                            onChange={(e) => {
+                              const newConversions = [...formData.uomConversions!];
+                              newConversions[idx].convertFrom = e.target.value;
+                              updateFormData({ uomConversions: newConversions });
+                            }}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] appearance-none bg-white cursor-pointer pr-8"
+                          >
+                            {previousUnits.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2 w-[80px]">
+                        <input
+                          type="radio"
+                          name="defaultSellingUnit"
+                          id={`defaultSellingUnit-${idx}`}
+                          checked={conv.isDefaultSellingUnit}
+                          onChange={() => {
+                            const newConversions = formData.uomConversions!.map((c, i) => ({
+                              ...c,
+                              isDefaultSellingUnit: i === idx
+                            }));
+                            updateFormData({ uomConversions: newConversions });
+                          }}
+                          className="w-4 h-4 text-[#2216a8] focus:ring-[#2216a8] cursor-pointer"
+                        />
+                        <label htmlFor={`defaultSellingUnit-${idx}`} className="text-xs font-bold text-slate-600 cursor-pointer">
+                          Default
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newConversions = formData.uomConversions!.filter((_, i) => i !== idx);
+                          updateFormData({ uomConversions: newConversions });
+                        }}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer mb-0.5"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Note */}

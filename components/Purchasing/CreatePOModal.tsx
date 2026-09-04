@@ -3,7 +3,9 @@ import { Plus, Trash2, X, CreditCard, Calendar, DollarSign, Clock } from "lucide
 import { Modal } from "../Modal";
 import { Supplier, Product, PurchaseOrderItem } from "../../types";
 import { createPurchase } from "../../services/Purchase/createPurchase";
+import { updatePurchase } from "../../services/Purchase/updatePurchase";
 import { toast } from "sonner";
+import { UomConversion } from "../../types";
 
 interface CreatePOModalProps {
   isOpen: boolean;
@@ -12,6 +14,7 @@ interface CreatePOModalProps {
   products: Product[];
   onSuccess: () => void;
   defaultSupplierId?: string;
+  initialData?: any;
 }
 
 export const CreatePOModal: React.FC<CreatePOModalProps> = ({
@@ -21,16 +24,57 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   products,
   onSuccess,
   defaultSupplierId,
+  initialData,
 }) => {
   const [poSupplierId, setPOSupplierId] = useState(defaultSupplierId || "");
   const [poItems, setPOItems] = useState<PurchaseOrderItem[]>([]);
   const [poSelectedProduct, setPOSelectedProduct] = useState("");
 
   useEffect(() => {
-    if (isOpen && defaultSupplierId) {
-      setPOSupplierId(defaultSupplierId);
+    if (isOpen && initialData) {
+      setPOSupplierId(
+        typeof initialData.supplierId === "object"
+          ? initialData.supplierId._id || initialData.supplierId.id
+          : initialData.supplierId
+      );
+      
+      const mappedItems = initialData.products.map((p: any) => ({
+        productId: p.inventoryId?._id || p.inventoryId || p.productId || `prod-${Math.random()}`,
+        name: p.productName || p.inventoryId?.productName || p.name || "",
+        qty: p.purchaseQuantity || p.qty || 1,
+        unit: p.unit || "piece",
+        costPrice: p.buyingPrice || p.costPrice || 0,
+        factor: p.factor || 1,
+        baseQuantity: p.baseQuantity || (p.purchaseQuantity * (p.factor || 1)),
+        note: ""
+      }));
+      setPOItems(mappedItems);
+      setPONote(initialData.note || "");
+      
+      if (initialData.paymentType === "credit") {
+        setPaymentType("credit");
+        setInitialPaidAmount(initialData.paidAmount || 0);
+        if (initialData.dueDate) {
+          setDueDate(new Date(initialData.dueDate).toISOString().split('T')[0]);
+        }
+      } else {
+        setPaymentType("paid");
+        setInitialPaidAmount(0);
+        setDueDate("");
+      }
+    } else if (isOpen && !initialData) {
+      setPOSupplierId(defaultSupplierId || "");
+      setPOItems([]);
+      setPONote("");
+      setPaymentType("paid");
+      setInitialPaidAmount(0);
+      setDueDate("");
+      setPOSelectedProduct("");
+      setPONewProductName("");
+      setProductSearchQuery("");
+      setPOQty(1);
     }
-  }, [isOpen, defaultSupplierId]);
+  }, [isOpen, initialData, defaultSupplierId]);
   const [poQty, setPOQty] = useState(1);
   const [poItemNote, setPOItemNote] = useState("");
   const [poNote, setPONote] = useState("");
@@ -38,6 +82,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const productDropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedUnit, setSelectedUnit] = useState<string>("");
 
   // Credit Purchase States
   const [paymentType, setPaymentType] = useState<"paid" | "credit">("paid");
@@ -72,6 +117,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
     setProductSearchQuery(productName);
     setShowProductDropdown(false);
     setPONewProductName("");
+
+    const product = products.find((p) => (p._id || p.id) === productId);
+    if (product && product.unitOfMeasure) {
+      setSelectedUnit(product.unitOfMeasure);
+    } else {
+      setSelectedUnit("piece");
+    }
   };
 
   const handleProductInputChange = (value: string) => {
@@ -98,6 +150,29 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
     };
   }, []);
 
+  const getEffectiveFactor = (
+    targetUnit: string,
+    baseUnit: string,
+    uomConversions: UomConversion[] = []
+  ): number => {
+    if (!targetUnit || targetUnit === baseUnit) return 1;
+
+    let factor = 1;
+    let currentUnit = targetUnit;
+    let maxDepth = 10;
+
+    while (currentUnit !== baseUnit && maxDepth > 0) {
+      const conversion = uomConversions.find(c => c.unit === currentUnit);
+      if (!conversion) break;
+
+      factor *= conversion.factor;
+      currentUnit = conversion.convertFrom;
+      maxDepth--;
+    }
+
+    return factor;
+  };
+
   const addPOItem = () => {
     if (!poSelectedProduct && !poNewProductName) return;
     if (poQty <= 0) return;
@@ -105,6 +180,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
     let productId = poSelectedProduct;
     let productName = "";
     let buyingPrice = 0;
+    let unit = "piece";
+    let factor = 1;
 
     if (poSelectedProduct) {
       const product = products.find(
@@ -112,13 +189,27 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       );
       if (!product) return;
       productName = product.productName || product.name;
-      buyingPrice = product.buyingPrice;
+      unit = selectedUnit || product.unitOfMeasure || "piece";
+
+      factor = getEffectiveFactor(
+        unit,
+        product.unitOfMeasure || "piece",
+        product.uomConversions || []
+      );
+      
+      // Calculate equivalent buying price
+      buyingPrice = product.costPrice * factor;
+      // Also fallback if costPrice is 0 or undefined for some reason, maybe buyingPrice property exists?
+      if (!buyingPrice && (product as any).buyingPrice) {
+         buyingPrice = (product as any).buyingPrice * factor;
+      }
     } else {
       // New product - generate ID
       productId = `new-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 9)}`;
       productName = poNewProductName;
+      unit = selectedUnit || "piece";
     }
 
     const newItem: PurchaseOrderItem = {
@@ -127,13 +218,18 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       qty: poQty,
       costPrice: buyingPrice,
       note: poItemNote,
+      unit,
+      factor,
+      baseQuantity: poQty * factor
     };
 
     setPOItems((prev) => [...prev, newItem]);
     setPOSelectedProduct("");
     setPONewProductName("");
+    setProductSearchQuery("");
     setPOQty(1);
     setPOItemNote("");
+    setSelectedUnit("");
   };
 
   const removePOItem = (index: number) => {
@@ -180,6 +276,9 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       products: poItems.map((item) => ({
         inventoryId: item.productId,
         purchaseQuantity: item.qty,
+        unit: item.unit,
+        factor: item.factor,
+        baseQuantity: item.baseQuantity
       })),
       supplierId: poSupplierId,
       note: poNote,
@@ -192,9 +291,15 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const response = await createPurchase(payload);
+      let response;
+      if (initialData) {
+        response = await updatePurchase(initialData._id, payload);
+      } else {
+        response = await createPurchase(payload);
+      }
+      
       if (response.success) {
-        toast.success("Purchase Order Created Successfully!");
+        toast.success(`Purchase Order ${initialData ? 'Updated' : 'Created'} Successfully!`);
         setPOSupplierId("");
         setPOItems([]);
         setPONote("");
@@ -218,7 +323,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create Purchase Order">
+    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? "Update Purchase Order" : "Create Purchase Order"}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="space-y-4">
@@ -324,12 +429,12 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2">
-                  Quantity
+                  Quantity & Unit
                 </label>
-                <div className="flex  gap-2">
+                <div className="flex gap-2">
                   <input
                     type="number"
-                    className="w-full border rounded p-2 text-sm"
+                    className="w-1/2 border rounded p-2 text-sm"
                     placeholder="Qty"
                     value={poQty === 0 ? "" : poQty}
                     onChange={(e) => {
@@ -345,9 +450,34 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     }}
                     min="1"
                   />
+                  <select
+                    className={`w-1/2 border rounded p-2 text-sm focus:outline-none focus:border-[#2216a8] ${
+                      !poSelectedProduct ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+                    }`}
+                    value={selectedUnit}
+                    onChange={(e) => setSelectedUnit(e.target.value)}
+                    disabled={!poSelectedProduct}
+                  >
+                    {poSelectedProduct ? (() => {
+                      const product = products.find(p => (p._id || p.id) === poSelectedProduct);
+                      const baseUnit = product?.unitOfMeasure || "piece";
+                      const conversions = product?.uomConversions || [];
+                      
+                      return (
+                        <>
+                          <option value={baseUnit}>{baseUnit} (Base)</option>
+                          {conversions.map(c => (
+                            <option key={c.unit} value={c.unit}>{c.unit}</option>
+                          ))}
+                        </>
+                      );
+                    })() : (
+                      <option value="">-- Select Unit --</option>
+                    )}
+                  </select>
                   <button
                     onClick={addPOItem}
-                    className="bg-green-100 text-green-700 p-2 rounded hover:bg-green-200"
+                    className="bg-green-100 text-green-700 p-2 rounded hover:bg-green-200 min-w-[40px] flex justify-center items-center"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -378,6 +508,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                 <tr className="border-b">
                   <th className="py-2 px-1 w-48">Item</th>
                   <th className="py-2 px-1">Qty</th>
+                  <th className="py-2 px-1">Unit</th>
                   <th className="py-2 px-1">Unit Price</th>
                   <th className="py-2 px-1">Cost Price</th>
                   <th className="py-2 px-1 w-12">Action</th>
@@ -388,6 +519,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                   <tr key={i} className="border-b">
                     <td className="py-2 px-1">{item.name}</td>
                     <td className="py-2 px-1">{item.qty}</td>
+                    <td className="py-2 px-1">{item.unit || "piece"}</td>
                     <td className="py-2 px-1">{item.costPrice.toLocaleString()}</td>
                     <td className="py-2 px-1">
                       {(item.costPrice * item.qty).toLocaleString()}
@@ -405,13 +537,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                 ))}
                 {poItems.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center text-slate-400 py-4">
+                    <td colSpan={6} className="text-center text-slate-400 py-4">
                       No items added
                     </td>
                   </tr>
                 )}
                 <tr>
-                  <td colSpan={5} className="text-right py-2">
+                  <td colSpan={6} className="text-right py-2">
                     Total:{" "}
                     {poItems
                       .reduce(
@@ -556,10 +688,10 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Creating Purchase Order...</span>
+                <span>{initialData ? "Updating Purchase Order..." : "Creating Purchase Order..."}</span>
               </>
             ) : (
-              <span>Create Purchase Order</span>
+              <span>{initialData ? "Update Purchase Order" : "Create Purchase Order"}</span>
             )}
           </button>
           <p className="text-xs text-slate-400 mt-2 text-center">

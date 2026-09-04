@@ -163,12 +163,16 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
       const res = await updatePurchaseStatus(id, status);
       if (res.success) {
         toast.success("Status updated successfully");
-        // Reload with current filter status
-        loadPurchases(
-          pagination.currentPage,
-          pagination.itemsPerPage,
-          poFilter,
-        );
+        if (status === "arrived") {
+          setPoFilter("arrived");
+        } else {
+          // Reload with current filter status
+          loadPurchases(
+            pagination.currentPage,
+            pagination.itemsPerPage,
+            poFilter,
+          );
+        }
       } else {
         toast.error(res.message || "Failed to update status");
       }
@@ -366,34 +370,39 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   return (
     <div className="space-y-6">
       {/* Filter Tabs / Pills */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => setPoFilter("pending")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "pending"
-            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-            }`}
-        >
-          {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
-        </button>
-        <button
-          onClick={() => setPoFilter("arrived")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "arrived"
-            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-            }`}
-        >
-          {isMy ? "ပစ္စည်း ရောက်ပြီ" : "Arrived"}
-        </button>
-        <button
-          onClick={() => setPoFilter("deleted")}
-          className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "deleted"
-            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
-            }`}
-        >
-          {isMy ? "ဖျက်လိုက်သော စာရင်း" : "Deleted"}
-        </button>
+      <div className="flex items-center justify-between w-full mt-4">
+        <h2 className="text-2xl font-black text-slate-800">
+          {isMy ? "ဝယ်ယူမှု အော်ဒါစာရင်းများ" : "Purchase Orders List"}
+        </h2>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setPoFilter("pending")}
+            className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "pending"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+              }`}
+          >
+            {isMy ? "ပစ္စည်းစောင့်ဆိုင်းဆဲ" : "Pending"}
+          </button>
+          <button
+            onClick={() => setPoFilter("arrived")}
+            className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "arrived"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+              }`}
+          >
+            {isMy ? "ပစ္စည်းရောက်ရှိ" : "Arrived"}
+          </button>
+          <button
+            onClick={() => setPoFilter("deleted")}
+            className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${poFilter === "deleted"
+              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+              }`}
+          >
+            {isMy ? "စာရင်းပယ်ဖျက်" : "Deleted"}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -427,31 +436,30 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <div
-            className={`overflow-y-auto ${
-              tableHeight &&
-              (tableHeight.startsWith("h-") || tableHeight.startsWith("max-h-"))
+            className={`overflow-y-auto ${tableHeight &&
+                (tableHeight.startsWith("h-") || tableHeight.startsWith("max-h-"))
                 ? tableHeight
                 : ""
-            }`}
+              }`}
             style={
               !tableHeight ||
-              (!tableHeight.startsWith("h-") && !tableHeight.startsWith("max-h-"))
+                (!tableHeight.startsWith("h-") && !tableHeight.startsWith("max-h-"))
                 ? { height: tableHeight || "calc(100vh - 350px)" }
                 : undefined
             }
           >
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 border-b sticky top-0 z-10 text-slate-700 text-xs font-bold">
+              <thead className="bg-slate-50 border-b sticky top-0 z-10 text-black text-xs font-bold">
                 <tr>
                   <th className="p-4 w-12 text-center">No</th>
                   <th className="p-4">PO Number ID</th>
                   <th className="p-4">Date</th>
                   <th className="p-4">Supplier</th>
-                  <th className="p-4">Total Amount</th>
-                  <th className="p-4">Payment & Debt</th>
+                  <th className="p-4 whitespace-nowrap">Total Amount</th>
+                  <th className="p-4 whitespace-nowrap">Payment & Debt</th>
                   <th className="p-4">Status</th>
                   {/* <th className="p-4">Note</th> */}
-                  <th className="p-4">Total Remaining</th>
+                  <th className="p-4 whitespace-nowrap">Total Remaining</th>
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -471,13 +479,13 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                   return (
                     <tr key={po._id} className="hover:bg-slate-50">
                       <td className="p-4 text-center text-slate-400">
-                        {(currentPagination.currentPage - 1) * currentPagination.itemsPerPage + idx + 1}
+                        {String((currentPagination.currentPage - 1) * currentPagination.itemsPerPage + idx + 1).padStart(2, '0')}
                       </td>
-                      <td className="p-4 font-bold text-[#2216a8]">{po.poNumber}</td>
+                      <td className="p-4 font-bold text-[#2216a8] whitespace-nowrap">{po.poNumber}</td>
                       <td className="p-4">
                         {new Date(po.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 whitespace-nowrap">
                         {po.supplierId?.supplierName || "Unknown Supplier"}
                       </td>
                       <td className="p-4 font-bold text-slate-800">
@@ -495,7 +503,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                                   {isMy ? "ရက်ကျော်လွန်" : "OVERDUE"}
                                 </span>
                               ) : po.paymentStatus === "paid" ? (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#cfdbf7] text-slate-900">
                                   {isMy ? "အပြေချေပြီး" : "PAID"}
                                 </span>
                               ) : po.paymentStatus === "partially_paid" ? (
@@ -509,51 +517,33 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                               )}
                             </div>
 
-                            {po.paymentStatus !== "paid" && (
-                              <div className="text-[11px] font-bold text-slate-700">
-                                <span className="text-slate-400 font-medium">{isMy ? "ကျန်ငွေ: " : "Bal: "}</span>
-                                <span className="text-amber-700">{remainingDebt.toLocaleString()} MMK</span>
-                              </div>
-                            )}
 
-                            {po.dueDate && (
-                              <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-slate-400" />
-                                <span>Due: {new Date(po.dueDate).toLocaleDateString()}</span>
-                              </div>
-                            )}
                           </div>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
-                            {isMy ? "အပြေချေ (PAID)" : "PAID IN FULL"}
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#cfdbf7] text-slate-900">
+                            {isMy ? "အပြေချေပြီး" : "PAID"}
                           </span>
                         )}
                       </td>
 
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-black ${po.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
+                          className={`px-3 py-1 rounded-full text-[10px] font-black ${po.status === "pending"
+                            ? "bg-[#cff7d3] text-[#02542d] border border-[#02542d]"
+                            : "bg-green-100 text-green-700 border border-green-200"
                             }`}
                         >
-                          {po.status.toUpperCase()}
+                          {po.status === "pending" ? "Active" : po.status.toUpperCase()}
                         </span>
                       </td>
                       {/* <td className="p-4 text-slate-500 truncate max-w-xs">
                         {po.note}
                       </td> */}
-                      <td className="p-4 font-bold text-slate-800">{po.totalRemainingQuantity}</td>
+                      <td className="p-4 font-bold text-slate-800">{po.totalRemainingQuantity ?? 0}</td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex flex-row items-center gap-2 whitespace-nowrap">
                           {poFilter === "deleted" ? (
                             <>
-                              <button
-                                onClick={() => onViewPO?.(po)}
-                                className="text-xs bg-[#2216a8]/5 text-[#2216a8] border border-[#2216a8]/10 hover:bg-[#2216a8]/10 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                              >
-                                <Eye className="w-3.5 h-3.5" /> {isMy ? "ကြည့်ရန်" : "View"}
-                              </button>
                               <button
                                 onClick={() => handleRestore(po)}
                                 className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
@@ -565,29 +555,19 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="text-xs bg-[#2216a8]/5 text-[#2216a8] border border-[#2216a8]/10 hover:bg-[#2216a8]/10 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                className="text-xs bg-[#1f1fb8] text-white hover:bg-[#1f1fb8]/90 px-4 py-1.5 rounded-full font-bold transition-colors flex items-center gap-1 cursor-pointer"
                               >
-                                <Eye className="w-3.5 h-3.5" /> {isMy ? "ကြည့်ရန်" : "View"}
+                                {isMy ? "ပြင်မယ်" : "Edit"}
                               </button>
-                              {/* Quick Pay Button */}
-                              {isCredit && po.paymentStatus !== "paid" && (
-                                <button
-                                  onClick={() => handleOpenPayment(po)}
-                                  className="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-2.5 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                                  title="Record Payment"
-                                >
-                                  <CreditCard className="w-3.5 h-3.5" />
-                                  <span>{isMy ? "ငွေဆပ်မယ်" : "Pay"}</span>
-                                </button>
-                              )}
+
                               {po.status === "pending" && (
                                 <button
                                   onClick={() =>
                                     handleUpdateStatus(po._id, "arrived")
                                   }
-                                  className="flex items-center gap-1 text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors cursor-pointer"
+                                  className="text-xs bg-[#1f1fb8] text-white hover:bg-[#1f1fb8]/90 px-4 py-1.5 rounded-full font-bold transition-colors flex items-center gap-1 cursor-pointer"
                                 >
-                                  <Check className="w-3.5 h-3.5" /> {isMy ? "ရောက်ပြီ" : "Mark Arrived"}
+                                  {isMy ? "ပစ္စည်းရောက်ပြီ" : "Arrived"}
                                 </button>
                               )}
                               {(po.status === "arrived" ||
@@ -604,11 +584,12 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                               {po.status === "pending" && (
                                 <button
                                   onClick={() => handleSoftDelete(po)}
-                                  className="text-xs bg-red-55 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 border border-red-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                  className="text-xs bg-red-50 text-red-600 px-4 py-1.5 rounded-full hover:bg-red-100 border border-red-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" /> {isMy ? "ဖျက်မယ်" : "Delete"}
+                                  <Trash2 className="w-3.5 h-3.5" /> {isMy ? "ပယ်ဖျက်" : "Delete"}
                                 </button>
                               )}
+
                             </>
                           )}
                         </div>
@@ -623,18 +604,44 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={deleteModalOpen}
-        title="Delete Purchase Order"
-        message={`Are you sure you want to delete PO ${poToDelete?.poNumber}? This action can be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmButtonColor="red"
-        onConfirm={confirmDelete}
-        onCancel={cancelDelete}
-        isLoading={isDeleting}
-      />
+      {/* Modern Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
+            <h3 className="text-xl font-black text-slate-800 mb-2">
+              {isMy ? "ဖျက်ရန် သေချာပါသလား?" : "Delete Order"}
+            </h3>
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">
+              {isMy ? (
+                <>မှာယူထားသော <span className="font-bold text-slate-800">{poToDelete?.poNumber}</span> စာရင်းကို ဖျက်ရန်သေချာပါသလား? ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။</>
+              ) : (
+                <>Are you sure you want to delete PO <span className="font-bold text-slate-800">{poToDelete?.poNumber}</span>? This action cannot be undone.</>
+              )}
+            </p>
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                onClick={cancelDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                {isMy ? "မလုပ်တော့ပါ" : "Cancel"}
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+              >
+                {isDeleting ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                <span>{isMy ? "ဖျက်မည်" : "Delete"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Restore Confirmation Modal */}
       <ConfirmModal

@@ -25,6 +25,13 @@ export enum ProductCategory {
   OTHER = "Other",
 }
 
+export interface UomConversion {
+  unit: string;
+  factor: number;
+  convertFrom: string;
+  isDefaultSellingUnit: boolean;
+}
+
 export interface Product {
   id: string;
   _id?: string;
@@ -43,6 +50,7 @@ export interface Product {
   isExpiringSoon?: boolean;
   unitOfMeasure?: string;
   supplierIds?: (string | Supplier)[];
+  uomConversions?: UomConversion[];
 }
 
 export interface CartItem extends Product {
@@ -159,6 +167,9 @@ export interface PurchaseOrderItem {
   qty: number;
   costPrice: number;
   note?: string;
+  unit?: string;
+  factor?: number;
+  baseQuantity?: number;
 }
 
 export interface PurchaseOrder {

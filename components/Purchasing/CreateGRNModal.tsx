@@ -71,21 +71,41 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
     const po = purchaseOrders.find((p) => p._id === selectedPOId);
     if (!po) return;
 
-    const grnItemsForPO: ExtendedGRNItem[] = po.products
+    const groupedItems = new Map<string, ExtendedGRNItem>();
+
+    po.products
       .filter((item) => item.productStatus === "pending")
-      .map((item) => ({
-        productId: item.inventoryId,
-        productCode: item.productCode || "",
-        name: item.productName,
-        qtyOrdered: item.purchaseQuantity,
-        qtyReceived: item.purchaseQuantity,
-        qtyGood: item.purchaseQuantity,
-        qtyBad: 0,
-        costPrice: item.buyingPrice,
-        batchNumber: "",
-        expiryDate: "",
-        isSelected: true,
-      }));
+      .forEach((item: any) => {
+        const code = item.productCode || item.inventoryId;
+        const bQty = item.baseQuantity || (item.purchaseQuantity * (item.factor || 1));
+        const rQty = item.receivedQuantity || 0;
+        const remaining = Math.max(0, bQty - rQty);
+        
+        if (remaining <= 0) return;
+
+        if (groupedItems.has(code)) {
+          const existing = groupedItems.get(code)!;
+          existing.qtyOrdered += bQty;
+          existing.qtyReceived += remaining;
+          existing.qtyGood += remaining;
+        } else {
+          groupedItems.set(code, {
+            productId: item.inventoryId,
+            productCode: item.productCode || "",
+            name: item.productName,
+            qtyOrdered: bQty,
+            qtyReceived: remaining,
+            qtyGood: remaining,
+            qtyBad: 0,
+            costPrice: item.buyingPrice,
+            batchNumber: "",
+            expiryDate: "",
+            isSelected: true,
+          });
+        }
+      });
+
+    const grnItemsForPO = Array.from(groupedItems.values());
 
     setGRNItems(grnItemsForPO);
   };
@@ -262,7 +282,8 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
               </div>
               <button
                 onClick={loadPOItems}
-                className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                disabled={grnItems.length > 0}
+                className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Load PO Items
               </button>

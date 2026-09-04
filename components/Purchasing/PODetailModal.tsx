@@ -31,6 +31,7 @@ interface PODetailModalProps {
   purchaseId: string | null;
   suppliers: Supplier[];
   onOrderUpdate?: () => void;
+  onEditClick?: (po: any) => void;
 }
 
 export const PODetailModal: React.FC<PODetailModalProps> = ({
@@ -39,6 +40,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
   purchaseId,
   suppliers,
   onOrderUpdate,
+  onEditClick,
 }) => {
   const [purchase, setPurchase] = useState<PurchaseDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -214,7 +216,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
   };
 
   const totalQuantity =
-    purchase?.products.reduce((sum, p) => sum + p.purchaseQuantity, 0) || 0;
+    purchase?.products.reduce((sum, item) => sum + Number((item as any).baseQuantity || (item.purchaseQuantity * ((item as any).factor || 1))), 0) || 0;
 
   const isCredit = purchase?.paymentType === "credit";
   const remainingDebt = isCredit && purchase
@@ -426,10 +428,22 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
 
           {/* Products List */}
           <div>
-            <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2 text-sm">
-              <Package className="w-4 h-4 text-[#2216a8]" />
-              Products ({purchase.products.length})
-            </h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                <Package className="w-4 h-4 text-[#2216a8]" />
+                Products ({purchase.products.length})
+              </h3>
+              {onEditClick && (
+                <button
+                  type="button"
+                  onClick={() => onEditClick(purchase)}
+                  className="px-3 py-1.5 bg-[#2216a8] hover:bg-[#2216a8]/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Purchase Order</span>
+                </button>
+              )}
+            </div>
             <div className="bg-white rounded-xl border overflow-hidden">
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 border-b text-slate-600 font-bold">
@@ -470,7 +484,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
                         </span>
                       </td>
                       <td className="p-3 text-center font-bold text-blue-700">
-                        {product.purchaseQuantity}
+                        {product.purchaseQuantity} {((product as any).unit) ? `(${(product as any).unit})` : ''}
                       </td>
                       <td className="p-3 text-center font-bold text-emerald-700">
                         {product.receivedQuantity}

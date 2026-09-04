@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, PackageCheck, Plus } from "lucide-react";
+import { FileText, PackageCheck, Plus, PlusCircle } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { PurchaseOrderList } from "../components/Purchasing/PurchaseOrderList";
 import { CreatePOModal } from "../components/Purchasing/CreatePOModal";
@@ -9,6 +9,7 @@ import { GRNDetailModal } from "../components/Purchasing/GRNDetailModal";
 import { PODetailModal } from "../components/Purchasing/PODetailModal";
 import { TransferWarehouseModal } from "../components/Purchasing/TransferWarehouseModal";
 import { usePurchasing } from "../hooks/usePurchasing";
+import { useState } from "react";
 
 export const Purchasing: React.FC = () => {
   const { t, language } = useLanguage();
@@ -50,6 +51,19 @@ export const Purchasing: React.FC = () => {
     handleTransferGRN,
   } = usePurchasing();
 
+  const [editingPO, setEditingPO] = useState<any>(null);
+
+  const handleEditClick = (po: any) => {
+    setEditingPO(po);
+    setIsPODetailModalOpen(false);
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreatePOModal = () => {
+    setIsCreateModalOpen(false);
+    setEditingPO(null);
+  };
+
   const isMy = language === "my";
 
   return (
@@ -57,7 +71,7 @@ export const Purchasing: React.FC = () => {
       <div className="bg-white min-h-[96vh] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
 
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+        <div className="flex items-center justify-between w-full border-b border-gray-100 pb-5">
           <div>
             <h1 className="text-2xl font-black text-slate-850">
               {isMy ? "ပစ္စည်း အမှာစာရင်း" : "Purchasing Records"}
@@ -68,6 +82,20 @@ export const Purchasing: React.FC = () => {
                 : "Order items for shop, check list of ordered items"}
             </p>
           </div>
+          <button
+            onClick={() => {
+              if (activeTab === "po") {
+                setEditingPO(null);
+                setIsCreateModalOpen(true);
+              } else {
+                setIsCreateGRNModalOpen(true);
+              }
+            }}
+            className="bg-[#2216a8] hover:bg-[#2216a8]/90 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer transition-all"
+          >
+            <PlusCircle className="w-4.5 h-4.5" />
+            <span>{isMy ? "စာရင်းအသစ်ထည့်မယ်" : "Create New"}</span>
+          </button>
         </div>
 
         {/* Tabs Section */}
@@ -94,28 +122,6 @@ export const Purchasing: React.FC = () => {
           </button>
         </div>
 
-        {/* Active Tab Content Title and Action Button */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-black text-slate-800">
-            {activeTab === "po"
-              ? (isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders List")
-              : (isMy ? "ပစ္စည်းလက်ခံ စာရင်းများ" : "Goods Received Notes List")
-            }
-          </h2>
-          <button
-            onClick={() => {
-              if (activeTab === "po") {
-                setIsCreateModalOpen(true);
-              } else {
-                setIsCreateGRNModalOpen(true);
-              }
-            }}
-            className="bg-[#2216a8] hover:bg-[#2216a8]/90 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer transition-all"
-          >
-            <Plus className="w-4.5 h-4.5" />
-            <span>{isMy ? "စာရင်းအသစ်ထည့်မယ်" : "Create New"}</span>
-          </button>
-        </div>
 
         {/* Tab Contents */}
         <div className="w-full">
@@ -140,16 +146,18 @@ export const Purchasing: React.FC = () => {
               />
               <CreatePOModal
                 isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
+                onClose={closeCreatePOModal}
                 suppliers={suppliers}
                 products={products}
                 onSuccess={loadPurchases}
+                initialData={editingPO}
               />
               <PODetailModal
                 isOpen={isPODetailModalOpen}
                 onClose={() => setIsPODetailModalOpen(false)}
                 purchaseId={selectedPOId}
                 suppliers={suppliers}
+                onEditClick={handleEditClick}
                 onOrderUpdate={() => {
                   if (poFilter === "deleted") {
                     loadDeletedPurchases(

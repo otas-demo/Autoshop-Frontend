@@ -109,10 +109,10 @@ export const Inventory: React.FC = () => {
     reorderPoint: 0,
     reorderQuantity: 0,
     taxRate: 0,
-    status: "active",
     tags: [],
     note: "",
     supplierIds: [],
+    uomConversions: [],
   });
 
   // Map API product to local Product type
@@ -268,6 +268,7 @@ export const Inventory: React.FC = () => {
       tags: [],
       note: "",
       supplierIds: [],
+      uomConversions: [],
     });
     setError(null);
   };
@@ -368,6 +369,9 @@ export const Inventory: React.FC = () => {
             ({ quantity, price }) => ({ quantity, price }),
           );
         }
+        if (formData.uomConversions && formData.uomConversions.length > 0) {
+          apiPayload.uomConversions = formData.uomConversions;
+        }
 
         await updateProduct(editingId, apiPayload);
 
@@ -440,6 +444,9 @@ export const Inventory: React.FC = () => {
           ({ quantity, price }) => ({ quantity, price }),
         );
       }
+      if (formData.uomConversions && formData.uomConversions.length > 0) {
+        apiPayload.uomConversions = formData.uomConversions;
+      }
 
       await createProduct(apiPayload);
 
@@ -492,6 +499,7 @@ export const Inventory: React.FC = () => {
       supplierIds: (apiProduct?.supplierIds || []).map((s: any) =>
         typeof s === "object" ? s._id || s.id : s
       ),
+      uomConversions: apiProduct?.uomConversions || [],
     });
 
     setIsModalOpen(true);
@@ -720,7 +728,7 @@ export const Inventory: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             {/* Refresh Button */}
             <button
-              onClick={loadProducts}
+              onClick={() => loadProducts()}
               disabled={isFetching}
               className="px-4 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >

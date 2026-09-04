@@ -4,6 +4,7 @@ import {
   Eye,
   CheckCircle,
   Warehouse,
+  Store,
   ChevronLeft,
   ChevronRight,
   PackageCheck,
@@ -25,7 +26,7 @@ interface GRNListProps {
   setIsCreateModalOpen: (isOpen: boolean) => void;
   onViewGRN?: (grn: GRNData) => void;
   onStatusChange?: (page?: number, limit?: number) => void;
-  onTransferGRN?: (grn: GRNData) => void;
+  onTransferGRN?: (grn: GRNData, destination: 'warehouse' | 'storefront') => void;
   pagination: PaginationData;
   loading?: boolean;
 }
@@ -291,7 +292,7 @@ export const GRNList: React.FC<GRNListProps> = ({
                       {grn.notes || "-"}
                     </td> */}
                     <td className="p-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-row items-center gap-2 whitespace-nowrap">
                         <button
                           onClick={() => onViewGRN?.(grn)}
                           className="text-xs bg-[#2216a8]/5 text-[#2216a8] border border-[#2216a8]/10 hover:bg-[#2216a8]/10 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1 cursor-pointer"
@@ -314,12 +315,20 @@ export const GRNList: React.FC<GRNListProps> = ({
                           grn.lineItems.some(
                             (item) => item.availableQuantity > 0
                           ) && (
-                            <button
-                              onClick={() => onTransferGRN?.(grn)}
-                              className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                            >
-                              <Warehouse className="w-3.5 h-3.5" /> {isMy ? "လွှဲပြောင်းမယ်" : "Transfer"}
-                            </button>
+                            <>
+                              <button
+                                onClick={() => onTransferGRN?.(grn, 'warehouse')}
+                                className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <Warehouse className="w-3.5 h-3.5" /> {isMy ? "ဂိုဒေါင်သို့ လွှဲမယ်" : "Transfer to Warehouse"}
+                              </button>
+                              <button
+                                onClick={() => onTransferGRN?.(grn, 'storefront')}
+                                className="text-xs bg-teal-50 text-teal-600 px-3 py-1.5 rounded-lg hover:bg-teal-100 border border-teal-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <Store className="w-3.5 h-3.5" /> {isMy ? "ဆိုင်သို့ လွှဲမယ်" : "Transfer to Storefront"}
+                              </button>
+                            </>
                           )}
                       </div>
                     </td>

@@ -27,6 +27,7 @@ export interface StorefrontStockStorefront {
 
 export interface StorefrontStockItem {
   _id: string;
+  stockRecordId?: string;
   storefrontId: StorefrontStockStorefront;
   inventoryId: StorefrontStockInventory;
   quantity: number;

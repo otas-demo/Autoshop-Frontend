@@ -25,6 +25,7 @@ export interface WarehouseStockWarehouse {
 
 export interface WarehouseStockItem {
   _id: string;
+  stockRecordId?: string;
   inventoryId: WarehouseStockInventory;
   warehouseId: WarehouseStockWarehouse;
   quantity: number;

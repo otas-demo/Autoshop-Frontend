@@ -476,10 +476,11 @@ export const WarehouseDetail: React.FC = () => {
       const payload: UpdateWarehouseStockQuantityPayload = {
         quantityChange,
         reason: adjustmentReason.trim() || "",
+        warehouseId: id || selectedStockItem.warehouseId?._id,
       };
 
       const result = await updateWarehouseStockQuantity(
-        selectedStockItem._id,
+        selectedStockItem.stockRecordId || selectedStockItem._id,
         payload,
       );
 

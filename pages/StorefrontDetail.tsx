@@ -219,10 +219,11 @@ export const StorefrontDetail: React.FC = () => {
       const payload: UpdateStorefrontStockQuantityPayload = {
         quantityChange,
         reason: adjustmentReason.trim() || "",
+        storefrontId: id || selectedStockItem.storefrontId?._id,
       };
 
       const result = await updateStorefrontStockQuantity(
-        selectedStockItem._id,
+        selectedStockItem.stockRecordId || selectedStockItem._id,
         payload,
       );
 

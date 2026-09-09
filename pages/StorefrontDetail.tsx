@@ -1550,8 +1550,7 @@ export const StorefrontDetail: React.FC = () => {
                                   key={stockItem.inventoryId.productCode}
                                   value={stockItem.inventoryId.productCode}
                                 >
-                                  {stockItem.inventoryId.productName} (
-                                  {stockItem.inventoryId.productCode})
+                                  {stockItem.inventoryId.productName}
                                 </option>
                               ))}
                             </select>

@@ -11,6 +11,10 @@ import {
   AlertCircle,
   Plus,
   Package,
+  Clock,
+  PackageCheck,
+  Trash2,
+  LayoutDashboard,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchSupplierById } from "../services/Supplier/fetchSupplierById";
@@ -53,7 +57,16 @@ export const SupplierDetail: React.FC = () => {
   });
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"orders" | "products">("orders");
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products">("overview");
+  const [statusCounts, setStatusCounts] = useState<{
+    pending: number;
+    arrived: number;
+    deleted: number;
+  }>({
+    pending: 0,
+    arrived: 0,
+    deleted: 0,
+  });
   const [suppliedProducts, setSuppliedProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
@@ -61,6 +74,7 @@ export const SupplierDetail: React.FC = () => {
   const [deletedPOList, setDeletedPOList] = useState<ApiPurchaseOrder[]>([]);
   const [poLoading, setPoLoading] = useState(false);
   const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">("pending");
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "unpaid" | "paid">("all");
   const [poPagination, setPoPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -85,9 +99,10 @@ export const SupplierDetail: React.FC = () => {
     if (id) {
       loadSupplierData();
       loadMetadata();
-      loadPurchases(1, 10);
+      loadPurchases(1, 10, poFilter, paymentFilter);
       loadSupplierStats();
       loadSuppliedProducts();
+      loadStatusCounts();
     }
   }, [id]);
 
@@ -171,20 +186,50 @@ export const SupplierDetail: React.FC = () => {
     }
   };
 
-  const loadPurchases = async (page = 1, limit = 10, status?: string) => {
+  const loadStatusCounts = async () => {
+    if (!id) return;
+    try {
+      const [pendingRes, arrivedRes, deletedRes] = await Promise.all([
+        fetchPurchases({ page: 1, limit: 1, isDeleted: false, status: "pending", supplierId: id }),
+        fetchPurchases({ page: 1, limit: 1, isDeleted: false, status: "arrived", supplierId: id }),
+        fetchPurchases({ page: 1, limit: 1, isDeleted: true, supplierId: id }),
+      ]);
+      setStatusCounts({
+        pending: pendingRes.success ? pendingRes.pagination.totalItems : 0,
+        arrived: arrivedRes.success ? arrivedRes.pagination.totalItems : 0,
+        deleted: deletedRes.success ? deletedRes.pagination.totalItems : 0,
+      });
+    } catch (err) {
+      console.error("Error loading status counts:", err);
+    }
+  };
+
+  const loadPurchases = async (
+    page = 1,
+    limit = 10,
+    status?: string,
+    paymentStatus?: "all" | "unpaid" | "paid"
+  ) => {
     if (!id) return;
     setPoLoading(true);
     try {
+      const activeStatus = (status || poFilter) as "pending" | "arrived";
       const res = await fetchPurchases({
         page,
         limit,
         isDeleted: false,
-        status: status as any,
+        status: activeStatus,
+        paymentStatus: paymentStatus,
         supplierId: id,
       });
       if (res.success) {
         setPOList(res.data);
         setPoPagination(res.pagination);
+        if (activeStatus === "pending") {
+          setStatusCounts((prev) => ({ ...prev, pending: res.pagination.totalItems }));
+        } else if (activeStatus === "arrived") {
+          setStatusCounts((prev) => ({ ...prev, arrived: res.pagination.totalItems }));
+        }
       }
     } catch (error) {
       console.error("Error loading purchases:", error);
@@ -207,6 +252,7 @@ export const SupplierDetail: React.FC = () => {
       if (res.success) {
         setDeletedPOList(res.data);
         setDeletedPoPagination(res.pagination);
+        setStatusCounts((prev) => ({ ...prev, deleted: res.pagination.totalItems }));
       }
     } catch (error) {
       console.error("Error loading deleted purchases:", error);
@@ -232,9 +278,10 @@ export const SupplierDetail: React.FC = () => {
     if (poFilter === "deleted") {
       loadDeletedPurchases(deletedPoPagination.currentPage, deletedPoPagination.itemsPerPage);
     } else {
-      loadPurchases(poPagination.currentPage, poPagination.itemsPerPage, poFilter);
+      loadPurchases(poPagination.currentPage, poPagination.itemsPerPage, poFilter, paymentFilter);
     }
     loadSupplierStats();
+    loadStatusCounts();
   };
 
   return (
@@ -270,6 +317,69 @@ export const SupplierDetail: React.FC = () => {
           </button>
         </div>
 
+        {/* Main Tabs (Overview, Purchase Orders, Supplied Products) */}
+        <div className="flex items-center gap-3 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overview")}
+            className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "overview"
+                ? "bg-[#2216a8] text-white shadow-sm"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>{isMy ? "အကျဉ်းချုပ် & ငွေစာရင်း" : "Overview & Financials"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("orders")}
+            className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "orders"
+                ? "bg-[#2216a8] text-white shadow-sm"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            <span>{isMy ? "ဝယ်ယူမှု အော်ဒါစာရင်းများ" : "Purchase Orders"}</span>
+            <span
+              className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
+                activeTab === "orders"
+                  ? "bg-white/20 text-white"
+                  : "bg-slate-100 text-slate-700"
+              }`}
+            >
+              {supplierStats.count}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("products");
+              loadSuppliedProducts();
+            }}
+            className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "products"
+                ? "bg-[#2216a8] text-white shadow-sm"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <Package className="w-4 h-4" />
+            <span>{isMy ? "တင်သွင်းသော ကုန်ပစ္စည်းများ" : "Supplied Products"}</span>
+            <span
+              className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
+                activeTab === "products"
+                  ? "bg-white/20 text-white"
+                  : "bg-slate-100 text-slate-700"
+              }`}
+            >
+              {suppliedProducts.length}
+            </span>
+          </button>
+        </div>
+
         {loadingSupplier ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <Loader2 className="w-10 h-10 animate-spin text-[#2216a8]" />
@@ -277,170 +387,175 @@ export const SupplierDetail: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Supplier Info Card */}
-            {supplier && (
-              <div className="bg-[#fcfbf9] border border-gray-150 rounded-2xl p-6 flex flex-col md:flex-row gap-6 md:items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 bg-indigo-50 rounded-2xl text-[#2216a8]">
-                    <User className="w-8 h-8" />
+            {/* Overview Tab Content */}
+            {activeTab === "overview" && (
+              <div className="space-y-6">
+                {/* Supplier Info Card */}
+                {supplier && (
+                  <div className="bg-[#fcfbf9] border border-gray-150 rounded-2xl p-6 flex flex-col md:flex-row gap-6 md:items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 bg-indigo-50 rounded-2xl text-[#2216a8]">
+                        <User className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-slate-800">
+                          {supplier.supplierName}
+                        </h3>
+                        <p className="text-xs text-slate-400 font-bold mt-1">
+                          ID: {supplier._id || supplier.id}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l border-gray-200/60 pt-4 md:pt-0 md:pl-6 min-w-[250px]">
+                      <div className="p-3 bg-green-50 rounded-xl text-green-700">
+                        <Phone className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Contact Number
+                        </p>
+                        <p className="text-sm font-extrabold text-slate-700 mt-0.5">
+                          {supplier.contactNumber}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-800">
-                      {supplier.supplierName}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-bold mt-1">
-                      ID: {supplier._id || supplier.id}
-                    </p>
+                )}
+
+                {/* Financial Stats Grid (Total Amount, Orders, Paid, Debt) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Purchase Amount */}
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                    <div className="p-3.5 bg-indigo-50 text-[#2216a8] rounded-2xl">
+                      <DollarSign className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 font-bold">
+                        {isMy ? "စုစုပေါင်း ဝယ်ယူမှုပမာဏ" : "Total Purchases"}
+                      </p>
+                      <h4 className="text-lg font-black text-slate-850 mt-0.5">
+                        {supplierStats.totalAmount.toLocaleString()}{" "}
+                        <span className="text-xs font-bold text-slate-500">MMK</span>
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Total Orders Count */}
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                    <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl">
+                      <ShoppingCart className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 font-bold">
+                        {isMy ? "စုစုပေါင်း အော်ဒါအရေအတွက်" : "Total Orders"}
+                      </p>
+                      <h4 className="text-lg font-black text-slate-850 mt-0.5">
+                        {supplierStats.count.toLocaleString()}{" "}
+                        <span className="text-xs font-bold text-slate-500">
+                          {isMy ? "စောင်" : "POs"}
+                        </span>
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Total Paid Amount */}
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                    <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 font-bold">
+                        {isMy ? "ပေးချေပြီးငွေ စုစုပေါင်း" : "Total Paid"}
+                      </p>
+                      <h4 className="text-lg font-black text-emerald-600 mt-0.5">
+                        {supplierStats.totalPaid.toLocaleString()}{" "}
+                        <span className="text-xs font-bold text-slate-500">MMK</span>
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Total Remaining Debt */}
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                    <div
+                      className={`p-3.5 rounded-2xl ${
+                        supplierStats.totalRemaining > 0
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-slate-50 text-slate-400"
+                      }`}
+                    >
+                      <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 font-bold">
+                        {isMy ? "ပေးရန်ကျန် အကြွေး စုစုပေါင်း" : "Remaining Debt"}
+                      </p>
+                      <h4
+                        className={`text-lg font-black mt-0.5 ${
+                          supplierStats.totalRemaining > 0
+                            ? "text-amber-700"
+                            : "text-slate-700"
+                        }`}
+                      >
+                        {supplierStats.totalRemaining.toLocaleString()}{" "}
+                        <span className="text-xs font-bold text-slate-500">MMK</span>
+                      </h4>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l border-gray-200/60 pt-4 md:pt-0 md:pl-6 min-w-[250px]">
-                  <div className="p-3 bg-green-50 rounded-xl text-green-700">
-                    <Phone className="w-5 h-5" />
+                {/* Quick Action & Info Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="bg-[#f8faff] border border-indigo-100 rounded-2xl p-6 flex flex-col justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-[#2216a8] font-bold text-sm mb-1">
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>{isMy ? "ဝယ်ယူမှု အော်ဒါများ ကြည့်ရှုမည်" : "Purchase Orders"}</span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {isMy
+                          ? `ဤ Supplier ထံမှ စုစုပေါင်း အော်ဒါ ${supplierStats.count} စောင် မှတ်တမ်းတင်ထားပါသည်။ Table အပြည့်အစုံ ကြည့်ရန် နှိပ်ပါ။`
+                          : `Total of ${supplierStats.count} purchase orders recorded. Click to open full-page table.`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("orders")}
+                      className="self-start px-4 py-2 bg-[#2216a8] hover:bg-[#1b1187] text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs"
+                    >
+                      {isMy ? "အော်ဒါစာရင်း အပြည့်အစုံဖွင့်မည် →" : "View Full PO Table →"}
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Contact Number
-                    </p>
-                    <p className="text-sm font-extrabold text-slate-700 mt-0.5">
-                      {supplier.contactNumber}
-                    </p>
+
+                  <div className="bg-[#f6fbf9] border border-emerald-100 rounded-2xl p-6 flex flex-col justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm mb-1">
+                        <Package className="w-4 h-4" />
+                        <span>{isMy ? "တင်သွင်းသော ကုန်ပစ္စည်းများ ကြည့်ရှုမည်" : "Supplied Products"}</span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {isMy
+                          ? `ဤ Supplier နှင့် ချိတ်ဆက်ထားသော ကုန်ပစ္စည်း ${suppliedProducts.length} မျိုး ရှိပါသည်။ Table အပြည့်အစုံ ကြည့်ရန် နှိပ်ပါ။`
+                          : `${suppliedProducts.length} products linked to this supplier. Click to open full-page table.`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("products");
+                        loadSuppliedProducts();
+                      }}
+                      className="self-start px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs"
+                    >
+                      {isMy ? "ကုန်ပစ္စည်းစာရင်း အပြည့်အစုံဖွင့်မည် →" : "View Full Products Table →"}
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Financial Stats Grid (Total Amount, Orders, Paid, Debt) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Total Purchase Amount */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
-                <div className="p-3.5 bg-indigo-50 text-[#2216a8] rounded-2xl">
-                  <DollarSign className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold">
-                    {isMy ? "စုစုပေါင်း ဝယ်ယူမှုပမာဏ" : "Total Purchases"}
-                  </p>
-                  <h4 className="text-lg font-black text-slate-850 mt-0.5">
-                    {supplierStats.totalAmount.toLocaleString()}{" "}
-                    <span className="text-xs font-bold text-slate-500">MMK</span>
-                  </h4>
-                </div>
-              </div>
-
-              {/* Total Orders Count */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
-                <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl">
-                  <ShoppingCart className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold">
-                    {isMy ? "စုစုပေါင်း အော်ဒါအရေအတွက်" : "Total Orders"}
-                  </p>
-                  <h4 className="text-lg font-black text-slate-850 mt-0.5">
-                    {supplierStats.count.toLocaleString()}{" "}
-                    <span className="text-xs font-bold text-slate-500">
-                      {isMy ? "စောင်" : "POs"}
-                    </span>
-                  </h4>
-                </div>
-              </div>
-
-              {/* Total Paid Amount */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
-                <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl">
-                  <CreditCard className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold">
-                    {isMy ? "ပေးချေပြီးငွေ စုစုပေါင်း" : "Total Paid"}
-                  </p>
-                  <h4 className="text-lg font-black text-emerald-600 mt-0.5">
-                    {supplierStats.totalPaid.toLocaleString()}{" "}
-                    <span className="text-xs font-bold text-slate-500">MMK</span>
-                  </h4>
-                </div>
-              </div>
-
-              {/* Total Remaining Debt */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
-                <div
-                  className={`p-3.5 rounded-2xl ${supplierStats.totalRemaining > 0
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-slate-50 text-slate-400"
-                    }`}
-                >
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold">
-                    {isMy ? "ပေးရန်ကျန် အကြွေး စုစုပေါင်း" : "Remaining Debt"}
-                  </p>
-                  <h4
-                    className={`text-lg font-black mt-0.5 ${supplierStats.totalRemaining > 0
-                        ? "text-amber-700"
-                        : "text-slate-700"
-                      }`}
-                  >
-                    {supplierStats.totalRemaining.toLocaleString()}{" "}
-                    <span className="text-xs font-bold text-slate-500">MMK</span>
-                  </h4>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs for Orders & Supplied Products */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setActiveTab("orders")}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === "orders"
-                    ? "bg-[#2216a8] text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                <ShoppingCart className="w-4 h-4" />
-                <span>{isMy ? "ဝယ်ယူမှုအော်ဒါများ" : "Purchase Orders"}</span>
-                <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
-                    activeTab === "orders"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 text-slate-700"
-                  }`}
-                >
-                  {supplierStats.count}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("products");
-                  loadSuppliedProducts();
-                }}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === "products"
-                    ? "bg-[#2216a8] text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                <Package className="w-4 h-4" />
-                <span>{isMy ? "တင်သွင်းသော ကုန်ပစ္စည်းများ" : "Supplied Products"}</span>
-                <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
-                    activeTab === "products"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 text-slate-700"
-                  }`}
-                >
-                  {suppliedProducts.length}
-                </span>
-              </button>
-            </div>
-
-            {/* Tab Contents */}
-            {activeTab === "orders" ? (
+            {/* Purchase Orders Full-Page Tab */}
+            {activeTab === "orders" && (
               <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm">
                 <PurchaseOrderList
                   poList={poList}
@@ -456,10 +571,17 @@ export const SupplierDetail: React.FC = () => {
                   loading={poLoading}
                   poFilter={poFilter}
                   setPoFilter={setPoFilter}
-                  tableHeight="calc(100vh - 400px)"
+                  paymentFilter={paymentFilter}
+                  setPaymentFilter={setPaymentFilter}
+                  hideStatusFilter={false}
+                  hideHeaderTitle={false}
+                  tableHeight="calc(100vh - 350px)"
                 />
               </div>
-            ) : (
+            )}
+
+            {/* Supplied Products Full-Page Tab */}
+            {activeTab === "products" && (
               <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">

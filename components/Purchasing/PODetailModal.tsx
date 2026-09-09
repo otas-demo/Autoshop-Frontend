@@ -382,7 +382,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
                       {isMy ? "ငွေပေးချေမှုနှင့် အကြွေးအခြေအနေ" : "Payment & Credit Terms"}
                     </h4>
                   </div>
-                  {isCredit && remainingDebt > 0 && (
+                  {isCredit && remainingDebt > 0 && (purchase.status === "arrived" || purchase.status === "received") && (
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -519,7 +519,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
               </h3>
               <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50/90 border-b border-gray-200/80 text-slate-700 font-bold">
+                  <thead className="bg-slate-50 border-b border-gray-200 text-slate-700 font-bold">
                     <tr>
                       <th className="py-3.5 px-4 w-12 text-center">No</th>
                       <th className="py-3.5 px-4">{isMy ? "ပစ္စည်း အမည်" : "Product Name"}</th>
@@ -607,7 +607,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
                 <h3 className="font-bold text-slate-900 text-sm">
                   {isMy ? "ငွေပေးချေမှု မှတ်တမ်းများ" : "Payment History"}
                 </h3>
-                {isCredit && remainingDebt > 0 && (
+                {isCredit && remainingDebt > 0 && (purchase?.status === "arrived" || purchase?.status === "received") && (
                   <button
                     type="button"
                     onClick={handleOpenPaymentModal}
@@ -630,7 +630,7 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
               ) : (
                 <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-50/90 border-b border-gray-200/80 text-slate-700 font-bold">
+                    <thead className="bg-slate-50 border-b border-gray-200 text-slate-700 font-bold">
                       <tr>
                         <th className="py-3.5 px-4 w-12 text-center">No</th>
                         <th className="py-3.5 px-4">{isMy ? "ပေးချေသည့် ရက်စွဲ" : "Payment Date"}</th>

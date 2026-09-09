@@ -54,6 +54,9 @@ interface PurchaseOrderListProps {
   paymentFilter: "all" | "unpaid" | "paid";
   setPaymentFilter: (filter: "all" | "unpaid" | "paid") => void;
   tableHeight?: string;
+  hideStatusFilter?: boolean;
+  hideHeaderTitle?: boolean;
+  title?: string;
 }
 
 export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
@@ -72,6 +75,9 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   paymentFilter,
   setPaymentFilter,
   tableHeight,
+  hideStatusFilter = false,
+  hideHeaderTitle = false,
+  title,
 }) => {
   const { t, language } = useLanguage();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -383,45 +389,49 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
   return (
     <div className="space-y-6">
       {/* Title & Filter Pills Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-          {isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders List"}
-        </h2>
+      <div className={`flex flex-col lg:flex-row lg:items-center ${hideHeaderTitle ? "lg:justify-end" : "lg:justify-between"} gap-4`}>
+        {!hideHeaderTitle && (
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            {title || (isMy ? "ဝယ်ယူမှု အော်ဒါ စာရင်းများ" : "Purchase Orders List")}
+          </h2>
+        )}
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className={`flex items-center gap-3 flex-wrap ${hideHeaderTitle ? "ml-auto" : ""}`}>
           {/* Order Status Filters */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-full border border-slate-200/80">
-            <button
-              onClick={() => setPoFilter("pending")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                poFilter === "pending"
-                  ? "bg-white text-indigo-700 shadow-xs font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {isMy ? "ပစ္စည်း စောင့်ဆိုင်းနေဆဲ" : "Pending"}
-            </button>
-            <button
-              onClick={() => setPoFilter("arrived")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                poFilter === "arrived"
-                  ? "bg-white text-indigo-700 shadow-xs font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {isMy ? "ပစ္စည်းရောက်ရှိ" : "Arrived"}
-            </button>
-            <button
-              onClick={() => setPoFilter("deleted")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                poFilter === "deleted"
-                  ? "bg-white text-rose-700 shadow-xs font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {isMy ? "စာရင်း ပယ်ဖျက်" : "Deleted"}
-            </button>
-          </div>
+          {!hideStatusFilter && (
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-full border border-slate-200/80">
+              <button
+                onClick={() => setPoFilter("pending")}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  poFilter === "pending"
+                    ? "bg-white text-indigo-700 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {isMy ? "ပစ္စည်း စောင့်ဆိုင်းနေဆဲ" : "Pending"}
+              </button>
+              <button
+                onClick={() => setPoFilter("arrived")}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  poFilter === "arrived"
+                    ? "bg-white text-indigo-700 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {isMy ? "ပစ္စည်းရောက်ရှိ" : "Arrived"}
+              </button>
+              <button
+                onClick={() => setPoFilter("deleted")}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  poFilter === "deleted"
+                    ? "bg-white text-rose-700 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {isMy ? "စာရင်း ပယ်ဖျက်" : "Deleted"}
+              </button>
+            </div>
+          )}
 
           {/* Payment Status Filter */}
           {poFilter !== "deleted" && (
@@ -513,7 +523,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
             }
           >
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50/90 border-b border-gray-200/80 sticky top-0 z-10 text-slate-700 text-xs font-bold">
+              <thead className="bg-slate-50 border-b border-gray-200 sticky top-0 z-10 text-slate-700 text-xs font-bold">
                 <tr>
                   <th className="py-3.5 px-4 w-14 text-center">No</th>
                   <th className="py-3.5 px-4">PO Number ID</th>

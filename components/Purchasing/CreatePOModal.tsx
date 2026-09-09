@@ -113,9 +113,16 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
     });
   };
 
-  // Products belonging to the currently selected supplier
+  // Products belonging to the currently selected supplier (only active products)
   const supplierProducts = poSupplierId
-    ? products.filter((p) => isProductSupplied(p, poSupplierId))
+    ? products.filter(
+        (p) =>
+          isProductSupplied(p, poSupplierId) &&
+          (p.status === "active" || (!p.status && !(p as any).isDeleted)) &&
+          p.status !== "inactive" &&
+          p.status !== "discontinued" &&
+          !(p as any).isDeleted,
+      )
     : [];
 
   // Filtered by search query (name or productCode)

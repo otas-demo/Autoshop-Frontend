@@ -18,6 +18,7 @@ import { fetchExpenses, Expense } from "../services/Expense/fetchExpenses";
 import { createExpense } from "../services/Expense/createExpense";
 import { updateExpense } from "../services/Expense/updateExpense";
 import { deleteExpense } from "../services/Expense/deleteExpense";
+import { fetchExpenseCategories } from "../services/Expense/fetchExpenseCategories";
 import {
   fetchLocationProfiles,
   LocationProfile,
@@ -31,12 +32,26 @@ import {
   saveStoredDateRange,
 } from "../utils/dateRangeStorage";
 
+const DEFAULT_EXPENSE_CATEGORIES = [
+  "electricity",
+  "water",
+  "utilities",
+  "salary",
+  "maintenance",
+  "rent",
+  "transportation",
+  "other",
+];
+
 export const Expenses: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState<LocationProfile[]>([]);
   const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryInput, setCategoryInput] = useState("");
+  const [categoryShowDropdown, setCategoryShowDropdown] = useState(false);
 
   // Date filter — restored from sessionStorage on mount
   const [dateRange, setDateRange] = useState(
@@ -49,7 +64,7 @@ export const Expenses: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    category: "electricity",
+    category: "",
     amount: 0,
     date: new Date().toISOString().split("T")[0], // Format: YYYY-MM-DD
     notes: "",
@@ -69,7 +84,39 @@ export const Expenses: React.FC = () => {
 
   useEffect(() => {
     loadLocations();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const response = await fetchExpenseCategories();
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading expense categories:", error);
+    }
+  };
+
+  const getUniqueCategories = (): string[] => {
+    const catsSet = new Set<string>();
+    DEFAULT_EXPENSE_CATEGORIES.forEach((c) => catsSet.add(c));
+    categories.forEach((c) => {
+      if (c) catsSet.add(c);
+    });
+    expenses.forEach((e) => {
+      if (e.category) catsSet.add(e.category);
+    });
+    return Array.from(catsSet).sort((a, b) => a.localeCompare(b));
+  };
+
+  const getFilteredCategories = (input: string): string[] => {
+    const allCategories = getUniqueCategories();
+    if (!input.trim()) return allCategories;
+    return allCategories.filter((cat) =>
+      cat.toLowerCase().includes(input.toLowerCase()),
+    );
+  };
 
   const loadLocations = async () => {
     try {
@@ -114,6 +161,8 @@ export const Expenses: React.FC = () => {
 
   const handleOpenEdit = (expense: Expense) => {
     setEditingId(expense._id);
+    setCategoryInput("");
+    setCategoryShowDropdown(false);
     setFormData({
       category: expense.category,
       amount: expense.amount,
@@ -126,8 +175,10 @@ export const Expenses: React.FC = () => {
 
   const resetForm = () => {
     setEditingId(null);
+    setCategoryInput("");
+    setCategoryShowDropdown(false);
     setFormData({
-      category: "electricity",
+      category: "",
       amount: 0,
       date: new Date().toISOString().split("T")[0],
       notes: "",
@@ -171,6 +222,7 @@ export const Expenses: React.FC = () => {
           toast.success(t("expenses.expenseUpdated"));
           handleCloseModal();
           loadExpenses();
+          loadCategories();
         } else {
           toast.error(response.message || t("expenses.failedToUpdate"));
         }
@@ -194,6 +246,7 @@ export const Expenses: React.FC = () => {
           toast.success(t("expenses.expenseCreated"));
           handleCloseModal();
           loadExpenses();
+          loadCategories();
         } else {
           toast.error(response.message || t("expenses.failedToCreate"));
         }
@@ -503,27 +556,51 @@ export const Expenses: React.FC = () => {
                     <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <select
+                    <input
+                      type="text"
                       required
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white pr-10"
+                      value={categoryInput || formData.category}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCategoryInput(value);
+                        setFormData({ ...formData, category: value });
+                        setCategoryShowDropdown(true);
+                      }}
+                      onFocus={() => setCategoryShowDropdown(true)}
+                      onBlur={() => {
+                        setTimeout(() => setCategoryShowDropdown(false), 200);
+                      }}
+                      placeholder={
+                        t("expenses.categoryPlaceholder") ||
+                        (language === "my"
+                          ? "အမျိုးအစားရွေးပါ သို့မဟုတ် အသစ်ရိုက်ထည့်ပါ..."
+                          : "Select category or type new...")
                       }
-                    >
-                      <option value="electricity">
-                        {t("expenses.electricity")}
-                      </option>
-                      <option value="water">{t("expenses.water")}</option>
-                      <option value="utilities">{t("expenses.utilities")}</option>
-                      <option value="salary">{t("expenses.salary")}</option>
-                      <option value="maintenance">
-                        {t("expenses.maintenance")}
-                      </option>
-                      <option value="rent">{t("expenses.rent")}</option>
-                      <option value="other">{t("expenses.other")}</option>
-                    </select>
+                    />
                     <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    {categoryShowDropdown && (
+                      <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {getFilteredCategories(
+                          categoryInput || formData.category,
+                        ).map((category) => (
+                          <div
+                            key={category}
+                            className="px-4 py-2.5 hover:bg-indigo-50 hover:text-[#2216a8] text-slate-700 cursor-pointer text-sm font-medium transition-colors capitalize"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setFormData({ ...formData, category });
+                              setCategoryInput("");
+                              setCategoryShowDropdown(false);
+                            }}
+                          >
+                            {t(`expenses.${category}`) !== `expenses.${category}`
+                              ? t(`expenses.${category}`)
+                              : category}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

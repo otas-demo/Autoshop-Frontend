@@ -5,10 +5,18 @@ import {
   CreditCard,
   BarChart3,
   Gift,
+  PieChart,
 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 
-type TabType = "overall" | "foc" | "paid" | "credit" | "statistics" | "revenue";
+export type TabType =
+  | "overall"
+  | "foc"
+  | "paid"
+  | "credit"
+  | "statistics"
+  | "revenue"
+  | "expense";
 
 interface ReportTabsProps {
   activeTab: TabType;
@@ -76,6 +84,17 @@ export const ReportTabs: React.FC<ReportTabsProps> = ({
       >
         <Gift className="w-3.5 h-3.5" />
         <span>{t("reports.focProducts")}</span>
+      </button>
+      <button
+        onClick={() => onTabChange("expense")}
+        className={`px-4 py-3 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+          activeTab === "expense"
+            ? "border-b-2 border-[#2216a8] text-[#2216a8]"
+            : "text-slate-400 hover:text-slate-600"
+        }`}
+      >
+        <PieChart className="w-3.5 h-3.5" />
+        <span>{t("reports.expensesTab") || t("expenses.title") || "Expenses"}</span>
       </button>
     </div>
   );

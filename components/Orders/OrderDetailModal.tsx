@@ -78,7 +78,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       serviceCharge: 0,
       tax: 0,
       receiptSequenceNumber: parseInt(order.orderNumber?.split("/").pop() || "0", 10) || Date.now() % 10000,
-      cashierName: JSON.parse(localStorage.getItem("adminData") || "{}").name || "Cashier",
+      cashierName:
+        JSON.parse(localStorage.getItem("adminData") || "{}").name ||
+        JSON.parse(localStorage.getItem("adminData") || "{}").username ||
+        "Cashier",
       customerName: typeof order.creditPersonId === "object" ? order.creditPersonId?.name : "",
       customerPhone: typeof order.creditPersonId === "object" ? order.creditPersonId?.phone : "",
       customerAddress: typeof order.creditPersonId === "object" ? order.creditPersonId?.address || "" : "",

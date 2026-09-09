@@ -47,6 +47,20 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
 }) => {
   const isThermal = paperSize.startsWith("thermal");
 
+  const getLoggedInCashier = () => {
+    try {
+      const adminData = JSON.parse(localStorage.getItem("adminData") || "{}");
+      return adminData.name || adminData.username || "";
+    } catch {
+      return "";
+    }
+  };
+
+  const cashierName =
+    (receiptData.cashierName && receiptData.cashierName.trim() !== ""
+      ? receiptData.cashierName
+      : getLoggedInCashier()) || "Cashier";
+
   if (isThermal) {
     return (
       <div className="voucher-container" data-paper={paperSize}>
@@ -191,9 +205,9 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
         )}
 
         {/* Printed by */}
-        {receiptData.cashierName && (
+        {cashierName && (
           <div className="voucher-thermal-printed-by">
-            Printed by: {receiptData.cashierName}
+            Printed by: {cashierName}
           </div>
         )}
       </div>
@@ -331,9 +345,12 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
         </div>
       </div>
 
-      <div className="mt-8 sm:mt-16 text-center">
-        <div className="voucher-sign border-t border-gray-300 mt-6 sm:mt-8 pt-4">
-          <p className="text-xs text-right">
+      <div className="mt-8 sm:mt-16">
+        <div className="voucher-sign border-t border-gray-300 mt-6 sm:mt-8 pt-4 flex justify-between items-center text-xs">
+          <p className="text-left font-medium text-gray-700">
+            {cashierName ? `Printed by: ${cashierName}` : ""}
+          </p>
+          <p className="text-right">
             Authorised Sign: _________________
           </p>
         </div>

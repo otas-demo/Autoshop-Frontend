@@ -48,24 +48,37 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   >("cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredProducts = products.filter((product) =>
-    product.productName
-      ?.toLowerCase()
-      .includes(productSearchQuery.toLowerCase()),
-  );
+  const isProductSupplied = (p: Product, supplierId: string) => {
+    if (!supplierId) return false;
+    return (p.supplierIds || []).some((s: any) => {
+      const sId = typeof s === "object" ? s?._id || s?.id : s;
+      return String(sId) === String(supplierId);
+    });
+  };
 
-  const sortedFilteredProducts = [...filteredProducts].sort((a, b) => {
-    if (!poSupplierId) return 0;
-    const aSupplied = (a.supplierIds || []).some(
-      (s: any) => (typeof s === "object" ? s._id || s.id : s) === poSupplierId
-    );
-    const bSupplied = (b.supplierIds || []).some(
-      (s: any) => (typeof s === "object" ? s._id || s.id : s) === poSupplierId
-    );
-    if (aSupplied && !bSupplied) return -1;
-    if (!aSupplied && bSupplied) return 1;
-    return 0;
+  // Products belonging to the currently selected supplier
+  const supplierProducts = poSupplierId
+    ? products.filter((p) => isProductSupplied(p, poSupplierId))
+    : [];
+
+  // Filtered by search query (name or productCode)
+  const filteredProducts = supplierProducts.filter((product) => {
+    const query = productSearchQuery.trim().toLowerCase();
+    if (!query) return true;
+    const nameMatch = (product.productName || product.name || "")
+      .toLowerCase()
+      .includes(query);
+    const codeMatch = (product.productCode || "")
+      .toLowerCase()
+      .includes(query);
+    return nameMatch || codeMatch;
   });
+
+  const handleSupplierChange = (newSupplierId: string) => {
+    setPOSupplierId(newSupplierId);
+    setPOSelectedProduct("");
+    setProductSearchQuery("");
+  };
 
   const handleProductSelect = (productId: string, productName: string) => {
     setPOSelectedProduct(productId);
@@ -112,7 +125,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       );
       if (!product) return;
       productName = product.productName || product.name;
-      buyingPrice = product.buyingPrice;
+      buyingPrice = (product as any).buyingPrice ?? product.costPrice ?? 0;
     } else {
       // New product - generate ID
       productId = `new-${Date.now()}-${Math.random()
@@ -121,16 +134,45 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       productName = poNewProductName;
     }
 
-    const newItem: PurchaseOrderItem = {
-      productId,
-      name: productName,
-      qty: poQty,
-      costPrice: buyingPrice,
-      note: poItemNote,
-    };
+    setPOItems((prev) => {
+      const existingIndex = prev.findIndex(
+        (item) =>
+          (productId && item.productId === productId) ||
+          (productName &&
+            item.name.trim().toLowerCase() ===
+              productName.trim().toLowerCase()),
+      );
 
-    setPOItems((prev) => [...prev, newItem]);
+      if (existingIndex > -1) {
+        // Merge quantity into existing item row
+        const updated = [...prev];
+        const existingItem = updated[existingIndex];
+        updated[existingIndex] = {
+          ...existingItem,
+          qty: existingItem.qty + poQty,
+          costPrice: buyingPrice || existingItem.costPrice,
+          note: poItemNote
+            ? existingItem.note
+              ? `${existingItem.note}, ${poItemNote}`
+              : poItemNote
+            : existingItem.note,
+        };
+        return updated;
+      } else {
+        const newItem: PurchaseOrderItem = {
+          productId,
+          name: productName,
+          qty: poQty,
+          costPrice: buyingPrice,
+          note: poItemNote,
+        };
+        return [...prev, newItem];
+      }
+    });
+
     setPOSelectedProduct("");
+    setProductSearchQuery("");
+    setShowProductDropdown(false);
     setPONewProductName("");
     setPOQty(1);
     setPOItemNote("");
@@ -240,7 +282,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     : "border-slate-200 bg-white text-slate-800 focus:border-[#2216a8]"
                 }`}
                 value={poSupplierId}
-                onChange={(e) => setPOSupplierId(e.target.value)}
+                onChange={(e) => handleSupplierChange(e.target.value)}
               >
                 <option value="">-- Select Supplier --</option>
                 {suppliers.map((supplier) => (
@@ -255,17 +297,35 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
             </div>
 
             <div className="border-t pt-4 mt-4">
-              <label className="block text-xs font-bold text-slate-500 mb-2">
-                Add Item to PO
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-bold text-slate-700">
+                  Add Item to PO
+                </label>
+                {poSupplierId && (
+                  <span className="text-[11px] text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                    {supplierProducts.length} မျိုး ရရှိနိုင်ပါသည်
+                  </span>
+                )}
+              </div>
               <div className="mb-2 relative" ref={productDropdownRef}>
                 <input
                   type="text"
-                  className="w-full border rounded p-2 pr-8 text-sm"
-                  placeholder="Type to search and select product..."
+                  disabled={!poSupplierId}
+                  className={`w-full border rounded-xl p-2.5 pr-8 text-sm transition-all ${
+                    !poSupplierId
+                      ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                      : "bg-white text-slate-800 border-slate-300 focus:border-[#2216a8]"
+                  }`}
+                  placeholder={
+                    !poSupplierId
+                      ? "ကျေးဇူးပြု၍ အထက်တွင် Supplier အရင်ရွေးချယ်ပါ..."
+                      : "Type to search and select product..."
+                  }
                   value={productSearchQuery}
                   onChange={(e) => handleProductInputChange(e.target.value)}
-                  onFocus={() => setShowProductDropdown(true)}
+                  onFocus={() => {
+                    if (poSupplierId) setShowProductDropdown(true);
+                  }}
                 />
                 {productSearchQuery && (
                   <button
@@ -279,44 +339,58 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     <X className="w-4 h-4" />
                   </button>
                 )}
-                {showProductDropdown && (
-                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-xl mt-1 max-h-60 overflow-y-auto shadow-lg">
-                    {sortedFilteredProducts.length > 0 ? (
-                      sortedFilteredProducts.map((p) => {
-                        const isSupplied =
-                          Boolean(poSupplierId) &&
-                          (p.supplierIds || []).some(
-                            (s: any) =>
-                              (typeof s === "object" ? s._id || s.id : s) ===
-                              poSupplierId
-                          );
+                {showProductDropdown && poSupplierId && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-xl mt-1 max-h-60 overflow-y-auto shadow-xl">
+                    {filteredProducts.length > 0 ? (
+                      filteredProducts.map((p) => {
+                        const price =
+                          (p as any).buyingPrice ?? p.costPrice ?? 0;
+                        const existingInPO = poItems.find(
+                          (item) => item.productId === (p._id || p.id),
+                        );
                         return (
                           <div
                             key={p._id || p.id}
-                            className={`px-3.5 py-2.5 hover:bg-indigo-50/70 cursor-pointer text-sm flex items-center justify-between transition-colors ${
-                              isSupplied ? "bg-indigo-50/30" : ""
+                            className={`px-3.5 py-2.5 hover:bg-indigo-50/80 cursor-pointer text-sm flex items-center justify-between transition-colors border-b border-gray-50 last:border-0 ${
+                              existingInPO ? "bg-indigo-50/30" : ""
                             }`}
                             onClick={() =>
                               handleProductSelect(
                                 p._id || p.id,
-                                p.productName || p.name
+                                p.productName || p.name,
                               )
                             }
                           >
-                            <span className="font-medium text-slate-800">
-                              {p.productName || p.name}
-                            </span>
-                            {isSupplied && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#f0effb] text-[#2216a8] border border-indigo-200/60">
-                                ဤ Supplier ၏ ပစ္စည်း
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-slate-800">
+                                  {p.productName || p.name}
+                                </span>
+                                {existingInPO && (
+                                  <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-100/70 border border-indigo-200 px-1.5 py-0.5 rounded">
+                                    ထည့်ပြီး: {existingInPO.qty} ခု
+                                  </span>
+                                )}
+                              </div>
+                              {p.productCode && (
+                                <span className="text-[11px] text-slate-400">
+                                  Code: {p.productCode}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs font-semibold text-indigo-900">
+                                {price.toLocaleString()} Ks
                               </span>
-                            )}
+                            </div>
                           </div>
                         );
                       })
                     ) : (
-                      <div className="px-3 py-2 text-gray-500 text-sm">
-                        No products found
+                      <div className="px-4 py-4 text-center text-slate-500 text-xs font-medium">
+                        {supplierProducts.length === 0
+                          ? "ဤ Supplier နှင့် ချိတ်ဆက်ထားသော ပစ္စည်း Inventory ထဲတွင် မရှိသေးပါ"
+                          : "ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ"}
                       </div>
                     )}
                   </div>

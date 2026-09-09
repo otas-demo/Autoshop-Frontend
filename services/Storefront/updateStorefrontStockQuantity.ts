@@ -3,6 +3,7 @@ import axios from "../axios";
 export interface UpdateStorefrontStockQuantityPayload {
   quantityChange: number; // Positive for increase, negative for decrease
   reason: string;
+  storefrontId?: string;
 }
 
 interface UpdateStorefrontStockQuantityResponse {

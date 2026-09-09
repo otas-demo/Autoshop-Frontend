@@ -38,6 +38,10 @@ import {
   fetchAllStorefrontsFOCOrders,
   FOCOrder,
 } from "../services/Reports/fetchFOCOrders";
+import {
+  fetchExpenses,
+  Expense,
+} from "../services/Expense/fetchExpenses";
 import { ReportsHeader } from "../components/Reports/ReportsHeader";
 import { generateReportPDF } from "../components/Reports/generateReportPDF";
 import { ReportTabs } from "../components/Reports/ReportTabs";
@@ -47,8 +51,16 @@ import { CreditOrdersTab } from "../components/Reports/CreditOrdersTab";
 import { SaleStatisticsTab } from "../components/Reports/SaleStatisticsTab";
 import { TotalRevenueTab } from "../components/Reports/TotalRevenueTab";
 import { FOCTab } from "../components/Reports/FOCTab";
+import { ExpenseReportTab } from "../components/Reports/ExpenseReportTab";
 
-type TabType = "overall" | "paid" | "credit" | "statistics" | "revenue" | "foc";
+type TabType =
+  | "overall"
+  | "paid"
+  | "credit"
+  | "statistics"
+  | "revenue"
+  | "foc"
+  | "expense";
 
 // Helper function to get today's date
 const getToday = () => {
@@ -59,6 +71,7 @@ const getToday = () => {
 
 export const Reports: React.FC = () => {
   const [storefronts, setStorefronts] = useState<LocationProfile[]>([]);
+  const [allLocations, setAllLocations] = useState<LocationProfile[]>([]);
   const [saleReports, setSaleReports] = useState<SaleReportResponse[]>([]);
   const [allStorefrontsReport, setAllStorefrontsReport] =
     useState<SaleReportResponse | null>(null);
@@ -89,12 +102,14 @@ export const Reports: React.FC = () => {
   const [allStorefrontsStock, setAllStorefrontsStock] = useState<
     StorefrontStockItem[]
   >([]);
+  const [expensesData, setExpensesData] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingPaidOrders, setLoadingPaidOrders] = useState(false);
   const [loadingCreditOrders, setLoadingCreditOrders] = useState(false);
   const [loadingStatistics, setLoadingStatistics] = useState(false);
   const [loadingRevenue, setLoadingRevenue] = useState(false);
   const [loadingFOC, setLoadingFOC] = useState(false);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
   const [selectedStorefront, setSelectedStorefront] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<TabType>("overall");
   // Initialize dates to today
@@ -121,6 +136,8 @@ export const Reports: React.FC = () => {
         loadRevenueData();
       } else if (activeTab === "foc") {
         loadFOCOrders();
+      } else if (activeTab === "expense") {
+        loadExpensesReport();
       } else if (activeTab === "overall") {
         loadReports();
       }
@@ -136,6 +153,8 @@ export const Reports: React.FC = () => {
         loadRevenueData();
       } else if (activeTab === "foc") {
         loadAllStorefrontsFOCOrders();
+      } else if (activeTab === "expense") {
+        loadExpensesReport();
       } else if (activeTab === "overall") {
         loadReports();
       }
@@ -151,13 +170,43 @@ export const Reports: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const loadExpensesReport = async () => {
+    setLoadingExpenses(true);
+    try {
+      const startDateStr = formatDateForAPI(startDate);
+      const endDateStr = formatDateForAPI(endDate);
+      const locationId =
+        selectedStorefront !== "all" ? selectedStorefront : undefined;
+      const response = await fetchExpenses(
+        startDateStr,
+        endDateStr,
+        locationId,
+      );
+      if (response.success && response.data) {
+        setExpensesData(response.data);
+      } else {
+        setExpensesData([]);
+      }
+    } catch (error) {
+      console.error("Error loading expenses report:", error);
+      toast.error("Failed to load expenses report");
+      setExpensesData([]);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  };
+
   const loadReports = async () => {
     setLoading(true);
     try {
       const locationResponse = await fetchLocationProfiles();
       if (locationResponse.success) {
-        const storefrontList = locationResponse.data.filter(
-          (loc) => loc.type === "storefront" && loc.status === "active",
+        const allLocs = locationResponse.data.filter(
+          (loc) => loc.status === "active",
+        );
+        setAllLocations(allLocs);
+        const storefrontList = allLocs.filter(
+          (loc) => loc.type === "storefront",
         );
         setStorefronts(storefrontList.reverse());
 
@@ -522,6 +571,8 @@ export const Reports: React.FC = () => {
           !allStorefrontsPaidOrdersReport)
       ) {
         loadRevenueData();
+      } else if (tab === "expense") {
+        loadExpensesReport();
       }
     }
   };
@@ -548,6 +599,8 @@ export const Reports: React.FC = () => {
       }
     } else if (activeTab === "revenue") {
       loadRevenueData();
+    } else if (activeTab === "expense") {
+      loadExpensesReport();
     }
   };
 
@@ -589,6 +642,7 @@ export const Reports: React.FC = () => {
       creditOrdersReport: effectiveCreditReport,
       productSalesStatistics: effectiveStatsReport,
       focOrders: effectiveFOCOrders,
+      expenses: expensesData,
       selectedStorefront,
       storefrontName,
       startDate,
@@ -654,17 +708,18 @@ export const Reports: React.FC = () => {
     <div className="w-full">
       <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
         <ReportsHeader
-        storefronts={storefronts}
-        selectedStorefront={selectedStorefront}
-        onStorefrontChange={setSelectedStorefront}
-        onRefresh={handleRefresh}
-        loading={loading}
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={handleDateRangeChange}
-        onGeneratePDF={handleGeneratePDF}
-      // singleDate={activeTab === "overall"}
-      />
+          storefronts={storefronts}
+          locations={allLocations}
+          activeTab={activeTab}
+          selectedStorefront={selectedStorefront}
+          onStorefrontChange={setSelectedStorefront}
+          onRefresh={handleRefresh}
+          loading={loading}
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={handleDateRangeChange}
+          onGeneratePDF={handleGeneratePDF}
+        />
 
       <ReportTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -746,6 +801,14 @@ export const Reports: React.FC = () => {
             (sum, record) => sum + (record.paidAmount || 0),
             0,
           )}
+        />
+      )}
+
+      {/* Expense Tab */}
+      {activeTab === "expense" && (
+        <ExpenseReportTab
+          expenses={expensesData}
+          loading={loadingExpenses}
         />
       )}
 

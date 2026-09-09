@@ -6,6 +6,8 @@ import { useLanguage } from "../../context/LanguageContext";
 
 interface ReportsHeaderProps {
   storefronts: LocationProfile[];
+  locations?: LocationProfile[];
+  activeTab?: string;
   selectedStorefront: string;
   onStorefrontChange: (storefrontId: string) => void;
   onRefresh: () => void;
@@ -20,6 +22,8 @@ interface ReportsHeaderProps {
 
 export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
   storefronts,
+  locations,
+  activeTab,
   selectedStorefront,
   onStorefrontChange,
   onRefresh,
@@ -32,6 +36,9 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
   onGeneratePDF,
 }) => {
   const { t } = useLanguage();
+  const isExpenseTab = activeTab === "expense";
+  const displayLocations = isExpenseTab && locations && locations.length > 0 ? locations : storefronts;
+
   return (
     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
       <div>
@@ -44,7 +51,7 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
       </div>
       
       <div className="flex flex-wrap items-center gap-3">
-        {/* Storefront Selector dropdown styled as a pill */}
+        {/* Storefront / Location Selector dropdown styled as a pill */}
         <div className="relative flex items-center">
           <Home className="absolute left-4 w-4 h-4 text-[#2216a8]" />
           <select
@@ -52,10 +59,17 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             onChange={(e) => onStorefrontChange(e.target.value)}
             className="pl-10 pr-8 py-2 text-sm font-semibold rounded-full border border-indigo-200 text-[#2216a8] bg-white hover:bg-indigo-50/50 transition-all outline-none cursor-pointer appearance-none"
           >
-            <option value="all">{t("reports.allStorefronts")}</option>
-            {storefronts.map((sf) => (
-              <option key={sf._id} value={sf._id}>
-                {sf.locationName || sf.storefrontName}
+            <option value="all">
+              {isExpenseTab
+                ? (t("reports.allLocations") || "All Locations")
+                : (t("reports.allStorefronts") || "All Storefronts")}
+            </option>
+            {displayLocations.map((loc) => (
+              <option key={loc._id} value={loc._id}>
+                {loc.locationName || (loc as any).storefrontName}
+                {isExpenseTab && loc.type
+                  ? ` (${loc.type.charAt(0).toUpperCase() + loc.type.slice(1)})`
+                  : ""}
               </option>
             ))}
           </select>

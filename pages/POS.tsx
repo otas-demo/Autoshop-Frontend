@@ -560,6 +560,7 @@ export const POS: React.FC = () => {
             Date.now() % 10000,
           cashierName:
             JSON.parse(localStorage.getItem("adminData") || "{}").name ||
+            JSON.parse(localStorage.getItem("adminData") || "{}").username ||
             "Cashier",
           customerName:
             creditPersonas.find((cp) => cp._id === selectedCreditPersonId)

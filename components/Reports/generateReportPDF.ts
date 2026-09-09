@@ -5,9 +5,17 @@ import { PaidOrdersReportResponse } from "../../services/Reports/fetchPaidOrders
 import { CreditOrdersReportResponse } from "../../services/Reports/fetchCreditOrdersReport";
 import { ProductSalesStatisticsResponse } from "../../services/Reports/fetchProductSalesStatistics";
 import { FOCOrder } from "../../services/Reports/fetchFOCOrders";
+import { Expense } from "../../services/Expense/fetchExpenses";
 import { getPaymentMethodLabel } from "../Orders/orderUtils";
 
-type TabType = "overall" | "paid" | "credit" | "statistics" | "revenue" | "foc";
+type TabType =
+  | "overall"
+  | "paid"
+  | "credit"
+  | "statistics"
+  | "revenue"
+  | "foc"
+  | "expense";
 
 interface ReportPDFParams {
   activeTab: TabType;
@@ -26,6 +34,7 @@ interface ReportPDFParams {
   creditOrdersReport: CreditOrdersReportResponse | null;
   productSalesStatistics: ProductSalesStatisticsResponse | null;
   focOrders: FOCOrder[];
+  expenses?: Expense[];
   selectedStorefront: string;
   storefrontName: string;
   startDate: Date | null;
@@ -496,6 +505,71 @@ const generateFOCPDF = (doc: jsPDF, params: ReportPDFParams) => {
   }
 };
 
+const generateExpensePDF = (doc: jsPDF, params: ReportPDFParams) => {
+  addHeader(
+    doc,
+    "EXPENSE REPORT",
+    params.storefrontName,
+    params.startDate,
+    params.endDate,
+  );
+
+  const expenses = params.expenses || [];
+  const totalAmount = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalEntries = expenses.length;
+
+  autoTable(doc, {
+    startY: 44,
+    head: [["Metric", "Value"]],
+    body: [
+      ["Total Expenses", formatCurrency(totalAmount)],
+      ["Total Entries", String(totalEntries)],
+      [
+        "Average per Entry",
+        formatCurrency(
+          totalEntries > 0 ? Math.round(totalAmount / totalEntries) : 0,
+        ),
+      ],
+    ],
+    theme: "plain",
+    styles: { fontSize: 10, cellPadding: 2 },
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 } },
+  });
+
+  const finalY = (doc as any).lastAutoTable?.finalY || 65;
+
+  autoTable(doc, {
+    startY: finalY + 8,
+    head: [
+      [
+        "No",
+        "Date",
+        "Category",
+        "Location",
+        "Notes",
+        "Recorded By",
+        "Amount",
+      ],
+    ],
+    body: expenses.map((e, idx) => [
+      String(idx + 1),
+      formatDate(new Date(e.date)),
+      e.category
+        ? e.category.charAt(0).toUpperCase() + e.category.slice(1)
+        : "-",
+      e.locationId?.locationName ||
+        (e.locationId as any)?.storefrontName ||
+        "-",
+      (e.notes || "-").substring(0, 25),
+      e.adminId?.name || "-",
+      formatCurrency(e.amount),
+    ]),
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [34, 22, 168] },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+  });
+};
+
 export const generateReportPDF = (params: ReportPDFParams) => {
   const doc = new jsPDF();
 
@@ -514,6 +588,9 @@ export const generateReportPDF = (params: ReportPDFParams) => {
       break;
     case "foc":
       generateFOCPDF(doc, params);
+      break;
+    case "expense":
+      generateExpensePDF(doc, params);
       break;
     default:
       generateOverallPDF(doc, params);

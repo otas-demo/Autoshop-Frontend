@@ -551,7 +551,7 @@ export const en = {
     focProducts: "FOC Products",
     storefrontStatus: "Storefront Status",
     totalSales: "Total Sales",
-    totalProfit: "Total Profit",
+    totalProfit: "Total Paid",
     outstandingCredits: "Outstanding Credits",
     totalOrders: "Total Orders",
     expensesTab: "Expenses",

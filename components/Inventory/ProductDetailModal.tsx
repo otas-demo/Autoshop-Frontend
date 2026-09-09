@@ -630,7 +630,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       })()
                     ) : (
                       (() => {
-                        const storefrontLocations = product.stockAvailability.storefronts.locations.filter(
+                        const storefrontLocations = product.stockAvailability.storefronts.locations.reverse().filter(
                           (loc) => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase()
                         );
                         return storefrontLocations.length > 0 ? (

@@ -444,11 +444,15 @@ export const Expenses: React.FC = () => {
 
                         {/* Date */}
                         <td className="px-4 py-4 text-slate-600 text-xs font-medium whitespace-nowrap">
-                          {new Date(expense.date).toLocaleDateString("en-US")}{" "}
-                          {new Date(expense.date).toLocaleTimeString("en-US", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {(() => {
+                            // expense.date = "YYYY-MM-DD" — no time stored.
+                            // new Date("YYYY-MM-DD") parses as UTC midnight → shows 06:30 AM in Myanmar.
+                            // Fix: read parts directly, never pass through Date constructor.
+                            const raw = (expense.date || "").split("T")[0]; // "2026-09-09"
+                            const [y, m, d] = raw.split("-");
+                            if (!y || !m || !d) return raw || "-";
+                            return `${parseInt(m)}/${parseInt(d)}/${y}`;
+                          })()}
                         </td>
 
                         {/* Category */}

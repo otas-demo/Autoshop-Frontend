@@ -557,7 +557,7 @@ export const my = {
     focProducts: "FOC ပစ္စည်းများ",
     storefrontStatus: "ဆိုင်ခန်း အခြေအနေ",
     totalSales: "စုစုပေါင်း ရောင်းရငွေ",
-    totalProfit: "စုစုပေါင်း ကျန်ငွေ",
+    totalProfit: "စုစုပေါင်း ပေးချေငွေ",
     outstandingCredits: "ရရန်ကျန်သေးတဲ့ အကြွေးများ",
     totalOrders: "စုစုပေါင်း Order",
     expensesTab: "ကုန်ကျစရိတ်",

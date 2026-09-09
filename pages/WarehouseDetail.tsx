@@ -210,7 +210,7 @@ export const WarehouseDetail: React.FC = () => {
           }
           if (searchTerm && searchTerm.trim()) {
             const term = searchTerm.toLowerCase();
-            data = data.filter(item => 
+            data = data.filter(item =>
               item.inventoryId?.productName?.toLowerCase().includes(term) ||
               item.inventoryId?.productCode?.toLowerCase().includes(term) ||
               item.batchNumber?.toLowerCase().includes(term)
@@ -575,7 +575,7 @@ export const WarehouseDetail: React.FC = () => {
     const usedCodes = transferItems
       .map((i) => i.productCode)
       .filter((code) => code !== currentCode);
-    
+
     const requiredBatch = transferItems.length > 1 ? transferItems[0].batchNumber : null;
 
     // If requiredBatch is set, use batchStockItems (API already filtered by batch)
@@ -785,11 +785,10 @@ export const WarehouseDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowExpiringOnly(!showExpiringOnly)}
-                className={`w-full px-4 py-2 border rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer ${
-                  showExpiringOnly 
-                    ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100" 
-                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer ${showExpiringOnly
+                  ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  }`}
               >
                 <AlertTriangle className="w-4 h-4" />
                 {showExpiringOnly ? "Showing Expiring Soon" : "Filter Expiring Soon"}
@@ -827,17 +826,10 @@ export const WarehouseDetail: React.FC = () => {
               </button>
             )}
           </div>
-
-          {/* Filter Results Summary */}
-          {(searchTerm || selectedCategory !== "all" || showExpiringOnly) && (
-            <div className="mt-3 text-sm text-slate-500">
-              Showing {stockItems.length} of {totalItems} items
-            </div>
-          )}
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
           <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-primary/20 rounded-lg">
@@ -847,7 +839,7 @@ export const WarehouseDetail: React.FC = () => {
                 <p className="text-xs sm:text-sm text-slate-500">
                   Total Products
                 </p>
-                <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
+                <p className="text-md sm:text-lg font-bold text-slate-800 truncate">
                   {totalProduct}
                 </p>
               </div>
@@ -863,35 +855,23 @@ export const WarehouseDetail: React.FC = () => {
                 <p className="text-xs sm:text-sm text-slate-500">
                   Total Quantity
                 </p>
-                <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
+                <p className="text-md sm:text-lg font-bold text-slate-800 truncate">
                   {totalproductQuantity}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-slate-500">Low Stock</p>
-              <p className="text-lg sm:text-2xl font-bold text-slate-800 truncate">
-                {filteredLowStockCount}
-              </p>
-            </div>
-          </div>
-        </div> */}
 
-          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-indigo-100 sm:col-span-2 lg:col-span-1">
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-indigo-100">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-indigo-100 rounded-lg">
                 <Package className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm text-slate-500">Total Amount</p>
-                <p className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">
+                <p className="text-md sm:text-lg font-bold text-indigo-600 truncate">
                   {totalAmount.toLocaleString()}{" "}
                   <span className="hidden sm:inline">MMK</span>
                 </p>

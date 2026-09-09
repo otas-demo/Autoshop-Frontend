@@ -162,7 +162,7 @@ export const SupplierDetail: React.FC = () => {
       if (supplierRes.success) {
         setSuppliers(supplierRes.data);
       }
-      const productRes = await fetchProducts();
+      const productRes = await fetchProducts(undefined, undefined, undefined, "active");
       if (productRes.success && Array.isArray(productRes.data)) {
         setProducts(productRes.data);
       }

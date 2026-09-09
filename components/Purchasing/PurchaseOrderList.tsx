@@ -525,14 +525,14 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 border-b border-gray-200 sticky top-0 z-10 text-slate-700 text-xs font-bold">
                 <tr>
-                  <th className="py-3.5 px-4 w-14 text-center">No</th>
-                  <th className="py-3.5 px-4">PO Number ID</th>
-                  <th className="py-3.5 px-4">Date</th>
-                  <th className="py-3.5 px-4">Supplier</th>
-                  <th className="py-3.5 px-4">Total</th>
-                  <th className="py-3.5 px-4">Payment & Debt</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Actions</th>
+                  <th className="py-3.5 px-4 w-14 text-center whitespace-nowrap">No</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">PO Number ID</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Date</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Supplier</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Total</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Payment & Debt</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                  <th className="py-3.5 px-4 text-center whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-slate-600 font-medium">
@@ -568,19 +568,19 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       key={po._id}
                       className="hover:bg-slate-50/80 transition-colors"
                     >
-                      <td className="py-4 px-4 text-center text-slate-500 font-semibold text-xs">
+                      <td className="py-3.5 px-4 text-center text-slate-500 font-semibold text-xs whitespace-nowrap">
                         {itemNumber}
                       </td>
-                      <td className="py-4 px-4 font-bold text-[#2216a8] text-xs tracking-tight">
+                      <td className="py-3.5 px-4 font-bold text-[#2216a8] text-xs tracking-tight whitespace-nowrap">
                         {po.poNumber}
                       </td>
-                      <td className="py-4 px-4 font-semibold text-slate-800 text-xs">
+                      <td className="py-3.5 px-4 font-semibold text-slate-800 text-xs whitespace-nowrap">
                         {formattedDate}
                       </td>
-                      <td className="py-4 px-4 font-semibold text-slate-600 text-xs">
+                      <td className="py-3.5 px-4 font-semibold text-slate-600 text-xs whitespace-nowrap">
                         {po.supplierId?.supplierName || "OTAS Shop"}
                       </td>
-                      <td className="py-4 px-4 text-xs whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-xs whitespace-nowrap">
                         <span className="font-bold text-slate-900">
                           {po.totalAmount.toLocaleString()}
                         </span>{" "}
@@ -588,7 +588,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       </td>
 
                       {/* Payment & Debt Column */}
-                      <td className="py-4 px-4 text-xs">
+                      <td className="py-3.5 px-4 text-xs whitespace-nowrap">
                         {isCredit ? (
                           isOverdue ? (
                             <span className="px-3.5 py-1 rounded-full text-xs font-medium border border-red-300 text-red-700 bg-red-50/70 inline-block">
@@ -615,7 +615,7 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       </td>
 
                       {/* Status Column */}
-                      <td className="py-4 px-4 text-xs">
+                      <td className="py-3.5 px-4 text-xs whitespace-nowrap">
                         <span
                           className={`px-3.5 py-1 rounded-full text-xs font-medium inline-block ${
                             poFilter === "deleted"
@@ -634,21 +634,22 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       </td>
 
                       {/* Actions Column */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5 flex-nowrap">
                           {poFilter === "deleted" ? (
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-medium px-3.5 py-1 rounded-full transition-all shadow-xs cursor-pointer"
+                                className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
                               >
-                                {isMy ? "မြင်မယ်" : "View"}
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>{isMy ? "မြင်မယ်" : "View"}</span>
                               </button>
                               <button
                                 onClick={() => handleRestore(po)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3.5 py-1 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1"
+                                className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
                               >
-                                <RotateCcw className="w-3 h-3" />
+                                <RotateCcw className="w-3.5 h-3.5" />
                                 <span>
                                   {isMy ? "ပြန်လည်စတင်မယ်" : "Restore"}
                                 </span>
@@ -658,18 +659,21 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-medium px-3.5 py-1 rounded-full transition-all shadow-xs cursor-pointer"
+                                className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
                               >
-                                {isMy ? "မြင်မယ်" : "View"}
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>{isMy ? "မြင်မယ်" : "View"}</span>
                               </button>
                               {po.status === "pending" && (
                                 <button
                                   onClick={() =>
                                     handleUpdateStatus(po._id, "arrived")
                                   }
-                                  className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-medium px-3.5 py-1 rounded-full transition-all shadow-xs cursor-pointer"
+                                  className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                                  title={isMy ? "ပစ္စည်းရောက်ပြီ အဖြစ်မှတ်သားမည်" : "Mark as Arrived"}
                                 >
-                                  {isMy ? "ပစ္စည်းရောက်ပြီ" : "Mark Arrived"}
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>{isMy ? "ပစ္စည်းရောက်ပြီ" : "Arrived"}</span>
                                 </button>
                               )}
                               {(po.status === "arrived" ||
@@ -677,9 +681,9 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                                 po.totalRemainingQuantity > 0 && (
                                   <button
                                     onClick={() => onCreateGRN?.(po)}
-                                    className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-medium px-3.5 py-1 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1"
+                                    className="bg-indigo-50 text-[#2216a8] hover:bg-indigo-100 border border-indigo-200/80 text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
                                   >
-                                    <PackageCheck className="w-3 h-3" />
+                                    <PackageCheck className="w-3.5 h-3.5" />
                                     <span>
                                       {isMy ? "GRN သွင်းမယ်" : "Create GRN"}
                                     </span>
@@ -688,10 +692,10 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                               {po.status === "pending" && (
                                 <button
                                   onClick={() => handleSoftDelete(po)}
-                                  className="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-full transition-all shadow-xs cursor-pointer"
+                                  className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-red-200 flex items-center justify-center whitespace-nowrap"
                                   title={isMy ? "ဖျက်မယ်" : "Delete"}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               )}
                             </>

@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -619,8 +620,8 @@ export const CreditDetail: React.FC = () => {
             <div className="space-y-6">
               {/* Associated Orders Tab */}
               {activeTab === "orders" && (
-                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+                <div className="bg-white border border-gray-150 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                  <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                     <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                       <Receipt className="w-5 h-5 text-[#2216a8]" />
                       <span>
@@ -638,33 +639,140 @@ export const CreditDetail: React.FC = () => {
                       {isMy ? "အော်ဒါမှတ်တမ်း မရှိသေးပါ" : "No orders found"}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
-                      {personaDetail.orders.map((order) => (
-                        <div
-                          key={order._id}
-                          onClick={() => handleViewOrder(order._id)}
-                          className="group p-4 bg-[#fcfbf9] hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 rounded-2xl transition-all cursor-pointer shadow-xs flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-white group-hover:bg-indigo-100 rounded-xl text-[#2216a8] border border-slate-100 transition-colors">
-                              <Receipt className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-[#2216a8] group-hover:underline">
-                                {order.orderNumber}
-                              </p>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                {isMy
-                                  ? "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ"
-                                  : "Click to view details"}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-xs text-slate-400 group-hover:text-indigo-600 font-black">
-                            &rarr;
-                          </span>
-                        </div>
-                      ))}
+                    <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+                      <table className="w-full text-sm text-left min-w-[700px]">
+                        <thead className="text-slate-500">
+                          <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                            <th className="px-4 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              No
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "အော်ဒါနံပါတ်" : "Order Num"}
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "ရက်စွဲ" : "Date"}
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "ပစ္စည်းများ" : "Items"}
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "ကျသင့်ငွေ" : "Final Amount"}
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "ပေးချေပြီး" : "Paid"}
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "ပေးရန်ကျန်" : "Remaining"}
+                            </th>
+                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "ပေးချေနည်း" : "Method"}
+                            </th>
+                            <th className="px-4 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
+                              {isMy ? "လုပ်ဆောင်ချက်" : "Actions"}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {personaDetail.orders.map((order, index) => {
+                            const finalAmt = order.finalAmount ?? 0;
+                            const paidAmt = order.paidAmount ?? 0;
+                            const remainingAmt = Math.max(0, finalAmt - paidAmt);
+                            const itemsCount = order.ordersProducts?.length ?? 0;
+
+                            return (
+                              <tr
+                                key={order._id}
+                                className="hover:bg-slate-50/60 transition-colors"
+                              >
+                                {/* No */}
+                                <td className="px-4 py-3.5 text-center font-bold text-slate-400 text-xs whitespace-nowrap">
+                                  {String(index + 1).padStart(2, "0")}
+                                </td>
+
+                                {/* Order Number */}
+                                <td
+                                  onClick={() => handleViewOrder(order._id)}
+                                  className="px-4 py-3.5 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs whitespace-nowrap"
+                                >
+                                  {order.orderNumber}
+                                </td>
+
+                                {/* Date */}
+                                <td className="px-4 py-3.5 text-slate-600 text-xs font-semibold whitespace-nowrap">
+                                  {order.createdAt ? formatDate(order.createdAt) : "-"}
+                                </td>
+
+                                {/* Items */}
+                                <td className="px-4 py-3.5 text-slate-500 text-xs font-medium whitespace-nowrap">
+                                  {itemsCount}{" "}
+                                  {itemsCount === 1
+                                    ? isMy
+                                      ? "မျိုး"
+                                      : "Item"
+                                    : isMy
+                                      ? "မျိုး"
+                                      : "Items"}
+                                </td>
+
+                                {/* Final Amount */}
+                                <td className="px-4 py-3.5 font-bold text-slate-800 text-xs whitespace-nowrap">
+                                  {finalAmt.toLocaleString()}{" "}
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    MMK
+                                  </span>
+                                </td>
+
+                                {/* Paid */}
+                                <td className="px-4 py-3.5 font-bold text-emerald-600 text-xs whitespace-nowrap">
+                                  {paidAmt.toLocaleString()}{" "}
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    MMK
+                                  </span>
+                                </td>
+
+                                {/* Remaining */}
+                                <td className="px-4 py-3.5 text-xs whitespace-nowrap">
+                                  {remainingAmt > 0 ? (
+                                    <span className="font-bold text-amber-700">
+                                      {remainingAmt.toLocaleString()}{" "}
+                                      <span className="text-[10px] text-slate-400 font-medium">
+                                        MMK
+                                      </span>
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      {isMy ? "အပြေချေပြီး" : "PAID"}
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Method */}
+                                <td className="px-4 py-3.5 whitespace-nowrap">
+                                  <div className="flex items-center gap-1.5">
+                                    <CreditCard className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                    <span className="text-xs text-slate-600 font-medium">
+                                      {getPaymentMethodLabel(
+                                        order.paymentMethod || "cash",
+                                      )}
+                                    </span>
+                                  </div>
+                                </td>
+
+                                {/* Actions */}
+                                <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                                  <button
+                                    onClick={() => handleViewOrder(order._id)}
+                                    className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#2216a8] hover:bg-[#1b1187] text-white shadow-xs inline-flex items-center justify-center gap-1 cursor-pointer transition-all whitespace-nowrap"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>{isMy ? "ကြည့်မယ်" : "View"}</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </div>

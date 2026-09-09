@@ -64,8 +64,8 @@ export const usePurchasing = () => {
           setSuppliers(supplierRes.data);
         }
 
-        // Fetch Products
-        const productRes = await fetchProducts();
+        // Fetch Products (Active only for Purchase Orders)
+        const productRes = await fetchProducts(undefined, undefined, undefined, "active");
         if (productRes.success && Array.isArray(productRes.data)) {
           setProducts(productRes.data);
         } else if (Array.isArray(productRes)) {
@@ -73,15 +73,6 @@ export const usePurchasing = () => {
         } else if (productRes.data && Array.isArray(productRes.data)) {
           setProducts(productRes.data);
         }
-
-        // Fetch Purchase Orders
-        loadPurchases();
-
-        // Fetch Deleted Purchase Orders
-        loadDeletedPurchases();
-
-        // Fetch GRNs
-        loadGRNs();
       } catch (error) {
         console.error("Failed to load data", error);
       }

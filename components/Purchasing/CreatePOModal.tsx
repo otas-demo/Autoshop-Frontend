@@ -116,13 +116,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   // Products belonging to the currently selected supplier (only active products)
   const supplierProducts = poSupplierId
     ? products.filter(
-        (p) =>
-          isProductSupplied(p, poSupplierId) &&
-          (p.status === "active" || (!p.status && !(p as any).isDeleted)) &&
-          p.status !== "inactive" &&
-          p.status !== "discontinued" &&
-          !(p as any).isDeleted,
-      )
+      (p) =>
+        isProductSupplied(p, poSupplierId) &&
+        (p.status === "active" || (!p.status && !(p as any).isDeleted)) &&
+        p.status !== "inactive" &&
+        p.status !== "discontinued" &&
+        !(p as any).isDeleted,
+    )
     : [];
 
   // Filtered by search query (name or productCode)
@@ -204,7 +204,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
           (productId && item.productId === productId) ||
           (productName &&
             item.name.trim().toLowerCase() ===
-              productName.trim().toLowerCase()),
+            productName.trim().toLowerCase()),
       );
 
       if (existingIndex > -1) {
@@ -311,9 +311,9 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
         } else {
           toast.error(
             response.message ||
-              (isMy
-                ? "Purchase Order ပြင်ဆင်ခြင်း မအောင်မြင်ပါ"
-                : "Failed to update Purchase Order")
+            (isMy
+              ? "Purchase Order ပြင်ဆင်ခြင်း မအောင်မြင်ပါ"
+              : "Failed to update Purchase Order")
           );
         }
       } else {
@@ -336,9 +336,9 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
         } else {
           toast.error(
             response.message ||
-              (isMy
-                ? "Purchase Order ထည့်သွင်းခြင်း မအောင်မြင်ပါ"
-                : "Failed to create Purchase Order")
+            (isMy
+              ? "Purchase Order ထည့်သွင်းခြင်း မအောင်မြင်ပါ"
+              : "Failed to create Purchase Order")
           );
         }
       }
@@ -346,9 +346,9 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       console.error("Failed to save PO:", error);
       toast.error(
         error.message ||
-          (isMy
-            ? "လုပ်ဆောင်ချက် မအောင်မြင်ပါ"
-            : "An error occurred while saving the Purchase Order")
+        (isMy
+          ? "လုပ်ဆောင်ချက် မအောင်မြင်ပါ"
+          : "An error occurred while saving the Purchase Order")
       );
     } finally {
       setIsSubmitting(false);
@@ -380,11 +380,10 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                 )}
               </label>
               <select
-                className={`w-full border rounded-xl p-2.5 text-sm font-medium transition-all ${
-                  !poSupplierId
+                className={`w-full border rounded-xl p-2.5 text-sm font-medium transition-all ${!poSupplierId
                     ? "border-amber-400 bg-amber-50/20 text-slate-600 focus:border-amber-500"
                     : "border-slate-200 bg-white text-slate-800 focus:border-[#2216a8]"
-                }`}
+                  }`}
                 value={poSupplierId}
                 onChange={(e) => handleSupplierChange(e.target.value)}
               >
@@ -415,11 +414,10 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                 <input
                   type="text"
                   disabled={!poSupplierId}
-                  className={`w-full border rounded-xl p-2.5 pr-8 text-sm transition-all ${
-                    !poSupplierId
+                  className={`w-full border rounded-xl p-2.5 pr-8 text-sm transition-all ${!poSupplierId
                       ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
                       : "bg-white text-slate-800 border-slate-300 focus:border-[#2216a8]"
-                  }`}
+                    }`}
                   placeholder={
                     !poSupplierId
                       ? "ကျေးဇူးပြု၍ အထက်တွင် Supplier အရင်ရွေးချယ်ပါ..."
@@ -455,9 +453,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                         return (
                           <div
                             key={p._id || p.id}
-                            className={`px-3.5 py-2.5 hover:bg-indigo-50/80 cursor-pointer text-sm flex items-center justify-between transition-colors border-b border-gray-50 last:border-0 ${
-                              existingInPO ? "bg-indigo-50/30" : ""
-                            }`}
+                            className={`px-3.5 py-2.5 hover:bg-indigo-50/80 cursor-pointer text-sm flex items-center justify-between transition-colors border-b border-gray-50 last:border-0 ${existingInPO ? "bg-indigo-50/30" : ""
+                              }`}
                             onClick={() =>
                               handleProductSelect(
                                 p._id || p.id,
@@ -622,22 +619,20 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                   setInitialPaidAmount(0);
                   setDueDate("");
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  paymentType === "paid"
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${paymentType === "paid"
                     ? "bg-[#2216a8] text-white shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
-                အပြေချေ (Paid in Full)
+                အပြည့်ချေ (Paid in Full)
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentType("credit")}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  paymentType === "credit"
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${paymentType === "credit"
                     ? "bg-[#2216a8] text-white shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 အကြွေးဝယ်ယူမည် (Credit)
               </button>
@@ -703,7 +698,7 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     {Math.max(
                       0,
                       poItems.reduce((sum, item) => sum + item.qty * item.costPrice, 0) -
-                        (initialPaidAmount || 0)
+                      (initialPaidAmount || 0)
                     ).toLocaleString()}{" "}
                     MMK
                   </span>
@@ -740,8 +735,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                       ? "ပြင်ဆင်နေသည်..."
                       : "Updating Purchase Order..."
                     : isMy
-                    ? "လုပ်ဆောင်နေသည်..."
-                    : "Creating Purchase Order..."}
+                      ? "လုပ်ဆောင်နေသည်..."
+                      : "Creating Purchase Order..."}
                 </span>
               </>
             ) : (
@@ -751,8 +746,8 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                     ? "အော်ဒါ ပြင်ဆင်မှု သိမ်းဆည်းမည်"
                     : "Update Purchase Order"
                   : isMy
-                  ? "ဝယ်ယူမှု အော်ဒါ အတည်ပြုမည်"
-                  : "Create Purchase Order"}
+                    ? "ဝယ်ယူမှု အော်ဒါ အတည်ပြုမည်"
+                    : "Create Purchase Order"}
               </span>
             )}
           </button>

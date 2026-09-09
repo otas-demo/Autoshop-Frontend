@@ -42,12 +42,12 @@ const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f5f3]">
       {/* Floating AI hanging badge */}
-      {token && <AIFloatingIcon />}
+      {token && <div className="no-print"><AIFloatingIcon /></div>}
       {/* Floating Hamburger Menu Button (Mobile/Tablet Only) */}
       {token && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden fixed top-4 right-4 z-40 p-2.5 bg-white border border-gray-200 shadow-md rounded-xl text-[#2216a8] hover:bg-gray-50 transition-all cursor-pointer"
+          className="no-print lg:hidden fixed top-4 right-4 z-40 p-2.5 bg-white border border-gray-200 shadow-md rounded-xl text-[#2216a8] hover:bg-gray-50 transition-all cursor-pointer"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
@@ -56,12 +56,14 @@ const AppLayout: React.FC = () => {
 
       {/* Sidebar */}
       {token && (
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <div className="no-print">
+          <Sidebar 
+            isOpen={sidebarOpen} 
+            onClose={() => setSidebarOpen(false)} 
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
+          />
+        </div>
       )}
 
       {/* Main Content */}

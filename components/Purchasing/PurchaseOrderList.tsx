@@ -402,31 +402,28 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
             <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-full border border-slate-200/80">
               <button
                 onClick={() => setPoFilter("pending")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  poFilter === "pending"
-                    ? "bg-white text-indigo-700 shadow-xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${poFilter === "pending"
+                  ? "bg-white text-indigo-700 shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {isMy ? "ပစ္စည်း စောင့်ဆိုင်းနေဆဲ" : "Pending"}
               </button>
               <button
                 onClick={() => setPoFilter("arrived")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  poFilter === "arrived"
-                    ? "bg-white text-indigo-700 shadow-xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${poFilter === "arrived"
+                  ? "bg-white text-indigo-700 shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {isMy ? "ပစ္စည်းရောက်ရှိ" : "Arrived"}
               </button>
               <button
                 onClick={() => setPoFilter("deleted")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  poFilter === "deleted"
-                    ? "bg-white text-rose-700 shadow-xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${poFilter === "deleted"
+                  ? "bg-white text-rose-700 shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {isMy ? "စာရင်း ပယ်ဖျက်" : "Deleted"}
               </button>
@@ -442,31 +439,28 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
               </span>
               <button
                 onClick={() => setPaymentFilter("all")}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  paymentFilter === "all"
-                    ? "bg-white text-slate-900 shadow-xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${paymentFilter === "all"
+                  ? "bg-white text-slate-900 shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {isMy ? "အားလုံး" : "All"}
               </button>
               <button
                 onClick={() => setPaymentFilter("unpaid")}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  paymentFilter === "unpaid"
-                    ? "bg-amber-500 text-white shadow-xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${paymentFilter === "unpaid"
+                  ? "bg-amber-500 text-white shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {isMy ? "မပေးချေရသေး (Unpaid)" : "Unpaid"}
               </button>
               <button
                 onClick={() => setPaymentFilter("paid")}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  paymentFilter === "paid"
-                    ? "bg-emerald-600 text-white shadow-xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${paymentFilter === "paid"
+                  ? "bg-emerald-600 text-white shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {isMy ? "ပေးချေပြီး (Paid)" : "Paid"}
               </button>
@@ -508,16 +502,15 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
       ) : (
         <div className="bg-white rounded-2xl shadow-xs border border-gray-200/80 overflow-hidden">
           <div
-            className={`overflow-x-auto overflow-y-auto ${
-              tableHeight &&
+            className={`overflow-x-auto overflow-y-auto ${tableHeight &&
               (tableHeight.startsWith("h-") || tableHeight.startsWith("max-h-"))
-                ? tableHeight
-                : ""
-            }`}
+              ? tableHeight
+              : ""
+              }`}
             style={
               !tableHeight ||
-              (!tableHeight.startsWith("h-") &&
-                !tableHeight.startsWith("max-h-"))
+                (!tableHeight.startsWith("h-") &&
+                  !tableHeight.startsWith("max-h-"))
                 ? { height: tableHeight || "calc(100vh - 350px)" }
                 : undefined
             }
@@ -543,16 +536,16 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                     : 0;
                   const isOverdue = Boolean(
                     isCredit &&
-                      po.dueDate &&
-                      new Date(po.dueDate) < new Date() &&
-                      po.paymentStatus !== "paid",
+                    po.dueDate &&
+                    new Date(po.dueDate) < new Date() &&
+                    po.paymentStatus !== "paid",
                   );
 
                   const itemNumber = String(
                     (currentPagination.currentPage - 1) *
-                      currentPagination.itemsPerPage +
-                      idx +
-                      1,
+                    currentPagination.itemsPerPage +
+                    idx +
+                    1,
                   ).padStart(2, "0");
 
                   const formattedDate = new Date(
@@ -617,11 +610,10 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       {/* Status Column */}
                       <td className="py-3.5 px-4 text-xs whitespace-nowrap">
                         <span
-                          className={`px-3.5 py-1 rounded-full text-xs font-medium inline-block ${
-                            poFilter === "deleted"
-                              ? "border border-red-300 bg-red-50 text-red-700"
-                              : "border border-emerald-300 bg-emerald-50 text-emerald-700"
-                          }`}
+                          className={`px-3.5 py-1 rounded-full text-xs font-medium inline-block ${poFilter === "deleted"
+                            ? "border border-red-300 bg-red-50 text-red-700"
+                            : "border border-emerald-300 bg-emerald-50 text-emerald-700"
+                            }`}
                         >
                           {poFilter === "deleted"
                             ? isMy
@@ -635,23 +627,23 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
 
                       {/* Actions Column */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5 flex-nowrap">
+                        <div className="flex items-center justify-center gap-2 flex-nowrap">
                           {poFilter === "deleted" ? (
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200/80 transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                               >
-                                <Eye className="w-3.5 h-3.5" />
-                                <span>{isMy ? "မြင်မယ်" : "View"}</span>
+                                <Eye className="w-3.5 h-3.5 text-slate-500" />
+                                <span>{isMy ? "အသေးစိတ်" : "View"}</span>
                               </button>
                               <button
                                 onClick={() => handleRestore(po)}
-                                className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                               >
                                 <RotateCcw className="w-3.5 h-3.5" />
                                 <span>
-                                  {isMy ? "ပြန်လည်စတင်မယ်" : "Restore"}
+                                  {isMy ? "ပြန်လည်စတင်မည်" : "Restore"}
                                 </span>
                               </button>
                             </>
@@ -659,45 +651,60 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                             <>
                               <button
                                 onClick={() => onViewPO?.(po)}
-                                className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200/80 transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                               >
-                                <Eye className="w-3.5 h-3.5" />
-                                <span>{isMy ? "မြင်မယ်" : "View"}</span>
+                                <Eye className="w-3.5 h-3.5 text-slate-500" />
+                                <span>{isMy ? "အသေးစိတ်" : "View"}</span>
                               </button>
+
                               {po.status === "pending" && (
-                                <button
-                                  onClick={() =>
-                                    handleUpdateStatus(po._id, "arrived")
-                                  }
-                                  className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
-                                  title={isMy ? "ပစ္စည်းရောက်ပြီ အဖြစ်မှတ်သားမည်" : "Mark as Arrived"}
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>{isMy ? "ပစ္စည်းရောက်ပြီ" : "Arrived"}</span>
-                                </button>
-                              )}
-                              {(po.status === "arrived" ||
-                                po.status === "received") &&
-                                po.totalRemainingQuantity > 0 && (
+                                <>
                                   <button
-                                    onClick={() => onCreateGRN?.(po)}
-                                    className="bg-indigo-50 text-[#2216a8] hover:bg-indigo-100 border border-indigo-200/80 text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                                    onClick={() =>
+                                      handleUpdateStatus(po._id, "arrived")
+                                    }
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                                    title={
+                                      isMy
+                                        ? "ပစ္စည်းရောက်ပြီ"
+                                        : "Mark as Arrived"
+                                    }
                                   >
-                                    <PackageCheck className="w-3.5 h-3.5" />
+                                    <Check className="w-3.5 h-3.5" />
                                     <span>
-                                      {isMy ? "GRN သွင်းမယ်" : "Create GRN"}
+                                      {isMy ? "ပစ္စည်းရောက်ပြီ" : "Arrived"}
                                     </span>
                                   </button>
-                                )}
-                              {po.status === "pending" && (
-                                <button
-                                  onClick={() => handleSoftDelete(po)}
-                                  className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-red-200 flex items-center justify-center whitespace-nowrap"
-                                  title={isMy ? "ဖျက်မယ်" : "Delete"}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                  <button
+                                    onClick={() => handleSoftDelete(po)}
+                                    className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors cursor-pointer border border-transparent hover:border-red-200 flex items-center justify-center whitespace-nowrap"
+                                    title={isMy ? "ဖျက်မည်" : "Delete"}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </>
                               )}
+
+                              {(po.status === "arrived" ||
+                                po.status === "received") &&
+                                (po.totalRemainingQuantity > 0 ? (
+                                  <button
+                                    onClick={() => onCreateGRN?.(po)}
+                                    className="bg-[#2216a8] hover:bg-[#1b1187] text-white text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                                  >
+
+                                    <span>
+                                      {isMy ? "GRN သွင်းမည်" : "Create GRN"}
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-full flex items-center gap-1 whitespace-nowrap">
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    <span>
+                                      {isMy ? "GRN ပြီးစီး" : "GRN Done"}
+                                    </span>
+                                  </span>
+                                ))}
                             </>
                           )}
                         </div>

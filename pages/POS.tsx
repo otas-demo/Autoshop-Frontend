@@ -917,6 +917,19 @@ export const POS: React.FC = () => {
                   <p className="text-[10px] sm:text-xs mt-1">
                     {stockItem.inventoryId.category}
                   </p>
+                  <span
+                    className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      (stockItem.availableQuantity ?? stockItem.quantity) <= 0
+                        ? "bg-red-100 text-red-600"
+                        : (stockItem.availableQuantity ?? stockItem.quantity) <= 5
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-green-100 text-green-700"
+                    }`}
+                  >
+                    {(stockItem.availableQuantity ?? stockItem.quantity) <= 0
+                      ? "Out of stock"
+                      : `Qty: ${stockItem.availableQuantity ?? stockItem.quantity}`}
+                  </span>
                 </div>
                 <div className="mt-2 sm:mt-4 flex justify-between items-end">
                   <span className="font-bold text-primary-600 text-xs sm:text-sm">

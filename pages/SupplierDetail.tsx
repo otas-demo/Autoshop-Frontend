@@ -651,7 +651,7 @@ export const SupplierDetail: React.FC = () => {
                                 </span>
                               </td>
                               <td className="p-3 text-right font-medium text-slate-700">
-                                {p.costPrice?.toLocaleString() || 0} MMK
+                                {(p.buyingPrice ?? p.costPrice ?? 0).toLocaleString()} MMK
                               </td>
                               <td className="p-3 text-right font-bold text-slate-900">
                                 {p.sellingPrice?.toLocaleString() || 0} MMK

@@ -137,8 +137,8 @@ export const GRNList: React.FC<GRNListProps> = ({
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded-lg text-sm font-medium ${page === currentPage
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-600 hover:bg-slate-50 border"
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-600 hover:bg-slate-50 border"
                   }`}
               >
                 {page}
@@ -183,8 +183,8 @@ export const GRNList: React.FC<GRNListProps> = ({
         <button
           onClick={() => setGrnFilter("pending")}
           className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${grnFilter === "pending"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
             }`}
         >
           {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
@@ -192,8 +192,8 @@ export const GRNList: React.FC<GRNListProps> = ({
         <button
           onClick={() => setGrnFilter("completed")}
           className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${grnFilter === "completed"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
             }`}
         >
           {isMy ? "စာရင်း လက်ခံပြီး" : "Completed"}
@@ -230,19 +230,17 @@ export const GRNList: React.FC<GRNListProps> = ({
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="h-[calc(100vh-450px)] overflow-y-auto">
+          <div className="h-[calc(100vh-350px)] overflow-y-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 border-b sticky top-0 z-10 text-slate-700 text-xs font-bold">
                 <tr>
                   <th className="p-4 w-12 text-center">No</th>
                   <th className="p-4">GRN Number ID</th>
-                  <th className="p-4">Date</th>
+                  {/* <th className="p-4">Date</th> */}
                   <th className="p-4">Items</th>
                   <th className="p-4">Received Qty</th>
                   <th className="p-4">Condition Status</th>
                   <th className="p-4">Total Amount</th>
-                  <th className="p-4">Status</th>
-                  {/* <th className="p-4">Note</th> */}
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -255,12 +253,12 @@ export const GRNList: React.FC<GRNListProps> = ({
                     <td className="p-4 font-bold text-[#2216a8]">
                       {grn.grnNumber}
                     </td>
-                    <td className="p-4">
+                    {/* <td className="p-4">
                       {new Date(grn.grnDate).toLocaleDateString()}
-                    </td>
+                    </td> */}
                     <td className="p-4">
                       <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-bold">
-                        {grn.lineItems.length} item(s)
+                        {grn.lineItems.length} {" "} <span className="text-xs "> {grn.lineItems.length === 1 ? "item" : "items"} </span>
                       </span>
                     </td>
                     <td className="p-4 font-bold text-slate-800">
@@ -278,18 +276,6 @@ export const GRNList: React.FC<GRNListProps> = ({
                     <td className="p-4 font-bold text-slate-800">
                       {grn.totalAmount.toLocaleString()}
                     </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-black ${getStatusColor(
-                          grn.status
-                        )}`}
-                      >
-                        {grn.status.toUpperCase()}
-                      </span>
-                    </td>
-                    {/* <td className="p-4 text-slate-500 truncate max-w-xs">
-                      {grn.notes || "-"}
-                    </td> */}
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <button

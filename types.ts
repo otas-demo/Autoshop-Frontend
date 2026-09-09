@@ -35,6 +35,7 @@ export interface Product {
   stockWarehouse: number;
   stockShop: number;
   costPrice: number;
+  buyingPrice?: number;
   sellingPrice: number;
   lowStockThreshold: number;
   status?: "active" | "inactive";

@@ -272,7 +272,9 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                         {item.totalPrice.toLocaleString()}
                       </td>
                       <td className="p-3 text-center">
-                        {grn.status?.toLowerCase() === "pending" && (
+                        {["pending", "verified", "partial"].includes(
+                          grn.status?.toLowerCase()
+                        ) && (
                           <button
                             onClick={() => handleUpdateLineItem(item)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

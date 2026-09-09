@@ -7,6 +7,8 @@ interface LineItem {
   receivedQuantity: number;
   goodQuantity: number;
   badQuantity: number;
+  transferredQuantity?: number;
+  availableQuantity?: number;
   inventoryId?: {
     productName: string;
     productCode: string;
@@ -44,6 +46,8 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
   const [notes, setNotes] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
 
+  const minGood = lineItem?.transferredQuantity || 0;
+
   React.useEffect(() => {
     if (lineItem) {
       setGoodQuantity(lineItem.goodQuantity);
@@ -55,7 +59,8 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
 
   const handleGoodQuantityChange = (value: number) => {
     if (!lineItem) return;
-    const newGoodQty = Math.max(0, Math.min(value, lineItem.receivedQuantity));
+    const minGoodQty = lineItem.transferredQuantity || 0;
+    const newGoodQty = Math.max(minGoodQty, Math.min(value, lineItem.receivedQuantity));
     const newBadQty = lineItem.receivedQuantity - newGoodQty;
     setGoodQuantity(newGoodQty);
     setBadQuantity(Math.max(0, newBadQty));
@@ -63,10 +68,11 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
 
   const handleBadQuantityChange = (value: number) => {
     if (!lineItem) return;
-    const newBadQty = Math.max(0, Math.min(value, lineItem.receivedQuantity));
+    const maxBad = lineItem.receivedQuantity - (lineItem.transferredQuantity || 0);
+    const newBadQty = Math.max(0, Math.min(value, maxBad));
     const newGoodQty = lineItem.receivedQuantity - newBadQty;
     setBadQuantity(newBadQty);
-    setGoodQuantity(Math.max(0, newGoodQty));
+    setGoodQuantity(Math.max(lineItem.transferredQuantity || 0, newGoodQty));
   };
 
   const handleSave = async () => {
@@ -185,12 +191,17 @@ export const UpdateLineItemModal: React.FC<UpdateLineItemModalProps> = ({
         </div> */}
 
         {/* Validation Info */}
-        <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+        <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-1">
           <div className="text-sm text-amber-800">
             <strong>Note:</strong> Good + Bad quantities should equal the
             received quantity ({lineItem.receivedQuantity}). Current total:{" "}
             {goodQuantity + badQuantity}
           </div>
+          {lineItem.transferredQuantity !== undefined && lineItem.transferredQuantity > 0 && (
+            <div className="text-xs text-amber-700">
+              * {lineItem.transferredQuantity} item(s) already transferred to warehouse/storefront. Good quantity cannot be less than {lineItem.transferredQuantity}.
+            </div>
+          )}
         </div>
 
         {/* Actions */}

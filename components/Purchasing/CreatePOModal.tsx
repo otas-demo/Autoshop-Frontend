@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X, CreditCard, Calendar, DollarSign, Clock } from "lucide-react";
+import { Plus, Trash2, X, CreditCard, Calendar, DollarSign, Clock, Edit3 } from "lucide-react";
 import { Modal } from "../Modal";
 import { Supplier, Product, PurchaseOrderItem } from "../../types";
 import { createPurchase } from "../../services/Purchase/createPurchase";
+import { updatePurchase } from "../../services/Purchase/updatePurchase";
+import { PurchaseDetail } from "../../services/Purchase/fetchPurchaseById";
+import { useLanguage } from "../../context/LanguageContext";
 import { toast } from "sonner";
 
 interface CreatePOModalProps {
@@ -12,6 +15,7 @@ interface CreatePOModalProps {
   products: Product[];
   onSuccess: () => void;
   defaultSupplierId?: string;
+  editingPO?: PurchaseDetail | null;
 }
 
 export const CreatePOModal: React.FC<CreatePOModalProps> = ({
@@ -21,16 +25,14 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   products,
   onSuccess,
   defaultSupplierId,
+  editingPO,
 }) => {
+  const { language } = useLanguage();
+  const isMy = language === "my";
+
   const [poSupplierId, setPOSupplierId] = useState(defaultSupplierId || "");
   const [poItems, setPOItems] = useState<PurchaseOrderItem[]>([]);
   const [poSelectedProduct, setPOSelectedProduct] = useState("");
-
-  useEffect(() => {
-    if (isOpen && defaultSupplierId) {
-      setPOSupplierId(defaultSupplierId);
-    }
-  }, [isOpen, defaultSupplierId]);
   const [poQty, setPOQty] = useState(1);
   const [poItemNote, setPOItemNote] = useState("");
   const [poNote, setPONote] = useState("");
@@ -47,6 +49,61 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
     "cash" | "kpay" | "wave" | "bank_transfer" | "other"
   >("cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (editingPO) {
+        const supId =
+          typeof editingPO.supplierId === "object"
+            ? (editingPO.supplierId as any)?._id || (editingPO.supplierId as any)?.id
+            : editingPO.supplierId;
+        setPOSupplierId(supId || "");
+
+        const mappedItems: PurchaseOrderItem[] = (editingPO.products || []).map((p) => {
+          const invId =
+            typeof p.inventoryId === "object"
+              ? (p.inventoryId as any)?._id || (p.inventoryId as any)?.id
+              : p.inventoryId;
+          return {
+            productId: invId,
+            name: p.productName,
+            qty: p.purchaseQuantity,
+            costPrice: p.buyingPrice,
+            note: "",
+          };
+        });
+        setPOItems(mappedItems);
+        setPONote(
+          editingPO.note === "No note available" ? "" : editingPO.note || ""
+        );
+        setPaymentType(editingPO.paymentType === "credit" ? "credit" : "paid");
+        setInitialPaidAmount(editingPO.paidAmount || 0);
+        setDueDate(
+          editingPO.dueDate
+            ? new Date(editingPO.dueDate).toISOString().split("T")[0]
+            : ""
+        );
+        setPaymentMethod("cash");
+      } else {
+        if (defaultSupplierId) {
+          setPOSupplierId(defaultSupplierId);
+        } else {
+          setPOSupplierId("");
+        }
+        setPOItems([]);
+        setPONote("");
+        setPaymentType("paid");
+        setInitialPaidAmount(0);
+        setDueDate("");
+        setPaymentMethod("cash");
+      }
+      setPOSelectedProduct("");
+      setProductSearchQuery("");
+      setPONewProductName("");
+      setPOQty(1);
+      setPOItemNote("");
+    }
+  }, [isOpen, editingPO, defaultSupplierId]);
 
   const isProductSupplied = (p: Product, supplierId: string) => {
     if (!supplierId) return false;
@@ -234,33 +291,73 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const response = await createPurchase(payload);
-      if (response.success) {
-        toast.success("Purchase Order Created Successfully!");
-        setPOSupplierId("");
-        setPOItems([]);
-        setPONote("");
-        setPaymentType("paid");
-        setInitialPaidAmount(0);
-        setDueDate("");
-        setPaymentMethod("cash");
-        onSuccess();
-        onClose();
+      if (editingPO) {
+        const response = await updatePurchase(editingPO._id, payload);
+        if (response.success) {
+          toast.success(
+            isMy
+              ? "Purchase Order ပြင်ဆင်ခြင်း အောင်မြင်ပါသည်!"
+              : "Purchase Order Updated Successfully!"
+          );
+          onSuccess();
+          onClose();
+        } else {
+          toast.error(
+            response.message ||
+              (isMy
+                ? "Purchase Order ပြင်ဆင်ခြင်း မအောင်မြင်ပါ"
+                : "Failed to update Purchase Order")
+          );
+        }
       } else {
-        toast.error(response.message || "Failed to create Purchase Order");
+        const response = await createPurchase(payload);
+        if (response.success) {
+          toast.success(
+            isMy
+              ? "Purchase Order အသစ်ထည့်သွင်းခြင်း အောင်မြင်ပါသည်!"
+              : "Purchase Order Created Successfully!"
+          );
+          setPOSupplierId("");
+          setPOItems([]);
+          setPONote("");
+          setPaymentType("paid");
+          setInitialPaidAmount(0);
+          setDueDate("");
+          setPaymentMethod("cash");
+          onSuccess();
+          onClose();
+        } else {
+          toast.error(
+            response.message ||
+              (isMy
+                ? "Purchase Order ထည့်သွင်းခြင်း မအောင်မြင်ပါ"
+                : "Failed to create Purchase Order")
+          );
+        }
       }
     } catch (error: any) {
-      console.error("Failed to create PO:", error);
+      console.error("Failed to save PO:", error);
       toast.error(
-        error.message || "An error occurred while creating the Purchase Order",
+        error.message ||
+          (isMy
+            ? "လုပ်ဆောင်ချက် မအောင်မြင်ပါ"
+            : "An error occurred while saving the Purchase Order")
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const modalTitle = editingPO
+    ? isMy
+      ? `ဝယ်ယူမှု အော်ဒါ ပြင်ဆင်မည် (${editingPO.poNumber})`
+      : `Edit Purchase Order (${editingPO.poNumber})`
+    : isMy
+      ? "ဝယ်ယူမှု အော်ဒါ အသစ်ထည့်မည်"
+      : "Create Purchase Order";
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create Purchase Order">
+    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="space-y-4">
@@ -630,14 +727,32 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Creating Purchase Order...</span>
+                <span>
+                  {editingPO
+                    ? isMy
+                      ? "ပြင်ဆင်နေသည်..."
+                      : "Updating Purchase Order..."
+                    : isMy
+                    ? "လုပ်ဆောင်နေသည်..."
+                    : "Creating Purchase Order..."}
+                </span>
               </>
             ) : (
-              <span>Create Purchase Order</span>
+              <span>
+                {editingPO
+                  ? isMy
+                    ? "အော်ဒါ ပြင်ဆင်မှု သိမ်းဆည်းမည်"
+                    : "Update Purchase Order"
+                  : isMy
+                  ? "ဝယ်ယူမှု အော်ဒါ အတည်ပြုမည်"
+                  : "Create Purchase Order"}
+              </span>
             )}
           </button>
           <p className="text-xs text-slate-400 mt-2 text-center">
-            Note: PO does NOT update stock. Use GRN to receive goods.
+            {isMy
+              ? "မှတ်ချက် - PO တင်ရုံဖြင့် ကုန်ပစ္စည်းလက်ကျန် (Stock) တိုးမည်မဟုတ်ပါ။ GRN သွင်းမှသာ Stock တိုးပါမည်။"
+              : "Note: PO does NOT update stock. Use GRN to receive goods."}
           </p>
         </div>
       </div>

@@ -22,6 +22,7 @@ export const usePurchasing = () => {
   const [deletedPOList, setDeletedPOList] = useState<ApiPurchaseOrder[]>([]);
   const [poLoading, setPoLoading] = useState(false);
   const [poFilter, setPoFilter] = useState<"pending" | "arrived" | "deleted">("pending");
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "unpaid" | "paid">("all");
   const [poPagination, setPoPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -92,10 +93,19 @@ export const usePurchasing = () => {
     page: number = 1,
     limit: number = 10,
     status: "pending" | "arrived" = "pending",
+    paymentStatus?: "all" | "unpaid" | "paid"
   ) => {
     setPoLoading(true);
+    const activePaymentStatus =
+      paymentStatus !== undefined ? paymentStatus : paymentFilter;
     try {
-      const res = await fetchPurchases({ page, limit, status });
+      const res = await fetchPurchases({
+        page,
+        limit,
+        status,
+        paymentStatus:
+          activePaymentStatus !== "all" ? activePaymentStatus : undefined,
+      });
       if (res.success) {
         setPOList(res.data);
         setPoPagination(res.pagination);
@@ -179,6 +189,8 @@ export const usePurchasing = () => {
     poLoading,
     poFilter,
     setPoFilter,
+    paymentFilter,
+    setPaymentFilter,
     poPagination,
     deletedPoPagination,
     isCreateModalOpen,

@@ -24,6 +24,7 @@ import { CreatePOModal } from "../components/Purchasing/CreatePOModal";
 import { CreateGRNModal } from "../components/Purchasing/CreateGRNModal";
 import { useLanguage } from "../context/LanguageContext";
 import { Supplier, ApiPurchaseOrder, Product } from "../types";
+import { PurchaseDetail } from "../services/Purchase/fetchPurchaseById";
 
 export const SupplierDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +37,7 @@ export const SupplierDetail: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingSupplier, setLoadingSupplier] = useState(true);
+  const [editingPO, setEditingPO] = useState<PurchaseDetail | null>(null);
 
   // Financial Stats
   const [supplierStats, setSupplierStats] = useState<{
@@ -572,7 +574,10 @@ export const SupplierDetail: React.FC = () => {
       {/* Modals */}
       <CreatePOModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingPO(null);
+        }}
         suppliers={suppliers}
         products={products}
         onSuccess={() => {
@@ -591,6 +596,7 @@ export const SupplierDetail: React.FC = () => {
           loadSupplierStats();
         }}
         defaultSupplierId={id}
+        editingPO={editingPO}
       />
 
       <PODetailModal
@@ -598,6 +604,11 @@ export const SupplierDetail: React.FC = () => {
         onClose={() => setIsPODetailModalOpen(false)}
         purchaseId={selectedPOId}
         suppliers={suppliers}
+        onEdit={(purchase) => {
+          setIsPODetailModalOpen(false);
+          setEditingPO(purchase);
+          setIsCreateModalOpen(true);
+        }}
         onOrderUpdate={() => {
           if (poFilter === "deleted") {
             loadDeletedPurchases(

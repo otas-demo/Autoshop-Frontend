@@ -88,12 +88,7 @@ export const OrdersFilters: React.FC<OrdersFiltersProps> = ({
             </div>
           </div>
 
-          {/* Results count */}
-          <div className="text-xs sm:text-sm font-semibold text-[#2216a8]/90 whitespace-nowrap flex-shrink-0 pl-1">
-            <span>
-              Showing {filteredOrders.length} Orders of {orders.length}
-            </span>
-          </div>
+
         </div>
       </div>
     </div>

@@ -499,7 +499,7 @@ export const CreditDetail: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 font-bold">
-                    {isMy ? "ပေးချေပြီးငွေ စုစုပေါင်း" : "Total Paid"}
+                    {isMy ? "အကြွေးပေးချေပြီးငွေ စုစုပေါင်း" : "Total Credit Paid"}
                   </p>
                   <h4 className="text-lg font-black text-emerald-600 mt-0.5">
                     {personaDetail.summary.totalPaidViaCreditRecords?.toLocaleString() ||

@@ -43,8 +43,8 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onClose,
   onOrderUpdate,
 }) => {
-  // console.log("orderdetail", order);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isMy = language === "my";
   const navigate = useNavigate();
   const adminData = JSON.parse(localStorage.getItem("adminData") || "{}");
   const userRole = adminData.role;
@@ -228,7 +228,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       <div className="flex items-center gap-2 mb-2">
                         <User className="w-4 h-4 text-orange-600" />
                         <p className="text-xs text-orange-600 font-medium">
-                          Credit Person
+                          {isMy ? "ဝယ်သူ" : "Customer"}
                         </p>
                       </div>
                       <p className="font-bold text-orange-800">

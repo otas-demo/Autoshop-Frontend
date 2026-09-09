@@ -138,10 +138,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [activePopover, setActivePopover] = useState<string | null>(null);
 
+  const isItemActive = (itemPath: string, currentPath: string) => {
+    return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`);
+  };
+
   // Auto-expand group containing the active item on path change or mount
   useEffect(() => {
     visibleGroups.forEach((group) => {
-      const containsActive = group.items.some((item) => item.path === location.pathname);
+      const containsActive = group.items.some((item) => isItemActive(item.path, location.pathname));
       if (containsActive) {
         setExpandedGroups((prev) => ({ ...prev, [group.id]: true }));
       }
@@ -206,7 +210,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
               {visibleGroups.map((group) => {
                 const GroupIcon = group.icon;
                 const isExpanded = !!expandedGroups[group.id];
-                const hasActiveItem = group.items.some((item) => location.pathname === item.path);
+                const hasActiveItem = group.items.some((item) => isItemActive(item.path, location.pathname));
 
                 if (isCollapsed) {
                   return (
@@ -244,7 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                           <div className="flex flex-col gap-1">
                             {group.items.map((item) => {
                               const ItemIcon = item.icon;
-                              const isActive = location.pathname === item.path;
+                              const isActive = isItemActive(item.path, location.pathname);
                               return (
                                 <NavLink
                                   key={item.path}
@@ -297,7 +301,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                       <div className="pl-4 space-y-1 border-l border-gray-100 ml-5">
                         {group.items.map((item) => {
                           const ItemIcon = item.icon;
-                          const isActive = location.pathname === item.path;
+                          const isActive = isItemActive(item.path, location.pathname);
 
                           return (
                             <NavLink

@@ -73,6 +73,8 @@ export const fetchOrders = async (
   startDate?: string | null,
   endDate?: string | null,
   paymentType?: string | null,
+  paymentMethod?: string | null,
+  creditPersonId?: string | null,
 ): Promise<FetchOrdersResponse> => {
   try {
     let url = "/order";
@@ -81,6 +83,20 @@ export const fetchOrders = async (
     // Add paymentType filter if provided
     if (paymentType && paymentType !== "all") {
       params.append("paymentType", paymentType);
+    }
+
+    // Add paymentMethod filter if provided
+    if (
+      paymentMethod &&
+      paymentMethod !== "all" &&
+      paymentMethod.trim() !== ""
+    ) {
+      params.append("paymentMethod", paymentMethod);
+    }
+
+    // Add creditPersonId filter if provided
+    if (creditPersonId && creditPersonId.trim() !== "") {
+      params.append("creditPersonId", creditPersonId);
     }
 
     if (startDate) {

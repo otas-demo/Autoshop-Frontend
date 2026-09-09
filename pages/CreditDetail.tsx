@@ -19,7 +19,6 @@ import {
   LayoutGrid,
   ChevronLeft,
   ChevronRight,
-  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -42,7 +41,8 @@ import {
   fetchCreditPersonaProducts,
   CreditPersonaProductReportResponse,
 } from "../services/Reports/fetchCreditPersonaProducts";
-import { Order } from "../services/Order/fetchOrders";
+import { fetchOrders, Order } from "../services/Order/fetchOrders";
+import { OrdersTable } from "../components/Orders/OrdersTable";
 import { OrderDetailModal } from "../components/Orders/OrderDetailModal";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -65,6 +65,11 @@ export const CreditDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("orders");
   const [personaDetail, setPersonaDetail] =
     useState<CreditPersonaRecordsData | null>(null);
+  const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [orderPaymentTypeFilter, setOrderPaymentTypeFilter] = useState<
+    "all" | "paid" | "credit"
+  >("all");
   const [productsReport, setProductsReport] =
     useState<CreditPersonaProductReportResponse | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -146,12 +151,15 @@ export const CreditDetail: React.FC = () => {
     if (!id) return;
     setLoading(true);
     setLoadingProducts(true);
+    setLoadingOrders(true);
     setPaymentsPage(1);
     try {
-      const [personaResponse, productsResponse] = await Promise.all([
-        fetchCreditPersonaRecords(id, 1),
-        fetchCreditPersonaProducts(id),
-      ]);
+      const [personaResponse, productsResponse, ordersResponse] =
+        await Promise.all([
+          fetchCreditPersonaRecords(id, 1),
+          fetchCreditPersonaProducts(id),
+          fetchOrders(null, null, null, null, id),
+        ]);
 
       if (personaResponse.success && personaResponse.data) {
         setPersonaDetail(personaResponse.data);
@@ -166,12 +174,17 @@ export const CreditDetail: React.FC = () => {
       if (productsResponse.success) {
         setProductsReport(productsResponse);
       }
+
+      if (ordersResponse.success && ordersResponse.data) {
+        setCustomerOrders(ordersResponse.data);
+      }
     } catch (error) {
       console.error("Error loading credit details:", error);
       toast.error("Failed to load credit details");
     } finally {
       setLoading(false);
       setLoadingProducts(false);
+      setLoadingOrders(false);
     }
   };
 
@@ -359,6 +372,18 @@ export const CreditDetail: React.FC = () => {
   };
 
   const isMy = language === "my";
+
+  const filteredCustomerOrders = customerOrders.filter((order) => {
+    if (orderPaymentTypeFilter === "all") return true;
+    return order.paymentType === orderPaymentTypeFilter;
+  });
+
+  const paidOrdersCount = customerOrders.filter(
+    (o) => o.paymentType === "paid",
+  ).length;
+  const creditOrdersCount = customerOrders.filter(
+    (o) => o.paymentType === "credit",
+  ).length;
 
   return (
     <div className="w-full">
@@ -563,7 +588,7 @@ export const CreditDetail: React.FC = () => {
                       : "bg-slate-100 text-slate-700"
                   }`}
                 >
-                  {personaDetail.orders.length}
+                  {customerOrders.length}
                 </span>
               </button>
 
@@ -620,161 +645,97 @@ export const CreditDetail: React.FC = () => {
             <div className="space-y-6">
               {/* Associated Orders Tab */}
               {activeTab === "orders" && (
-                <div className="bg-white border border-gray-150 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                  <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                      <Receipt className="w-5 h-5 text-[#2216a8]" />
-                      <span>
-                        {isMy ? "ဆက်စပ် အော်ဒါများ" : "Associated Orders"}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <Receipt className="w-5 h-5 text-[#2216a8]" />
+                        <span>
+                          {isMy ? "ဆက်စပ် အော်ဒါများ" : "Associated Orders"}
+                        </span>
+                      </h3>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {filteredCustomerOrders.length}{" "}
+                        {isMy ? "စောင်" : "orders"}
                       </span>
-                    </h3>
-                    <span className="text-xs font-semibold text-slate-500">
-                      {personaDetail.orders.length}{" "}
-                      {isMy ? "စောင်" : "orders"}
-                    </span>
+                    </div>
+
+                    {/* Paid / Credit Filter Pills */}
+                    <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/60 self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setOrderPaymentTypeFilter("all")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          orderPaymentTypeFilter === "all"
+                            ? "bg-[#2216a8] text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                        }`}
+                      >
+                        <span>{isMy ? "အားလုံး" : "All"}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                            orderPaymentTypeFilter === "all"
+                              ? "bg-white/20 text-white"
+                              : "bg-slate-200 text-slate-700"
+                          }`}
+                        >
+                          {customerOrders.length}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setOrderPaymentTypeFilter("paid")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          orderPaymentTypeFilter === "paid"
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>{isMy ? "ပေးချေပြီး" : "Paid"}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                            orderPaymentTypeFilter === "paid"
+                              ? "bg-white/20 text-white"
+                              : "bg-slate-200 text-slate-700"
+                          }`}
+                        >
+                          {paidOrdersCount}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setOrderPaymentTypeFilter("credit")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          orderPaymentTypeFilter === "credit"
+                            ? "bg-amber-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        <span>{isMy ? "အကြွေး" : "Credit"}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                            orderPaymentTypeFilter === "credit"
+                              ? "bg-white/20 text-white"
+                              : "bg-slate-200 text-slate-700"
+                          }`}
+                        >
+                          {creditOrdersCount}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
-                  {personaDetail.orders.length === 0 ? (
-                    <div className="py-12 text-center text-slate-400 text-xs font-semibold">
-                      {isMy ? "အော်ဒါမှတ်တမ်း မရှိသေးပါ" : "No orders found"}
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-                      <table className="w-full text-sm text-left min-w-[700px]">
-                        <thead className="text-slate-500">
-                          <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
-                            <th className="px-4 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              No
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "အော်ဒါနံပါတ်" : "Order Num"}
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "ရက်စွဲ" : "Date"}
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "ပစ္စည်းများ" : "Items"}
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "ကျသင့်ငွေ" : "Final Amount"}
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "ပေးချေပြီး" : "Paid"}
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "ပေးရန်ကျန်" : "Remaining"}
-                            </th>
-                            <th className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "ပေးချေနည်း" : "Method"}
-                            </th>
-                            <th className="px-4 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 whitespace-nowrap">
-                              {isMy ? "လုပ်ဆောင်ချက်" : "Actions"}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {personaDetail.orders.map((order, index) => {
-                            const finalAmt = order.finalAmount ?? 0;
-                            const paidAmt = order.paidAmount ?? 0;
-                            const remainingAmt = Math.max(0, finalAmt - paidAmt);
-                            const itemsCount = order.ordersProducts?.length ?? 0;
-
-                            return (
-                              <tr
-                                key={order._id}
-                                className="hover:bg-slate-50/60 transition-colors"
-                              >
-                                {/* No */}
-                                <td className="px-4 py-3.5 text-center font-bold text-slate-400 text-xs whitespace-nowrap">
-                                  {String(index + 1).padStart(2, "0")}
-                                </td>
-
-                                {/* Order Number */}
-                                <td
-                                  onClick={() => handleViewOrder(order._id)}
-                                  className="px-4 py-3.5 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs whitespace-nowrap"
-                                >
-                                  {order.orderNumber}
-                                </td>
-
-                                {/* Date */}
-                                <td className="px-4 py-3.5 text-slate-600 text-xs font-semibold whitespace-nowrap">
-                                  {order.createdAt ? formatDate(order.createdAt) : "-"}
-                                </td>
-
-                                {/* Items */}
-                                <td className="px-4 py-3.5 text-slate-500 text-xs font-medium whitespace-nowrap">
-                                  {itemsCount}{" "}
-                                  {itemsCount === 1
-                                    ? isMy
-                                      ? "မျိုး"
-                                      : "Item"
-                                    : isMy
-                                      ? "မျိုး"
-                                      : "Items"}
-                                </td>
-
-                                {/* Final Amount */}
-                                <td className="px-4 py-3.5 font-bold text-slate-800 text-xs whitespace-nowrap">
-                                  {finalAmt.toLocaleString()}{" "}
-                                  <span className="text-[10px] text-slate-400 font-medium">
-                                    MMK
-                                  </span>
-                                </td>
-
-                                {/* Paid */}
-                                <td className="px-4 py-3.5 font-bold text-emerald-600 text-xs whitespace-nowrap">
-                                  {paidAmt.toLocaleString()}{" "}
-                                  <span className="text-[10px] text-slate-400 font-medium">
-                                    MMK
-                                  </span>
-                                </td>
-
-                                {/* Remaining */}
-                                <td className="px-4 py-3.5 text-xs whitespace-nowrap">
-                                  {remainingAmt > 0 ? (
-                                    <span className="font-bold text-amber-700">
-                                      {remainingAmt.toLocaleString()}{" "}
-                                      <span className="text-[10px] text-slate-400 font-medium">
-                                        MMK
-                                      </span>
-                                    </span>
-                                  ) : (
-                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      {isMy ? "အပြေချေပြီး" : "PAID"}
-                                    </span>
-                                  )}
-                                </td>
-
-                                {/* Method */}
-                                <td className="px-4 py-3.5 whitespace-nowrap">
-                                  <div className="flex items-center gap-1.5">
-                                    <CreditCard className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                    <span className="text-xs text-slate-600 font-medium">
-                                      {getPaymentMethodLabel(
-                                        order.paymentMethod || "cash",
-                                      )}
-                                    </span>
-                                  </div>
-                                </td>
-
-                                {/* Actions */}
-                                <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                                  <button
-                                    onClick={() => handleViewOrder(order._id)}
-                                    className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-[#2216a8] hover:bg-[#1b1187] text-white shadow-xs inline-flex items-center justify-center gap-1 cursor-pointer transition-all whitespace-nowrap"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    <span>{isMy ? "ကြည့်မယ်" : "View"}</span>
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  <OrdersTable
+                    loading={loadingOrders}
+                    orders={filteredCustomerOrders}
+                    onViewOrder={handleViewOrder}
+                    onOpenCreditPersonModal={() => {}}
+                    onOrderDeleted={loadCreditDetail}
+                  />
                 </div>
               )}
 

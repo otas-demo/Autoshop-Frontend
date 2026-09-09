@@ -43,27 +43,6 @@ export interface CreditPersonaSummary {
 export interface CreditPersonaOrder {
   _id: string;
   orderNumber: string;
-  finalAmount?: number;
-  paidAmount?: number;
-  paymentType?: string;
-  paymentMethod?: string;
-  createdAt?: string;
-  ordersProducts?: Array<{
-    inventoryId: any;
-    quantity: number;
-    unitPrice: number;
-    _id: string;
-  }>;
-  storefrontId?: {
-    _id: string;
-    storefrontName: string;
-    storefrontCode: string;
-  };
-  soldBy?: {
-    _id: string;
-    name: string;
-    role?: string;
-  };
 }
 
 export interface CreditPersonaRecordsData {

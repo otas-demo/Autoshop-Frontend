@@ -100,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
         { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
         { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
         { path: "/purchasing-report", label: t("sidebar.purchasingReport"), icon: BarChart3 },
-        { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
+        // { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
       ],
     },
     {
@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       icon: Settings,
       items: [
         { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
-        { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
+        // { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
       ],
     },
   ];

@@ -51,7 +51,7 @@ export const CreditDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Get credit person info from location state if available
   const personInfo = location.state as {
@@ -357,469 +357,586 @@ export const CreditDetail: React.FC = () => {
     }
   };
 
+  const isMy = language === "my";
+
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate("/credits")}
-          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <User className="w-6 h-6 text-primary" />
-            {personName}
-          </h1>
-          {personPhone && (
-            <p className="text-slate-500 text-sm flex items-center gap-1 mt-1">
-              <Phone className="w-4 h-4" />
-              {personPhone}
-            </p>
-          )}
-          {personAddress && (
-            <p className="text-slate-500 text-sm flex items-center gap-1 mt-1">
-              {personAddress}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={loadCreditDetail}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          {t("creditDetail.refresh")}
-        </button>
-        {personaDetail && (
-          <div className="flex gap-2">
-            {/* <button
-              onClick={handleOpenAddCredit}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm transition-all active:scale-95"
+    <div className="w-full">
+      <div className="bg-white min-h-[96vh] rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col gap-6">
+        {/* Top Header Section */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/credits")}
+              className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-full transition-all cursor-pointer shadow-xs"
+              title={isMy ? "နောက်သို့" : "Back"}
             >
-              <Box className="w-4 h-4" />
-              Add Credit
-            </button> */}
-            {personaDetail.orders.length > 0 && (
+              <ArrowLeft className="w-5 h-5 text-slate-700" />
+            </button>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                {isMy ? "ဝယ်သူ အသေးစိတ်" : "Customer Details"}
+              </h1>
+              <p className="text-xs text-slate-400 mt-1 font-medium">
+                {isMy
+                  ? "ဝယ်သူ အချက်အလက်၊ ဝယ်ယူမှုအော်ဒါများနှင့် ငွေပေးချေမှုမှတ်တမ်းများ"
+                  : "Customer information, order records and credit payment history"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={loadCreditDetail}
+              disabled={loading}
+              className="p-2.5 sm:px-4 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
+              <span className="hidden sm:inline">
+                {isMy ? "ပြန်လည်စစ်ဆေးမည်" : "Refresh"}
+              </span>
+            </button>
+
+            {personaDetail && personaDetail.orders.length > 0 && (
               <button
                 onClick={handleOpenAddPayment}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm transition-all active:scale-95"
+                className="bg-[#2216a8] hover:bg-[#1b1187] text-white font-semibold text-xs sm:text-sm px-6 py-2.5 rounded-full shadow-sm flex items-center gap-2 cursor-pointer transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4" />
-                {t("creditDetail.addPayment")}
+                <span>{isMy ? "ငွေပေးသွင်းမည်" : "Add Payment"}</span>
               </button>
             )}
           </div>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
-          <p className="text-slate-500">{t("creditDetail.loading")}</p>
         </div>
-      ) : personaDetail ? (
-        <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white p-5 rounded-xl shadow-sm border">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <LayoutGrid className="w-6 h-6 text-blue-600" />
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <Loader2 className="w-10 h-10 animate-spin text-[#2216a8]" />
+            <p className="text-slate-500 font-medium">
+              {isMy
+                ? "အချက်အလက်များ ရယူနေပါသည်..."
+                : "Loading customer details..."}
+            </p>
+          </div>
+        ) : personaDetail ? (
+          <div className="space-y-6">
+            {/* Customer Info Card */}
+            <div className="bg-[#fcfbf9] border border-gray-150 rounded-2xl p-6 flex flex-col md:flex-row gap-6 md:items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-indigo-50 rounded-2xl text-[#2216a8]">
+                  <User className="w-8 h-8" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">
-                    {t("creditDetail.totalRecords")}
-                  </p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {personaDetail.summary.totalCreditRecords}
+                  <h3 className="text-lg font-black text-slate-800">
+                    {personName}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-bold mt-1">
+                    {isMy ? "ဝယ်သူ ID" : "Customer ID"}: {id}
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white p-5 rounded-xl shadow-sm border">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <DollarSign className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {t("creditDetail.totalPaid")}
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {personaDetail?.summary?.totalPaidViaCreditRecords?.toLocaleString()}{" "}
-                    MMK
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center gap-6 border-t md:border-t-0 md:border-l border-gray-200/60 pt-4 md:pt-0 md:pl-6">
+                {personPhone && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-green-50 rounded-xl text-green-700">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {isMy ? "ဖုန်းနံပါတ်" : "Contact Phone"}
+                      </p>
+                      <p className="text-sm font-extrabold text-slate-700 mt-0.5">
+                        {personPhone}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {personAddress && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-50 rounded-xl text-blue-700">
+                      <Store className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {isMy ? "လိပ်စာ" : "Address"}
+                      </p>
+                      <p className="text-sm font-extrabold text-slate-700 mt-0.5">
+                        {personAddress}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl shadow-sm border">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-orange-100 rounded-xl">
-                  <AlertTriangle className="w-6 h-6 text-orange-600" />
+            {/* Financial Stats Grid (Total Records, Total Paid, Outstanding) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Total Records */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl">
+                  <Receipt className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">
-                    {t("creditDetail.outstanding")}
+                  <p className="text-xs text-slate-500 font-bold">
+                    {isMy ? "စုစုပေါင်း မှတ်တမ်း" : "Total Records"}
                   </p>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <h4 className="text-lg font-black text-slate-850 mt-0.5">
+                    {personaDetail.summary.totalCreditRecords}{" "}
+                    <span className="text-xs font-bold text-slate-500">
+                      {isMy ? "ခု" : "records"}
+                    </span>
+                  </h4>
+                </div>
+              </div>
+
+              {/* Total Paid */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-bold">
+                    {isMy ? "ပေးချေပြီးငွေ စုစုပေါင်း" : "Total Paid"}
+                  </p>
+                  <h4 className="text-lg font-black text-emerald-600 mt-0.5">
+                    {personaDetail.summary.totalPaidViaCreditRecords?.toLocaleString() ||
+                      0}{" "}
+                    <span className="text-xs font-bold text-slate-500">
+                      MMK
+                    </span>
+                  </h4>
+                </div>
+              </div>
+
+              {/* Outstanding Debt */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
+                <div
+                  className={`p-3.5 rounded-2xl ${
+                    personaDetail.summary.totalOutstandingAmount > 0
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-slate-50 text-slate-400"
+                  }`}
+                >
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-bold">
+                    {isMy ? "ပေးရန်ကျန် အကြွေး စုစုပေါင်း" : "Outstanding Debt"}
+                  </p>
+                  <h4
+                    className={`text-lg font-black mt-0.5 ${
+                      personaDetail.summary.totalOutstandingAmount > 0
+                        ? "text-amber-700"
+                        : "text-slate-700"
+                    }`}
+                  >
                     {personaDetail.summary.totalOutstandingAmount.toLocaleString()}{" "}
-                    MMK
-                  </p>
+                    <span className="text-xs font-bold text-slate-500">
+                      MMK
+                    </span>
+                  </h4>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Tabs Navigation */}
-          <div className="flex gap-2 mb-6 border-b">
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`px-6 py-3 font-semibold flex items-center gap-2 transition-colors border-b-2 ${
-                activeTab === "orders"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <Receipt className="w-4 h-4" />
-              {t("creditDetail.associatedOrders")} (
-              {personaDetail.orders.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("products")}
-              className={`px-6 py-3 font-semibold flex items-center gap-2 transition-colors border-b-2 ${
-                activeTab === "products"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <Box className="w-4 h-4" />
-              Purchased Products (
-              {productsReport?.data.totals.totalUniqueProducts || 0})
-            </button>
-            <button
-              onClick={() => setActiveTab("payments")}
-              className={`px-6 py-3 font-semibold flex items-center gap-2 transition-colors border-b-2 ${
-                activeTab === "payments"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <CreditCard className="w-4 h-4" />
-              {t("creditDetail.paymentRecords")} (
-              {personaDetail.summary.totalCreditRecords})
-            </button>
-          </div>
+            {/* Tabs for Orders, Products, Payments */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("orders")}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  activeTab === "orders"
+                    ? "bg-[#2216a8] text-white shadow-sm"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <Receipt className="w-4 h-4" />
+                <span>{isMy ? "ဆက်စပ် အော်ဒါများ" : "Associated Orders"}</span>
+                <span
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
+                    activeTab === "orders"
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {personaDetail.orders.length}
+                </span>
+              </button>
 
-          {/* Tab Content */}
-          <div className="mb-6">
-            {activeTab === "orders" && (
-              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div className="p-4 border-b bg-slate-50">
-                  <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <Receipt className="w-5 h-5 text-primary" />
-                    {t("creditDetail.associatedOrders")}
-                  </h2>
-                </div>
-                <div className="p-6">
+              <button
+                type="button"
+                onClick={() => setActiveTab("products")}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  activeTab === "products"
+                    ? "bg-[#2216a8] text-white shadow-sm"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <Box className="w-4 h-4" />
+                <span>
+                  {isMy ? "ဝယ်ယူထားသော ပစ္စည်းများ" : "Purchased Products"}
+                </span>
+                <span
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
+                    activeTab === "products"
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {productsReport?.data.totals.totalUniqueProducts || 0}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("payments")}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  activeTab === "payments"
+                    ? "bg-[#2216a8] text-white shadow-sm"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>
+                  {isMy ? "ငွေပေးချေမှု မှတ်တမ်းများ" : "Payment Records"}
+                </span>
+                <span
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
+                    activeTab === "payments"
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {personaDetail.summary.totalCreditRecords}
+                </span>
+              </button>
+            </div>
+
+            {/* Tab Contents */}
+            <div className="space-y-6">
+              {/* Associated Orders Tab */}
+              {activeTab === "orders" && (
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Receipt className="w-5 h-5 text-[#2216a8]" />
+                      <span>
+                        {isMy ? "ဆက်စပ် အော်ဒါများ" : "Associated Orders"}
+                      </span>
+                    </h3>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {personaDetail.orders.length}{" "}
+                      {isMy ? "စောင်" : "orders"}
+                    </span>
+                  </div>
+
                   {personaDetail.orders.length === 0 ? (
-                    <p className="text-slate-400 text-sm text-center py-4">
-                      {t("creditDetail.noOrders")}
-                    </p>
+                    <div className="py-12 text-center text-slate-400 text-xs font-semibold">
+                      {isMy ? "အော်ဒါမှတ်တမ်း မရှိသေးပါ" : "No orders found"}
+                    </div>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
                       {personaDetail.orders.map((order) => (
-                        <button
+                        <div
                           key={order._id}
                           onClick={() => handleViewOrder(order._id)}
-                          className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors cursor-pointer"
+                          className="group p-4 bg-[#fcfbf9] hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 rounded-2xl transition-all cursor-pointer shadow-xs flex items-center justify-between"
                         >
-                          {order.orderNumber}
-                        </button>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-white group-hover:bg-indigo-100 rounded-xl text-[#2216a8] border border-slate-100 transition-colors">
+                              <Receipt className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-[#2216a8] group-hover:underline">
+                                {order.orderNumber}
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                                {isMy
+                                  ? "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ"
+                                  : "Click to view details"}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-slate-400 group-hover:text-indigo-600 font-black">
+                            &rarr;
+                          </span>
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === "products" && (
-              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
-                  <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <Box className="w-5 h-5 text-primary" />
-                    Purchased Products Summary
-                  </h2>
-                  {productsReport && (
-                    <div className="flex gap-4 text-sm">
-                      <span className="text-slate-500">
-                        Total Qty:{" "}
-                        <span className="font-bold text-slate-800">
-                          {productsReport.data.totals.totalQuantity}
-                        </span>
+              {/* Purchased Products Tab */}
+              {activeTab === "products" && (
+                <div className="bg-white border border-gray-150 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Box className="w-5 h-5 text-[#2216a8]" />
+                      <span>
+                        {isMy
+                          ? "ဝယ်ယူထားသော ပစ္စည်းများ အကျဉ်းချုပ်"
+                          : "Purchased Products Summary"}
                       </span>
-                      <span className="text-slate-500">
-                        Total Orders:{" "}
-                        <span className="font-bold text-slate-800">
-                          {productsReport.data.totals.totalOrderCount}
+                    </h3>
+                    {productsReport && (
+                      <div className="flex items-center gap-3 text-xs font-bold flex-wrap">
+                        <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full">
+                          {isMy ? "စုစုပေါင်း အရေအတွက်" : "Total Qty"}:{" "}
+                          <span className="text-[#2216a8] font-black">
+                            {productsReport.data.totals.totalQuantity.toLocaleString()}
+                          </span>
                         </span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="overflow-x-auto">
-                  {loadingProducts ? (
-                    <div className="p-12 text-center">
-                      <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
-                      <p className="text-slate-400 text-sm">
-                        Loading products...
-                      </p>
-                    </div>
-                  ) : !productsReport ||
-                    productsReport.data.products.length === 0 ? (
-                    <div className="p-12 text-center text-slate-400 text-sm">
-                      No products found for this credit persona.
-                    </div>
-                  ) : (
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-slate-50 text-slate-600 border-b">
-                        <tr>
-                          <th className="px-4 py-3 font-medium">
-                            Product Name
-                          </th>
-                          <th className="px-4 py-3 font-medium">SKU</th>
-                          <th className="px-4 py-3 font-medium text-right">
-                            Quantity
-                          </th>
-                          <th className="px-4 py-3 font-medium text-right">
-                            Order Count
-                          </th>
-                          <th className="px-4 py-3 font-medium">Unit</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {productsReport.data.products.map((product, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50">
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-slate-800">
-                                {product.productName}
-                              </div>
-                              <div className="text-xs text-slate-500">
-                                {product.productCode}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {product.SKU}
-                            </td>
-                            <td className="px-4 py-3 text-right font-bold text-slate-800">
-                              {product.totalQuantity.toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 text-right text-slate-600">
-                              {product.orderCount}
-                            </td>
-                            <td className="px-4 py-3 text-slate-500 uppercase">
-                              {product.unitOfMeasure}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            )}
+                        <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full">
+                          {isMy ? "အော်ဒါ အရေအတွက်" : "Total Orders"}:{" "}
+                          <span className="text-[#2216a8] font-black">
+                            {productsReport.data.totals.totalOrderCount}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-            {activeTab === "payments" && (
-              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div className="p-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                    {t("creditDetail.paymentRecords")}
-                  </h2>
-                  {paymentsPagination && paymentsPagination.totalItems > 0 && (
-                    <p className="text-xs text-slate-500">
-                      {paymentsPagination.totalItems} total records
-                    </p>
-                  )}
-                </div>
-                {paymentsLoading ? (
-                  <div className="p-12 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm">
-                      Loading payments...
-                    </p>
-                  </div>
-                ) : personaDetail.creditRecords.records.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400">
-                    {t("creditDetail.noRecords")}
-                  </div>
-                ) : (
-                  <>
-                    <div className="overflow-x-auto h-[calc(100vh-525px)]">
-                      <table className="w-full text-sm text-left">
-                        <thead className="bg-slate-50 text-slate-600 border-b sticky top-0">
+                  <div className="overflow-x-auto">
+                    {loadingProducts ? (
+                      <div className="p-16 text-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+                        <p className="text-slate-400 text-xs font-semibold">
+                          {isMy
+                            ? "ပစ္စည်းစာရင်းများ ရယူနေပါသည်..."
+                            : "Loading products..."}
+                        </p>
+                      </div>
+                    ) : !productsReport ||
+                      productsReport.data.products.length === 0 ? (
+                      <div className="p-16 text-center text-slate-400 text-xs font-semibold">
+                        {isMy
+                          ? "ဝယ်ယူထားသော ပစ္စည်းမှတ်တမ်း မရှိပါ"
+                          : "No products found for this customer."}
+                      </div>
+                    ) : (
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-[#fcfbf9] text-slate-600 border-b border-gray-100">
                           <tr>
-                            <th className="px-4 py-3 font-medium">
-                              {t("creditDetail.order")}
+                            <th className="py-3.5 px-4 font-bold">
+                              {isMy ? "ကုန်ပစ္စည်း အမည်" : "Product Name"}
                             </th>
-                            <th className="px-4 py-3 font-medium">
-                              {t("creditDetail.paymentDate")}
+                            <th className="py-3.5 px-4 font-bold">SKU</th>
+                            <th className="py-3.5 px-4 font-bold text-right">
+                              {isMy ? "အရေအတွက်" : "Quantity"}
                             </th>
-                            <th className="px-4 py-3 font-medium">
-                              {t("common.method")}
+                            <th className="py-3.5 px-4 font-bold text-right">
+                              {isMy ? "အော်ဒါ အကြိမ်ရေ" : "Order Count"}
                             </th>
-                            <th className="px-4 py-3 font-medium text-right">
-                              {t("creditDetail.amountPaid")}
-                            </th>
-                            <th className="px-4 py-3 font-medium text-right">
-                              {t("creditDetail.remaining")}
+                            <th className="py-3.5 px-4 font-bold">
+                              {isMy ? "ယူနစ်" : "Unit"}
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y">
-                          {personaDetail.creditRecords.records.map((record) => (
-                            <tr key={record._id} className="hover:bg-slate-50">
-                              <td className="px-4 py-3">
-                                <span className="text-blue-600 font-medium">
-                                  {record.orderId.orderNumber}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-slate-600">
-                                <div className="flex items-center gap-1.5">
-                                  <Calendar className="w-3.5 h-3.5" />
-                                  {formatDate(record.paymentDate)}
+                        <tbody className="divide-y divide-gray-100">
+                          {productsReport.data.products.map((product, idx) => (
+                            <tr
+                              key={idx}
+                              className="hover:bg-indigo-50/20 transition-colors"
+                            >
+                              <td className="py-3.5 px-4">
+                                <div className="font-bold text-slate-900">
+                                  {product.productName}
+                                </div>
+                                <div className="text-[11px] text-slate-400 font-semibold">
+                                  {product.productCode}
                                 </div>
                               </td>
-                              <td className="px-4 py-3">
-                                <span className="bg-slate-100 px-2 py-1 rounded text-xs font-medium">
-                                  {getPaymentMethodLabel(record.paymentMethod)}
-                                </span>
+                              <td className="py-3.5 px-4 font-semibold text-slate-600">
+                                {product.SKU || "-"}
                               </td>
-                              <td className="px-4 py-3 text-right font-bold text-green-600">
-                                {record.paidAmount.toLocaleString()} MMK
+                              <td className="py-3.5 px-4 text-right font-black text-slate-900">
+                                {product.totalQuantity.toLocaleString()}
                               </td>
-                              <td className="px-4 py-3 text-right">
-                                <span
-                                  className={`font-medium ${
-                                    record.remainingBalanceAfterPayment > 0
-                                      ? "text-orange-600"
-                                      : "text-green-600"
-                                  }`}
-                                >
-                                  {record.remainingBalanceAfterPayment?.toLocaleString()}{" "}
-                                  MMK
-                                </span>
+                              <td className="py-3.5 px-4 text-right font-bold text-[#2216a8]">
+                                {product.orderCount}
+                              </td>
+                              <td className="py-3.5 px-4 font-semibold text-slate-500 uppercase">
+                                {product.unitOfMeasure || "-"}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                    </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-                    {paymentsPagination &&
-                      paymentsPagination.totalPages > 1 && (
-                        <div className="px-4 py-3 border-t flex items-center justify-between bg-slate-50">
-                          <div className="flex-1 flex justify-between sm:hidden">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                loadPaymentRecords(paymentsPage - 1)
-                              }
-                              disabled={paymentsPage <= 1 || paymentsLoading}
-                              className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
-                            >
-                              Previous
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                loadPaymentRecords(paymentsPage + 1)
-                              }
-                              disabled={
-                                paymentsPage >= paymentsPagination.totalPages ||
-                                paymentsLoading
-                              }
-                              className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
-                            >
-                              Next
-                            </button>
-                          </div>
-                          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                            <p className="text-sm text-slate-700">
+              {/* Payment Records Tab */}
+              {activeTab === "payments" && (
+                <div className="bg-white border border-gray-150 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-[#2216a8]" />
+                      <span>
+                        {isMy
+                          ? "ငွေပေးချေမှု မှတ်တမ်းများ"
+                          : "Payment Records"}
+                      </span>
+                    </h3>
+                    {paymentsPagination && paymentsPagination.totalItems > 0 && (
+                      <span className="text-xs text-slate-400 font-bold">
+                        {paymentsPagination.totalItems}{" "}
+                        {isMy ? "ခု တွေ့ရှိပါသည်" : "records total"}
+                      </span>
+                    )}
+                  </div>
+
+                  {paymentsLoading ? (
+                    <div className="p-16 text-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#2216a8] mx-auto mb-2" />
+                      <p className="text-slate-400 text-xs font-semibold">
+                        {isMy
+                          ? "ငွေပေးချေမှု မှတ်တမ်းများ ရယူနေပါသည်..."
+                          : "Loading payment records..."}
+                      </p>
+                    </div>
+                  ) : personaDetail.creditRecords.records.length === 0 ? (
+                    <div className="p-16 text-center text-slate-400 text-xs font-semibold">
+                      {isMy
+                        ? "ငွေပေးချေမှု မှတ်တမ်း မရှိသေးပါ"
+                        : "No payment records found"}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left">
+                          <thead className="bg-[#fcfbf9] text-slate-600 border-b border-gray-100">
+                            <tr>
+                              <th className="py-3.5 px-4 font-bold">
+                                {isMy ? "အော်ဒါ နံပါတ်" : "Order"}
+                              </th>
+                              <th className="py-3.5 px-4 font-bold">
+                                {isMy ? "ပေးချေသည့် ရက်စွဲ" : "Payment Date"}
+                              </th>
+                              <th className="py-3.5 px-4 font-bold">
+                                {isMy ? "ပေးချေမှု ပုံစံ" : "Method"}
+                              </th>
+                              <th className="py-3.5 px-4 font-bold text-right">
+                                {isMy ? "ပေးသွင်းငွေ" : "Amount Paid"}
+                              </th>
+                              <th className="py-3.5 px-4 font-bold text-right">
+                                {isMy ? "ကျန်ရှိငွေ" : "Remaining"}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {personaDetail.creditRecords.records.map(
+                              (record) => (
+                                <tr
+                                  key={record._id}
+                                  className="hover:bg-indigo-50/20 transition-colors"
+                                >
+                                  <td className="py-3.5 px-4">
+                                    <button
+                                      onClick={() =>
+                                        handleViewOrder(record.orderId._id)
+                                      }
+                                      className="text-[#2216a8] font-bold hover:underline cursor-pointer"
+                                    >
+                                      {record.orderId.orderNumber}
+                                    </button>
+                                  </td>
+                                  <td className="py-3.5 px-4 font-semibold text-slate-600">
+                                    <div className="flex items-center gap-1.5">
+                                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                      <span>{formatDate(record.paymentDate)}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <span className="bg-slate-100 px-3 py-1 rounded-full text-[11px] font-bold text-slate-700">
+                                      {getPaymentMethodLabel(
+                                        record.paymentMethod
+                                      )}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right font-black text-emerald-600">
+                                    {record.paidAmount.toLocaleString()} MMK
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right">
+                                    <span
+                                      className={`font-black ${
+                                        record.remainingBalanceAfterPayment > 0
+                                          ? "text-amber-700"
+                                          : "text-emerald-600"
+                                      }`}
+                                    >
+                                      {record.remainingBalanceAfterPayment?.toLocaleString()}{" "}
+                                      MMK
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {paymentsPagination &&
+                        paymentsPagination.totalPages > 1 && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-white border-t border-gray-100">
+                            <div className="text-xs font-semibold text-slate-500">
                               Showing{" "}
-                              <span className="font-medium">
+                              <span className="font-bold text-slate-800">
                                 {(paymentsPage - 1) *
                                   paymentsPagination.itemsPerPage +
                                   1}
                               </span>{" "}
                               to{" "}
-                              <span className="font-medium">
+                              <span className="font-bold text-slate-800">
                                 {Math.min(
                                   paymentsPage *
                                     paymentsPagination.itemsPerPage,
-                                  paymentsPagination.totalItems,
+                                  paymentsPagination.totalItems
                                 )}
                               </span>{" "}
                               of{" "}
-                              <span className="font-medium">
+                              <span className="font-bold text-slate-800">
                                 {paymentsPagination.totalItems}
                               </span>{" "}
                               results
-                            </p>
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            </div>
+                            <div className="flex items-center gap-2">
                               <button
-                                type="button"
                                 onClick={() =>
                                   loadPaymentRecords(paymentsPage - 1)
                                 }
                                 disabled={paymentsPage <= 1 || paymentsLoading}
-                                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+                                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                               >
-                                <ChevronLeft className="h-5 w-5" />
+                                <ChevronLeft className="w-4 h-4" />
                               </button>
-                              {Array.from(
-                                {
-                                  length: Math.min(
-                                    5,
-                                    paymentsPagination.totalPages,
-                                  ),
-                                },
-                                (_, i) => {
-                                  let pageNum: number;
-                                  const { totalPages } = paymentsPagination;
-                                  if (totalPages <= 5) {
-                                    pageNum = i + 1;
-                                  } else if (paymentsPage <= 3) {
-                                    pageNum = i + 1;
-                                  } else if (paymentsPage >= totalPages - 2) {
-                                    pageNum = totalPages - 4 + i;
-                                  } else {
-                                    pageNum = paymentsPage - 2 + i;
-                                  }
-                                  return (
-                                    <button
-                                      key={pageNum}
-                                      type="button"
-                                      onClick={() =>
-                                        loadPaymentRecords(pageNum)
-                                      }
-                                      disabled={paymentsLoading}
-                                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                        paymentsPage === pageNum
-                                          ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                                          : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
-                                      }`}
-                                    >
-                                      {pageNum}
-                                    </button>
-                                  );
-                                },
-                              )}
+
+                              <div className="flex gap-1">
+                                {Array.from(
+                                  { length: paymentsPagination.totalPages },
+                                  (_, i) => i + 1
+                                ).map((page) => (
+                                  <button
+                                    key={page}
+                                    onClick={() => loadPaymentRecords(page)}
+                                    disabled={paymentsLoading}
+                                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                      page === paymentsPage
+                                        ? "bg-[#2216a8] text-white shadow-xs"
+                                        : "text-slate-600 hover:bg-slate-50 border border-slate-200"
+                                    }`}
+                                  >
+                                    {page}
+                                  </button>
+                                ))}
+                              </div>
+
                               <button
-                                type="button"
                                 onClick={() =>
                                   loadPaymentRecords(paymentsPage + 1)
                                 }
@@ -828,66 +945,73 @@ export const CreditDetail: React.FC = () => {
                                     paymentsPagination.totalPages ||
                                   paymentsLoading
                                 }
-                                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+                                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                               >
-                                <ChevronRight className="h-5 w-5" />
+                                <ChevronRight className="w-4 h-4" />
                               </button>
-                            </nav>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                  </>
-                )}
-              </div>
-            )}
+                        )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
-          <AlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">Failed to load credit details</p>
-          <button
-            onClick={loadCreditDetail}
-            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors font-medium"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-150 p-12 text-center">
+            <AlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500 font-semibold">
+              {isMy
+                ? "အချက်အလက်များ ရယူ၍ မရနိုင်ပါ"
+                : "Failed to load customer details"}
+            </p>
+            <button
+              onClick={loadCreditDetail}
+              className="mt-4 px-6 py-2.5 bg-[#2216a8] hover:bg-[#1b1187] text-white rounded-full transition-all font-bold text-xs shadow-sm cursor-pointer"
+            >
+              {isMy ? "ထပ်မံကြိုးစားမည်" : "Try Again"}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Modals remain same as before */}
+      {/* Add Payment Modal */}
       {showAddPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="p-4 border-b flex justify-between items-center bg-green-50">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-green-600" />
-                {t("creditDetail.recordPayment")}
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-gray-100">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-[#fcfbf9]">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <span>{isMy ? "ငွေပေးချေမှု ထည့်သွင်းမည်" : "Record Payment"}</span>
               </h2>
               <button
                 onClick={handleCloseAddPayment}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
               {/* Order Selection */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("creditDetail.selectOrder")}{" "}
-                  <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isMy ? "အော်ဒါ ရွေးချယ်ပါ" : "Select Order"}{" "}
+                  <span className="text-rose-500">*</span>
                 </label>
                 <select
-                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  className="w-full border border-slate-200 rounded-2xl p-3 text-xs font-semibold text-slate-800 bg-white focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] outline-none shadow-xs transition-all"
                   value={paymentForm.orderId}
                   onChange={(e) =>
                     setPaymentForm({ ...paymentForm, orderId: e.target.value })
                   }
                 >
                   <option value="">
-                    -- {t("creditDetail.selectOrder")} --
+                    -- {isMy ? "အော်ဒါ ရွေးချယ်ပါ" : "Select Order"} --
                   </option>
                   {[...personaDetail?.orders].reverse().map((order) => (
                     <option key={order._id} value={order._id}>
@@ -899,15 +1023,15 @@ export const CreditDetail: React.FC = () => {
 
               {/* Amount */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("creditDetail.amount")}{" "}
-                  <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isMy ? "ပေးသွင်းငွေ (MMK)" : "Payment Amount (MMK)"}{" "}
+                  <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
                   min="0"
-                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                  placeholder={t("creditDetail.enterAmount")}
+                  className="w-full border border-slate-200 rounded-2xl p-3 text-sm font-bold text-slate-900 bg-white focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] outline-none shadow-xs transition-all"
+                  placeholder={isMy ? "ငွေပမာဏ ရိုက်ထည့်ပါ..." : "Enter amount..."}
                   value={paymentForm.paidAmount || ""}
                   onChange={(e) =>
                     setPaymentForm({
@@ -920,11 +1044,11 @@ export const CreditDetail: React.FC = () => {
 
               {/* Payment Method */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("creditDetail.paymentMethod")}
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {isMy ? "ပေးချေမှု ပုံစံ" : "Payment Method"}
                 </label>
                 <select
-                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  className="w-full border border-slate-200 rounded-2xl p-3 text-xs font-semibold text-slate-800 bg-white focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] outline-none shadow-xs transition-all"
                   value={paymentForm.paymentMethod}
                   onChange={(e) =>
                     setPaymentForm({
@@ -942,27 +1066,27 @@ export const CreditDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 border-t bg-slate-50 flex justify-end gap-3">
+            <div className="p-5 border-t border-gray-100 bg-[#fcfbf9] flex justify-end gap-3">
               <button
                 onClick={handleCloseAddPayment}
-                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+                className="px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
               >
-                {t("common.cancel")}
+                {isMy ? "မလုပ်တော့ပါ" : "Cancel"}
               </button>
               <button
                 onClick={handleAddPayment}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
+                className="px-6 py-2.5 bg-[#2216a8] hover:bg-[#1b1187] text-white rounded-full transition-all disabled:opacity-50 flex items-center gap-2 font-bold text-xs shadow-sm cursor-pointer active:scale-95"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />{" "}
-                    {t("common.loading")}
+                    <span>{isMy ? "သိမ်းဆည်းနေသည်..." : "Recording..."}</span>
                   </>
                 ) : (
                   <>
                     <Plus className="w-4 h-4" />{" "}
-                    {t("creditDetail.recordPayment")}
+                    <span>{isMy ? "ငွေပေးသွင်းမည်" : "Record Payment"}</span>
                   </>
                 )}
               </button>

@@ -5,7 +5,7 @@ export type Language = "en" | "my";
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, fallback?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -38,7 +38,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLanguageState(lang);
   };
 
-  const t = (key: string): string => {
+  const t = (key: string, fallback?: string): string => {
     const keys = key.split(".");
     let value: any = translations[language];
     
@@ -51,11 +51,14 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         for (const fk of keys) {
           fallbackValue = fallbackValue?.[fk];
         }
-        return fallbackValue || key;
+        if (fallbackValue !== undefined) {
+          return fallbackValue;
+        }
+        return fallback !== undefined ? fallback : key;
       }
     }
     
-    return value || key;
+    return value !== undefined ? value : (fallback !== undefined ? fallback : key);
   };
 
   return (

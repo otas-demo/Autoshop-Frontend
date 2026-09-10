@@ -7,9 +7,9 @@ interface DeleteShopLogoResponse {
   data?: ShopSettings;
 }
 
-export const deleteShopLogo = async (): Promise<DeleteShopLogoResponse> => {
+export const deleteShopLogo = async (slot: number = 1): Promise<DeleteShopLogoResponse> => {
   try {
-    const response = await axios.delete("/shop-settings/logo");
+    const response = await axios.delete(`/shop-settings/logo/${slot}`);
     return response.data;
   } catch (error: unknown) {
     console.error("Error deleting shop logo:", error);

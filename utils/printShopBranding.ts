@@ -1,4 +1,5 @@
 import { ShopSettings } from "../services/ShopSettings/fetchShopSettings";
+import { getVoucherReceiptLogo } from "./receiptLogo";
 
 export interface PrintShopBranding {
   shopName: string;
@@ -11,9 +12,10 @@ export interface PrintShopBranding {
 
 export const getPrintShopBranding = (
   settings: ShopSettings | null,
+  logoSlotOverride?: number,
 ): PrintShopBranding => ({
   shopName: settings?.shopName || "Shop",
-  logo: settings?.logo || undefined,
+  logo: getVoucherReceiptLogo(settings, logoSlotOverride),
   phone: settings?.phoneNumber,
   address: settings?.address,
   website: settings?.socialMedia?.website,

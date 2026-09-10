@@ -100,6 +100,7 @@ export const ShopSettingsTab: React.FC = () => {
           {settings && (
             <ShopLogoUpload
               currentLogo={settings.logo}
+              logos={settings.logos}
               shopName={settings.shopName}
               onSuccess={loadShopSettings}
             />
@@ -108,27 +109,14 @@ export const ShopSettingsTab: React.FC = () => {
       ) : (
         <div className="space-y-6">
           <ShopInfoCard settings={settings} />
-          {/* <ShopLogoUpload
+          <ShopLogoUpload
             currentLogo={settings.logo}
+            logos={settings.logos}
             shopName={settings.shopName}
-            onSuccess={loadShopSettings}
-          /> */}
-          {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BusinessHoursCard businessHours={settings.businessHours} />
-            <SocialMediaCard socialMedia={settings.socialMedia} />
-          </div> */}
-        </div>
-      )}
-
-      {/* {settings && !isEditing && (
-        <div className="mt-6">
-          <DailyReportScheduleCard
-            currentTime={settings.dailyReportTime || "21:00"}
-            currentEnabled={settings.dailyReportEnabled !== false}
             onSuccess={loadShopSettings}
           />
         </div>
-      )} */}
+      )}
 
       <div className="mt-6">
         <PrintPaperSizeSettingsCard />

@@ -28,6 +28,12 @@ export interface ShopSettingsUpdatedBy {
   role: string;
 }
 
+export interface ShopLogoItem {
+  url: string;
+  key: string;
+  slot: number;
+}
+
 export interface ShopSettings {
   _id: string;
   shopName: string;
@@ -36,6 +42,7 @@ export interface ShopSettings {
   formattedPhoneNumber?: string;
   logo: string;
   logoKey: string;
+  logos?: ShopLogoItem[];
   email: string;
   taxId: string;
   currency: string;

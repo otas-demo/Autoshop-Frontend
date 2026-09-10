@@ -22,6 +22,7 @@ interface UploadShopLogoResponse {
 
 export const uploadShopLogo = async (
   file: File,
+  slot: number = 1,
 ): Promise<UploadShopLogoResponse> => {
   const validationError = validateShopLogoFile(file);
   if (validationError) {
@@ -30,6 +31,7 @@ export const uploadShopLogo = async (
 
   const formData = new FormData();
   formData.append("logo", file);
+  formData.append("slot", slot.toString());
 
   try {
     const response = await axios.post("/shop-settings/logo", formData, {

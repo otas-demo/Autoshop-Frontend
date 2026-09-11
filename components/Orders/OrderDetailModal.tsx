@@ -93,7 +93,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
     // Navigate to A4 print page for all devices
     navigate(
-      `/print-receipt/${receiptData.invoiceNumber}?size=${getSavedPrintPaperSize()}`,
+      `/print-receipt/${receiptData.invoiceNumber}?size=${getSavedPrintPaperSize()}&autoprint=1`,
     );
   };
 

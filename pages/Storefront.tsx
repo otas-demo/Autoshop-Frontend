@@ -558,7 +558,7 @@ export const Storefront: React.FC = () => {
                       {profile.status === "active" ? t("storefront.activeLabel") : t("storefront.inactiveLabel")}
                     </span>
 
-                    {userRole === "owner" && (
+                    {(userRole === "owner" || userRole === "warehouse") && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

@@ -1071,7 +1071,7 @@ export const StorefrontDetail: React.FC = () => {
                             >
                               Check
                             </button>
-                            {userRole === "owner" && (
+                            {(userRole === "owner" || userRole === "warehouse") && (
                               <>
                                 {/* <button
                                   onClick={() => openTransferModal("warehouse", item)}

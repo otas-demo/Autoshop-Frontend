@@ -53,6 +53,18 @@ const RootRedirect: React.FC = () => {
   return <Navigate to={role === "warehouse" ? "/warehouse" : "/pos"} replace />;
 };
 
+const RestrictWarehouseRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  let role = "";
+  try {
+    const storedAdmin = localStorage.getItem("adminData");
+    role = storedAdmin ? JSON.parse(storedAdmin)?.role : "";
+  } catch (e) {}
+  if (role === "warehouse") {
+    return <Navigate to="/warehouse" replace />;
+  }
+  return <>{children}</>;
+};
+
 const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
@@ -176,7 +188,9 @@ const AppLayout: React.FC = () => {
             path="/orders"
             element={
               <ProtectedRoute>
-                <Orders />
+                <RestrictWarehouseRoute>
+                  <Orders />
+                </RestrictWarehouseRoute>
               </ProtectedRoute>
             }
           />
@@ -184,7 +198,9 @@ const AppLayout: React.FC = () => {
             path="/credit-orders"
             element={
               <ProtectedRoute>
-                <CreditOrders />
+                <RestrictWarehouseRoute>
+                  <CreditOrders />
+                </RestrictWarehouseRoute>
               </ProtectedRoute>
             }
           />
@@ -240,7 +256,9 @@ const AppLayout: React.FC = () => {
             path="/accounts"
             element={
               <ProtectedRoute>
-                <AccountManagement />
+                <RestrictWarehouseRoute>
+                  <AccountManagement />
+                </RestrictWarehouseRoute>
               </ProtectedRoute>
             }
           />

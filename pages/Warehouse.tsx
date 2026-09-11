@@ -549,7 +549,7 @@ export const Warehouse: React.FC = () => {
                         >
                           {profile.status}
                         </span>
-                        {userRole === "owner" && (
+                        {(userRole === "owner" || userRole === "warehouse") && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

@@ -51,8 +51,12 @@ axios.interceptors.response.use(
   },
   (error) => {
     const errorCode = error.response?.data?.code;
-    if (errorCode) {
-      const localizedMessage = getErrorMessage(errorCode);
+    const backendMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error;
+
+    if (errorCode || backendMessage) {
+      const localizedMessage = getErrorMessage(errorCode, backendMessage);
       if (error.response?.data) {
         error.response.data.message = localizedMessage;
       }

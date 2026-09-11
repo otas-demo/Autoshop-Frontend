@@ -87,8 +87,6 @@ export const OrdersFilters: React.FC<OrdersFiltersProps> = ({
               </select>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>

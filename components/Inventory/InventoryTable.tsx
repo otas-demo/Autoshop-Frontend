@@ -165,7 +165,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     {p.sellingPrice.toLocaleString()} <span className="text-[10px] text-slate-500 font-bold ml-1">MMK</span>
                   </td>
                   <td className="px-3 py-4 text-center">
-                    {onStatusToggle && userRole === "owner" ? (
+                    {onStatusToggle && ["owner", "admin", "cashier"].includes(userRole) ? (
                       <button
                         onClick={() =>
                           onStatusToggle(p.id, p.status || "active")
@@ -192,7 +192,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   </td>
                   <td className="px-3 py-4">
                     <div className="flex items-center justify-center gap-1 sm:gap-2">
-                      {userRole === "owner" && (
+                      {["owner", "admin", "cashier"].includes(userRole) && (
                         <button
                           onClick={() => onEdit(p)}
                           className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm shadow-indigo-600/5 transition-all cursor-pointer whitespace-nowrap"

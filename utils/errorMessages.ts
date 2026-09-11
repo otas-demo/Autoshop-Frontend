@@ -9,6 +9,8 @@ export const ERROR_MAPPINGS: Record<string, Record<string, string>> = {
     DUPLICATE_KEY_ERROR: "ယခု အချက်အလက်တွေက စနစ်ထဲမှာ ထည့်သွင်းပြီးသား ဖြစ်ပါတယ်။",
     TOKEN_EXPIRED: "ဝင်ရောက်ခွင့်ကုဒ် သက်တမ်းကုန်ဆုံးသွားပါပြီ။ ကျေးဇူးပြုပြီး နောက်တစ်ကြိမ် login ပြန်လုပ်ပေးပါ။",
     INVALID_TOKEN: "ဝင်ရောက်ခွင့်ကုဒ် မှားယွင်းနေပါတယ်။ ကျေးဇူးပြုပြီး နောက်တစ်ကြိမ် login ပြန်လုပ်ပေးပါ။",
+    INVALID_PHONE: "ဖုန်းနံပါတ် ပုံစံ မှားယွင်းနေပါသည်။ (ဥပမာ - 09xxxxxxxxx)",
+    NOT_FOUND: "ရှာမတွေ့ပါ။",
     DEFAULT: "စနစ်ပိုင်းဆိုင်ရာ တစ်ခုခု မှားယွင်းနေပါတယ်။"
   },
   en: {
@@ -21,17 +23,47 @@ export const ERROR_MAPPINGS: Record<string, Record<string, string>> = {
     DUPLICATE_KEY_ERROR: "This data already exists in the system.",
     TOKEN_EXPIRED: "Session expired. Please log in again.",
     INVALID_TOKEN: "Invalid token. Please log in again.",
+    INVALID_PHONE: "Invalid phone number format (e.g. 09xxxxxxxxx).",
+    NOT_FOUND: "Resource not found.",
     DEFAULT: "Something went wrong."
   }
 };
 
 /**
- * Maps a backend error code to a user-friendly localized error message.
+ * Maps a backend error code and/or message to a user-friendly localized error message.
  * @param errorCode The standardized error code returned from the backend.
+ * @param fallbackMessage The specific error message returned from the backend (if any).
  * @returns The localized message.
  */
-export const getErrorMessage = (errorCode: string): string => {
+export const getErrorMessage = (errorCode?: string, fallbackMessage?: string): string => {
   const currentLang = localStorage.getItem("language") || "my";
   const mappings = ERROR_MAPPINGS[currentLang] || ERROR_MAPPINGS.my;
-  return mappings[errorCode] || mappings.DEFAULT;
+
+  // If a specific errorCode matches (not generic VALIDATION_ERROR / SERVER_ERROR)
+  if (errorCode && mappings[errorCode] && errorCode !== "VALIDATION_ERROR" && errorCode !== "SERVER_ERROR") {
+    return mappings[errorCode];
+  }
+
+  // If fallbackMessage contains phone error, map to localized phone message
+  if (fallbackMessage) {
+    const lower = fallbackMessage.toLowerCase();
+    if (lower.includes("phone number") || lower.includes("invalid phone")) {
+      return mappings.INVALID_PHONE || fallbackMessage;
+    }
+
+    // If fallbackMessage is a specific non-generic message, use it
+    if (
+      !lower.includes("something went wrong") &&
+      !lower.includes("internal server error")
+    ) {
+      return fallbackMessage;
+    }
+  }
+
+  // If we had a generic code like VALIDATION_ERROR or SERVER_ERROR
+  if (errorCode && mappings[errorCode]) {
+    return mappings[errorCode];
+  }
+
+  return mappings.DEFAULT;
 };

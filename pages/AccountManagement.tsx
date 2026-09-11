@@ -198,6 +198,8 @@ export const AccountManagement: React.FC = () => {
         return "border border-indigo-500 bg-indigo-50/50 text-indigo-700 font-semibold px-3.5 py-0.5 rounded-full text-xs";
       case "cashier":
         return "border border-blue-400 bg-blue-50/50 text-blue-600 font-semibold px-3.5 py-0.5 rounded-full text-xs";
+      case "warehouse":
+        return "border border-amber-500 bg-amber-50/50 text-amber-700 font-semibold px-3.5 py-0.5 rounded-full text-xs";
       case "manager":
         return "border border-green-500 bg-green-50/50 text-green-700 font-semibold px-3.5 py-0.5 rounded-full text-xs";
       default:
@@ -256,7 +258,7 @@ export const AccountManagement: React.FC = () => {
   );
 
   // Available roles for selection
-  const availableRoles = ["owner", "cashier"];
+  const availableRoles = ["owner", "cashier", "warehouse"];
 
   const handleOpenEditModal = (account: AdminAccount) => {
     setSelectedAccount(account);
@@ -1140,6 +1142,7 @@ export const AccountManagement: React.FC = () => {
                       }
                     >
                       <option value="cashier">Cashier</option>
+                      <option value="warehouse">Warehouse</option>
                       <option value="owner">Owner</option>
                     </select>
                     <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

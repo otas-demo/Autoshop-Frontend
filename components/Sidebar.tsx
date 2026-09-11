@@ -117,9 +117,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
   const userRole = adminData?.role || currentUser?.role;
 
   const hasPermission = (path: string) => {
+    // Warehouse role can only access warehouse and expenses
+    if (userRole === "warehouse") {
+      return path === "/warehouse" || path === "/expenses";
+    }
+
     if (path === "/accounts" && userRole !== "owner") return false;
     if (
-      ["/purchasing", "/inventory", "/warehouse", "/suppliers", "/purchasing-report"].includes(path) &&
+      ["/purchasing", "/warehouse", "/suppliers", "/purchasing-report"].includes(path) &&
       userRole !== "admin" &&
       userRole !== "owner"
     ) {

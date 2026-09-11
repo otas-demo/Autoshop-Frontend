@@ -91,10 +91,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     const receiptId = `receipt_${receiptData.invoiceNumber}`;
     localStorage.setItem(receiptId, JSON.stringify(receiptData));
 
-    // Navigate to A4 print page for all devices
-    navigate(
-      `/print-receipt/${receiptData.invoiceNumber}?size=${getSavedPrintPaperSize()}`,
-    );
+    // Device detection for print method selection
+    const device = detectDevice();
+
+    if (device.isAndroid || device.isIOS) {
+      navigate(
+        `/mobile-print/${receiptData.invoiceNumber}?size=${getSavedPrintPaperSize()}`,
+      );
+    } else {
+      navigate(
+        `/print-receipt/${receiptData.invoiceNumber}?size=${getSavedPrintPaperSize()}&autoprint=1`,
+      );
+    }
   };
 
   if (!isOpen) return null;

@@ -277,7 +277,7 @@ export const WarehouseDetail: React.FC = () => {
 
   const loadStorefronts = async () => {
     try {
-      const response = await fetchStorefrontProfiles();
+      const response = await fetchStorefrontProfiles(1, 100);
       if (response.success && response.data) {
         setStorefronts(response.data.filter((s) => s.status === "active"));
       }
@@ -345,6 +345,8 @@ export const WarehouseDetail: React.FC = () => {
   };
 
   const openTransferModal = (type: "storefront" | "warehouse", item?: WarehouseStockItem) => {
+    loadStorefronts();
+    loadWarehouses();
     if (item) {
       const maxQuantity = getTransferMaxQuantity(item);
       if (maxQuantity <= 0) {
@@ -1194,7 +1196,9 @@ export const WarehouseDetail: React.FC = () => {
                     value={selectedStorefrontId}
                     onChange={(e) => setSelectedStorefrontId(e.target.value)}
                   >
-                    <option value="">Select Storefront...</option>
+                    <option value="">
+                      {storefronts.length === 0 ? "Loading or No active storefronts..." : "Select Storefront..."}
+                    </option>
                     {storefronts.map((sf) => (
                       <option key={sf._id} value={sf._id}>
                         {sf.locationName} ({sf.locationCode})

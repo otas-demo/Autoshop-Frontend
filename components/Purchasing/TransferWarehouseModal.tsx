@@ -3,9 +3,10 @@ import { Modal } from "../Modal";
 import { GRNData } from "../../services/Purchase/fetchGRNs";
 import { fetchGRNById } from "../../services/Purchase/fetchGRNById";
 import { fetchWarehouseProfiles } from "../../services/Warehouse/fetchWarehouseProfiles";
+import { fetchStorefrontProfiles, StorefrontProfile } from "../../services/Storefront/fetchStorefrontProfiles";
 import { transferGRN } from "../../services/Purchase/transferGRN";
 import { toast } from "sonner";
-import { Warehouse, Package } from "lucide-react";
+import { Warehouse, Store, Package } from "lucide-react";
 
 interface WarehouseProfile {
   _id: string;
@@ -35,8 +36,11 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
   onSuccess,
 }) => {
   const [grn, setGrn] = useState<GRNData | null>(null);
+  const [destinationType, setDestinationType] = useState<"warehouse" | "storefront">("warehouse");
   const [warehouses, setWarehouses] = useState<WarehouseProfile[]>([]);
+  const [storefronts, setStorefronts] = useState<StorefrontProfile[]>([]);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
+  const [selectedStorefrontId, setSelectedStorefrontId] = useState("");
   const [transferItems, setTransferItems] = useState<TransferItem[]>([]);
   const [transferDate, setTransferDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -55,9 +59,10 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
     if (!grnId) return;
     setLoading(true);
     try {
-      const [grnRes, warehouseRes] = await Promise.all([
+      const [grnRes, warehouseRes, storefrontRes] = await Promise.all([
         fetchGRNById(grnId),
         fetchWarehouseProfiles(),
+        fetchStorefrontProfiles(),
       ]);
 
       if (grnRes.success && grnRes.data) {
@@ -74,6 +79,10 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
 
       if (warehouseRes.success && warehouseRes.data) {
         setWarehouses(warehouseRes.data);
+      }
+
+      if (storefrontRes.success && storefrontRes.data) {
+        setStorefronts(storefrontRes.data);
       }
     } catch (error) {
       console.error("Failed to load data", error);
@@ -110,7 +119,9 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
 
   const resetForm = () => {
     setGrn(null);
+    setDestinationType("warehouse");
     setSelectedWarehouseId("");
+    setSelectedStorefrontId("");
     setTransferItems([]);
     setTransferDate(new Date().toISOString().split("T")[0]);
     setNotes("");
@@ -127,8 +138,13 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
       return;
     }
 
-    if (!selectedWarehouseId) {
+    if (destinationType === "warehouse" && !selectedWarehouseId) {
       toast.error("Please select a destination warehouse");
+      return;
+    }
+
+    if (destinationType === "storefront" && !selectedStorefrontId) {
+      toast.error("Please select a destination storefront");
       return;
     }
 
@@ -148,10 +164,9 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const payload = {
+      const payload: any = {
         sourceType: "GRN" as const,
         grnId,
-        destinationWarehouseId: selectedWarehouseId,
         lineItems: itemsToProcess.map((item) => ({
           productCode: item.productCode,
           quantity: item.quantity,
@@ -159,6 +174,12 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
         transferDate,
         notes: notes || undefined,
       };
+
+      if (destinationType === "warehouse") {
+        payload.destinationWarehouseId = selectedWarehouseId;
+      } else {
+        payload.destinationStorefrontId = selectedStorefrontId;
+      }
 
       const result = await transferGRN(payload);
 
@@ -179,7 +200,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Transfer to Warehouse">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Transfer GRN Stock">
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
@@ -216,24 +237,79 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
               </div>
             </div>
 
-            {/* Warehouse Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                <Warehouse className="w-4 h-4" />
-                Destination Warehouse
-              </label>
-              <select
-                className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                value={selectedWarehouseId}
-                onChange={(e) => setSelectedWarehouseId(e.target.value)}
-              >
-                <option value="">Select Warehouse...</option>
-                {warehouses.map((wh) => (
-                  <option key={wh._id} value={wh._id}>
-                    {wh.locationName} ({wh.locationCode})
-                  </option>
-                ))}
-              </select>
+            {/* Destination Type & Location Selection */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Destination Type
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setDestinationType("warehouse")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                      destinationType === "warehouse"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Warehouse className="w-4 h-4" />
+                    Warehouse
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDestinationType("storefront")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                      destinationType === "storefront"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Store className="w-4 h-4" />
+                    Storefront
+                  </button>
+                </div>
+              </div>
+
+              {destinationType === "warehouse" ? (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <Warehouse className="w-4 h-4" />
+                    Destination Warehouse
+                  </label>
+                  <select
+                    className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    value={selectedWarehouseId}
+                    onChange={(e) => setSelectedWarehouseId(e.target.value)}
+                  >
+                    <option value="">Select Warehouse...</option>
+                    {warehouses.map((wh) => (
+                      <option key={wh._id} value={wh._id}>
+                        {wh.locationName} ({wh.locationCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <Store className="w-4 h-4" />
+                    Destination Storefront
+                  </label>
+                  <select
+                    className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    value={selectedStorefrontId}
+                    onChange={(e) => setSelectedStorefrontId(e.target.value)}
+                  >
+                    <option value="">Select Storefront...</option>
+                    {storefronts.map((sf) => (
+                      <option key={sf._id} value={sf._id}>
+                        {sf.locationName} ({sf.locationCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Transfer Date */}
@@ -393,7 +469,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                 <button
                   onClick={() => handleSubmit(true)}
                   disabled={
-                    !selectedWarehouseId ||
+                    !(destinationType === "warehouse" ? selectedWarehouseId : selectedStorefrontId) ||
                     transferItems.filter(
                       (item) => item.isSelected && item.quantity > 0
                     ).length === 0 ||
@@ -401,12 +477,12 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                   }
                   className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors flex items-center justify-center gap-2"
                 >
-                  <Warehouse className="w-5 h-5" />
+                  <Package className="w-5 h-5" />
                   {isSubmitting ? "Transferring..." : "Transfer Selected"}
                 </button>
               </div>
               <p className="text-xs text-slate-500 text-center">
-                Items will be transferred to the selected warehouse inventory.
+                Items will be transferred to the selected {destinationType} inventory.
               </p>
             </div>
           </div>

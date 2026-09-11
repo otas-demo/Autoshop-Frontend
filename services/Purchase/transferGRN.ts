@@ -5,9 +5,10 @@ interface TransferLineItem {
   quantity: number;
 }
 
-interface TransferGRNRequest {
+export interface TransferGRNRequest {
   grnId: string;
-  destinationWarehouseId: string;
+  destinationWarehouseId?: string;
+  destinationStorefrontId?: string;
   lineItems: TransferLineItem[];
   transferDate: string;
   notes?: string;

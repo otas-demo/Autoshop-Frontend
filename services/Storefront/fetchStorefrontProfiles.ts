@@ -31,9 +31,9 @@ interface FetchStorefrontProfilesResponse {
 }
 
 export const fetchStorefrontProfiles =
-  async (): Promise<FetchStorefrontProfilesResponse> => {
+  async (page: number = 1, limit: number = 100): Promise<FetchStorefrontProfilesResponse> => {
     try {
-      const response = await axios.get("/storefront-profile");
+      const response = await axios.get(`/storefront-profile?page=${page}&limit=${limit}`);
       return response.data;
     } catch (error: any) {
       console.error("Error fetching storefront profiles:", error);

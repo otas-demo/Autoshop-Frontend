@@ -34,6 +34,13 @@ export interface ShopLogoItem {
   slot: number;
 }
 
+export interface BrandingProfileItem {
+  slot: number;
+  name?: string;
+  phoneNumber?: string;
+  address?: string;
+}
+
 export interface ShopSettings {
   _id: string;
   shopName: string;
@@ -43,6 +50,7 @@ export interface ShopSettings {
   logo: string;
   logoKey: string;
   logos?: ShopLogoItem[];
+  brandingProfiles?: BrandingProfileItem[];
   email: string;
   taxId: string;
   currency: string;

@@ -1,10 +1,10 @@
-import { ShopSettings } from "../services/ShopSettings/fetchShopSettings";
+import { ShopSettings, BrandingProfileItem } from "../services/ShopSettings/fetchShopSettings";
 
 export const VOUCHER_RECEIPT_LOGO_KEY = "voucherReceiptLogoSlot";
 
 /**
- * Get the saved receipt logo slot from localStorage.
- * 1 = Slot 1, 2 = Slot 2, 3 = Slot 3, 0 = No Logo
+ * Get the saved receipt logo/branding slot from localStorage.
+ * 1 = Slot 1, 2 = Slot 2, 3 = Slot 3, 0 = No Logo (uses profile 1 for text)
  * Default is 1.
  */
 export const getSavedReceiptLogoSlot = (): number => {
@@ -63,3 +63,39 @@ export const getVoucherReceiptLogo = (
 
   return settings.logo || undefined;
 };
+
+export interface ResolvedBrandingProfile {
+  slot: number;
+  name: string;
+  logo?: string;
+  phone?: string;
+  address?: string;
+}
+
+/**
+ * Resolves full branding details (logo, phone, address, profile name) for voucher printing.
+ * Gracefully falls back to root settings phone/address if specific slot details are blank.
+ */
+export const getVoucherReceiptBranding = (
+  settings: ShopSettings | null,
+  slotOverride?: number,
+): ResolvedBrandingProfile => {
+  const rawSlot = slotOverride !== undefined ? slotOverride : getSavedReceiptLogoSlot();
+  const effectiveSlot = rawSlot === 0 ? 1 : rawSlot;
+
+  const profile = settings?.brandingProfiles?.find((p) => p.slot === effectiveSlot);
+
+  const phone = profile?.phoneNumber?.trim() || settings?.phoneNumber || "";
+  const address = profile?.address?.trim() || settings?.address || "";
+  const name = profile?.name?.trim() || `Profile ${effectiveSlot}`;
+  const logo = getVoucherReceiptLogo(settings, rawSlot);
+
+  return {
+    slot: rawSlot,
+    name,
+    logo,
+    phone,
+    address,
+  };
+};
+

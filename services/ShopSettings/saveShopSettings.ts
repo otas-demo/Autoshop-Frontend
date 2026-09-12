@@ -1,10 +1,11 @@
 import axios from "../axios";
-import { ShopSettings } from "./fetchShopSettings";
+import { ShopSettings, BrandingProfileItem } from "./fetchShopSettings";
 
 export interface SaveShopSettingsPayload {
   shopName: string;
   address: string;
   phoneNumber: string;
+  brandingProfiles?: BrandingProfileItem[];
 }
 
 interface SaveShopSettingsResponse {

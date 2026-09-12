@@ -1,5 +1,5 @@
 import { ShopSettings } from "../services/ShopSettings/fetchShopSettings";
-import { getVoucherReceiptLogo } from "./receiptLogo";
+import { getVoucherReceiptBranding } from "./receiptLogo";
 
 export interface PrintShopBranding {
   shopName: string;
@@ -8,19 +8,27 @@ export interface PrintShopBranding {
   address?: string;
   website?: string;
   currency: string;
+  slot?: number;
+  profileName?: string;
 }
 
 export const getPrintShopBranding = (
   settings: ShopSettings | null,
   logoSlotOverride?: number,
-): PrintShopBranding => ({
-  shopName: settings?.shopName || "Shop",
-  logo: getVoucherReceiptLogo(settings, logoSlotOverride),
-  phone: settings?.phoneNumber,
-  address: settings?.address,
-  website: settings?.socialMedia?.website,
-  currency: settings?.currency || "MMK",
-});
+): PrintShopBranding => {
+  const branding = getVoucherReceiptBranding(settings, logoSlotOverride);
+
+  return {
+    shopName: settings?.shopName || "Shop",
+    logo: branding.logo,
+    phone: branding.phone,
+    address: branding.address,
+    website: settings?.socialMedia?.website,
+    currency: settings?.currency || "MMK",
+    slot: branding.slot,
+    profileName: branding.name,
+  };
+};
 
 export const preloadImage = (src: string): Promise<void> =>
   new Promise((resolve) => {

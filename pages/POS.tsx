@@ -56,13 +56,21 @@ interface CartItem {
   qty: number;
 }
 
+const POS_SELECTED_STOREFRONT_KEY = "pos_selected_storefront_id";
+
 export const POS: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Data State
   const [storefronts, setStorefronts] = useState<StorefrontProfile[]>([]);
-  const [selectedStorefrontId, setSelectedStorefrontId] = useState<string>("");
+  const [selectedStorefrontId, setSelectedStorefrontId] = useState<string>(() => {
+    try {
+      return localStorage.getItem(POS_SELECTED_STOREFRONT_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
   const [allStockItems, setAllStockItems] = useState<StorefrontStockItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,9 +140,25 @@ export const POS: React.FC = () => {
         );
         setStorefronts(activeStorefronts);
 
-        // Auto-select first storefront
+        // Auto-select saved or first storefront
         if (activeStorefronts.length > 0) {
-          initialStorefrontId = activeStorefronts[0]._id;
+          let savedStoreId = "";
+          try {
+            savedStoreId = localStorage.getItem(POS_SELECTED_STOREFRONT_KEY) || "";
+          } catch {}
+
+          const matchedStore = savedStoreId
+            ? activeStorefronts.find((sf) => sf._id === savedStoreId)
+            : null;
+
+          if (matchedStore) {
+            initialStorefrontId = matchedStore._id;
+          } else {
+            initialStorefrontId = activeStorefronts[0]._id;
+            try {
+              localStorage.setItem(POS_SELECTED_STOREFRONT_KEY, initialStorefrontId);
+            } catch {}
+          }
           setSelectedStorefrontId(initialStorefrontId);
         }
       }
@@ -627,6 +651,9 @@ export const POS: React.FC = () => {
   // Handle storefront change
   const handleStorefrontChange = (storefrontId: string) => {
     setSelectedStorefrontId(storefrontId);
+    try {
+      localStorage.setItem(POS_SELECTED_STOREFRONT_KEY, storefrontId);
+    } catch {}
     setCart([]); // Clear cart when switching storefronts
     setSelectedCategory("All");
     setCurrentPage(1);

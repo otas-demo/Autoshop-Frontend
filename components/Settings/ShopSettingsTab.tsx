@@ -99,6 +99,7 @@ export const ShopSettingsTab: React.FC = () => {
           />
           {settings && (
             <ShopLogoUpload
+              shopSettings={settings}
               currentLogo={settings.logo}
               logos={settings.logos}
               shopName={settings.shopName}
@@ -110,6 +111,7 @@ export const ShopSettingsTab: React.FC = () => {
         <div className="space-y-6">
           <ShopInfoCard settings={settings} />
           <ShopLogoUpload
+            shopSettings={settings}
             currentLogo={settings.logo}
             logos={settings.logos}
             shopName={settings.shopName}

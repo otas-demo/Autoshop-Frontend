@@ -19,7 +19,7 @@ export const getPrintShopBranding = (
   const branding = getVoucherReceiptBranding(settings, logoSlotOverride);
 
   return {
-    shopName: settings?.shopName || "Shop",
+    shopName: branding.shopName || settings?.shopName || "Shop",
     logo: branding.logo,
     phone: branding.phone,
     address: branding.address,

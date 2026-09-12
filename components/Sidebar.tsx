@@ -127,9 +127,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
 
     if (path === "/accounts" && userRole !== "owner") return false;
     if (
-      ["/purchasing", "/warehouse", "/suppliers", "/purchasing-report"].includes(path) &&
+      ["/warehouse", "/suppliers"].includes(path) &&
       userRole !== "admin" &&
       userRole !== "owner"
+    ) {
+      return false;
+    }
+    if (
+      ["/purchasing", "/purchasing-report"].includes(path) &&
+      userRole !== "admin" &&
+      userRole !== "owner" &&
+      userRole !== "cashier"
     ) {
       return false;
     }

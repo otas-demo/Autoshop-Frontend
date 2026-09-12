@@ -67,14 +67,15 @@ export const getVoucherReceiptLogo = (
 export interface ResolvedBrandingProfile {
   slot: number;
   name: string;
+  shopName: string;
   logo?: string;
   phone?: string;
   address?: string;
 }
 
 /**
- * Resolves full branding details (logo, phone, address, profile name) for voucher printing.
- * Gracefully falls back to root settings phone/address if specific slot details are blank.
+ * Resolves full branding details (logo, phone, address, profile name, shop name) for voucher printing.
+ * Gracefully falls back to root settings shopName/phone/address if specific slot details are blank.
  */
 export const getVoucherReceiptBranding = (
   settings: ShopSettings | null,
@@ -87,12 +88,14 @@ export const getVoucherReceiptBranding = (
 
   const phone = profile?.phoneNumber?.trim() || settings?.phoneNumber || "";
   const address = profile?.address?.trim() || settings?.address || "";
+  const shopName = profile?.name?.trim() || settings?.shopName || "Shop";
   const name = profile?.name?.trim() || `Profile ${effectiveSlot}`;
   const logo = getVoucherReceiptLogo(settings, rawSlot);
 
   return {
     slot: rawSlot,
     name,
+    shopName,
     logo,
     phone,
     address,

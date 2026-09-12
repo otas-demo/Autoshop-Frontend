@@ -536,14 +536,20 @@ export const ShopLogoUpload: React.FC<ShopLogoUploadProps> = ({
 
                   {/* Profile Details (Name, Phone, Address) */}
                   <div className="pt-2 border-t border-slate-150 space-y-2 text-xs">
-                    {/* Profile Name */}
+                    {/* Shop Name / Profile Name */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-0.5">
-                        {t("settings.profileNameLabel") || "Profile Name"}
+                      <label className="block text-[11px] font-bold text-slate-600 mb-0.5 flex items-center gap-1">
+                        <Store className="w-3 h-3 text-[#2216a8]" />
+                        {t("settings.profileShopNameLabel") || "Shop Name"}
                       </label>
                       <input
                         type="text"
-                        placeholder={`e.g. ${slot === 1 ? "Main / A4" : slot === 2 ? "Thermal POS" : "Branch 2"}`}
+                        placeholder={
+                          shopSettings?.shopName
+                            ? `Default: ${shopSettings.shopName}`
+                            : t("settings.profileShopNamePlaceholder") ||
+                              "Shop default name"
+                        }
                         value={profileData[slot]?.name || ""}
                         onChange={(e) =>
                           setProfileData((prev) => ({

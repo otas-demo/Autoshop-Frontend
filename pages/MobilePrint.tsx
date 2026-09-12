@@ -203,7 +203,7 @@ const MobilePrint: React.FC = () => {
         </div>
       </div>
 
-      <div className="pb-8">
+      <div className="pb-8 print:pb-0">
         <VoucherContent
           receiptData={receiptData}
           shopBranding={shopBranding}

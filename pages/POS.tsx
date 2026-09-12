@@ -548,6 +548,7 @@ export const POS: React.FC = () => {
           })),
           subtotal,
           discountPercent: discount,
+          discountAmount,
           total,
           paidAmount: finalPaidAmount,
           change: finalPaidAmount - total,
@@ -1846,7 +1847,6 @@ export const POS: React.FC = () => {
                       setDiscount(Number(calculatedPercentage)); // Use number for consistency
                       setShowDiscountCalculator(false);
                       setDiscountAmount("");
-                      toast.success(`Discount set to ${calculatedPercentage}%`);
                     }
                   }}
                   disabled={

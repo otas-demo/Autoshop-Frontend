@@ -18,6 +18,7 @@ export interface VoucherReceiptData {
   items: VoucherReceiptItem[];
   subtotal: number;
   discountPercent: number;
+  discountAmount?: number;
   total: number;
   paymentMethod: string;
   paidAmount?: number;
@@ -60,6 +61,13 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
     (receiptData.cashierName && receiptData.cashierName.trim() !== ""
       ? receiptData.cashierName
       : getLoggedInCashier()) || "Cashier";
+
+  const effectiveDiscountAmount =
+    receiptData.discountAmount != null && receiptData.discountAmount > 0
+      ? receiptData.discountAmount
+      : receiptData.discountPercent > 0
+      ? Math.round((receiptData.subtotal * receiptData.discountPercent) / 100)
+      : Math.max(0, receiptData.subtotal - receiptData.total);
 
   if (isThermal) {
     return (
@@ -151,6 +159,17 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
             <span>Gross</span>
             <span>{receiptData.subtotal.toLocaleString()}</span>
           </div>
+          {effectiveDiscountAmount > 0 && (
+            <div className="voucher-summary-row">
+              <span>
+                Discount
+                {receiptData.discountPercent > 0
+                  ? ` (${Number(receiptData.discountPercent.toFixed(2))}%)`
+                  : ""}
+              </span>
+              <span>-{effectiveDiscountAmount.toLocaleString()}</span>
+            </div>
+          )}
           <div className="voucher-summary-row">
             <span>Service charge</span>
             <span>{(receiptData.serviceCharge || 0).toLocaleString()}</span>
@@ -321,15 +340,17 @@ export const VoucherContent: React.FC<VoucherContentProps> = ({
             <span>SUB TOTAL:</span>
             <span>{receiptData.subtotal.toLocaleString()}</span>
           </div>
-          {receiptData.discountPercent > 0 && (
+          {effectiveDiscountAmount > 0 && (
             <div className="flex justify-between mb-1 sm:mb-2">
-              <span>DISCOUNT:</span>
               <span>
-                -
-                {(
-                  (receiptData.subtotal * receiptData.discountPercent) /
-                  100
-                ).toLocaleString()}
+                DISCOUNT
+                {receiptData.discountPercent > 0
+                  ? ` (${Number(receiptData.discountPercent.toFixed(2))}%)`
+                  : ""}
+                :
+              </span>
+              <span>
+                -{effectiveDiscountAmount.toLocaleString()}
               </span>
             </div>
           )}

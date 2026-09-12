@@ -70,6 +70,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       discountPercent: order.discount
         ? (order.discount / (order.subTotal || 1)) * 100
         : 0,
+      discountAmount: order.discount || 0,
       total: order.finalAmount || 0,
       paymentMethod: getPaymentMethodLabel(order.paymentMethod),
       paidAmount: order.paidAmount,

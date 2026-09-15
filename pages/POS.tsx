@@ -1459,10 +1459,10 @@ export const POS: React.FC = () => {
                         {t("pos.bankTransfer")}
                       </option>
                       <option value={PaymentMethod.MMQR}>
-                        <span>MMQR</span>
+                        MMQR
                       </option>
                       <option value={PaymentMethod.FOC}>
-                        <span>FOC</span>
+                        FOC
                       </option>
                     </>
                   ) : (
@@ -1486,10 +1486,10 @@ export const POS: React.FC = () => {
                         {t("pos.bankTransfer")}
                       </option>
                       <option value={PaymentMethod.MMQR}>
-                        <span>MMQR</span>
+                        MMQR
                       </option>
                       <option value={PaymentMethod.FOC}>
-                        <span>FOC</span>
+                        FOC
                       </option>
                     </>
                   )}

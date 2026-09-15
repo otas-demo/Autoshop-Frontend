@@ -158,9 +158,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => onViewOrder(order._id)}
-                      className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
+                      className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center gap-1 cursor-pointer transition-all whitespace-nowrap"
                     >
-                      {t("common.edit")}
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{t("common.view") || "View"}</span>
                     </button>
                     {canDeleteOrder && (
                       <button

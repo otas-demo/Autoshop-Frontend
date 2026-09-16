@@ -3,6 +3,7 @@ import axios from "../axios";
 export interface UpdateAdminAccountPayload {
   name?: string;
   role?: string;
+  modules?: string[];
 }
 
 export interface UpdateAdminAccountResponse {
@@ -12,6 +13,7 @@ export interface UpdateAdminAccountResponse {
     _id: string;
     name: string;
     role: string;
+    modules?: string[];
     locationId: any;
     lastActiveAt: string | null;
     softDeleted: boolean;

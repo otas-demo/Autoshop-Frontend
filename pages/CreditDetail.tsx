@@ -41,7 +41,11 @@ import {
   fetchCreditPersonaProducts,
   CreditPersonaProductReportResponse,
 } from "../services/Reports/fetchCreditPersonaProducts";
-import { fetchOrders, Order } from "../services/Order/fetchOrders";
+import {
+  fetchOrders,
+  Order,
+  OrdersPagination,
+} from "../services/Order/fetchOrders";
 import { OrdersTable } from "../components/Orders/OrdersTable";
 import { OrderDetailModal } from "../components/Orders/OrderDetailModal";
 import { useLanguage } from "../context/LanguageContext";
@@ -70,6 +74,15 @@ export const CreditDetail: React.FC = () => {
   const [orderPaymentTypeFilter, setOrderPaymentTypeFilter] = useState<
     "all" | "paid" | "credit"
   >("all");
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersLimit] = useState(10);
+  const [ordersPagination, setOrdersPagination] =
+    useState<OrdersPagination | null>(null);
+  const [ordersSummaryCounts, setOrdersSummaryCounts] = useState<{
+    totalCount: number;
+    paidCount: number;
+    creditCount: number;
+  }>({ totalCount: 0, paidCount: 0, creditCount: 0 });
   const [productsReport, setProductsReport] =
     useState<CreditPersonaProductReportResponse | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -127,11 +140,11 @@ export const CreditDetail: React.FC = () => {
         setPersonaDetail((prev) =>
           prev
             ? {
-                ...prev,
-                creditRecords: response.data!.creditRecords,
-                summary: response.data!.summary,
-                orders: response.data!.orders,
-              }
+              ...prev,
+              creditRecords: response.data!.creditRecords,
+              summary: response.data!.summary,
+              orders: response.data!.orders,
+            }
             : response.data!,
         );
         setPaymentsPagination(response.pagination ?? null);
@@ -147,6 +160,42 @@ export const CreditDetail: React.FC = () => {
     }
   };
 
+  const loadCustomerOrders = async (
+    page: number = 1,
+    filterType: "all" | "paid" | "credit" = orderPaymentTypeFilter,
+  ) => {
+    if (!id) return;
+    setLoadingOrders(true);
+    try {
+      const response = await fetchOrders(
+        null,
+        null,
+        filterType === "all" ? null : filterType,
+        null,
+        id,
+        page,
+        ordersLimit,
+      );
+      if (response.success && response.data) {
+        setCustomerOrders(response.data);
+        if (response.pagination) {
+          setOrdersPagination(response.pagination);
+        }
+        if (response.summaryCounts) {
+          setOrdersSummaryCounts(response.summaryCounts);
+        }
+        setOrdersPage(page);
+      } else {
+        toast.error(response.message || "Failed to load orders");
+      }
+    } catch (error) {
+      console.error("Error loading customer orders:", error);
+      toast.error("Failed to load customer orders");
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
   const loadCreditDetail = async () => {
     if (!id) return;
     setLoading(true);
@@ -158,7 +207,15 @@ export const CreditDetail: React.FC = () => {
         await Promise.all([
           fetchCreditPersonaRecords(id, 1),
           fetchCreditPersonaProducts(id),
-          fetchOrders(null, null, null, null, id),
+          fetchOrders(
+            null,
+            null,
+            orderPaymentTypeFilter === "all" ? null : orderPaymentTypeFilter,
+            null,
+            id,
+            ordersPage,
+            ordersLimit,
+          ),
         ]);
 
       if (personaResponse.success && personaResponse.data) {
@@ -177,6 +234,12 @@ export const CreditDetail: React.FC = () => {
 
       if (ordersResponse.success && ordersResponse.data) {
         setCustomerOrders(ordersResponse.data);
+        if (ordersResponse.pagination) {
+          setOrdersPagination(ordersResponse.pagination);
+        }
+        if (ordersResponse.summaryCounts) {
+          setOrdersSummaryCounts(ordersResponse.summaryCounts);
+        }
       }
     } catch (error) {
       console.error("Error loading credit details:", error);
@@ -373,17 +436,19 @@ export const CreditDetail: React.FC = () => {
 
   const isMy = language === "my";
 
-  const filteredCustomerOrders = customerOrders.filter((order) => {
-    if (orderPaymentTypeFilter === "all") return true;
-    return order.paymentType === orderPaymentTypeFilter;
-  });
+  const handleFilterChange = (filter: "all" | "paid" | "credit") => {
+    setOrderPaymentTypeFilter(filter);
+    loadCustomerOrders(1, filter);
+  };
 
-  const paidOrdersCount = customerOrders.filter(
-    (o) => o.paymentType === "paid",
-  ).length;
-  const creditOrdersCount = customerOrders.filter(
-    (o) => o.paymentType === "credit",
-  ).length;
+  const totalOrdersDisplayCount = ordersPagination
+    ? ordersPagination.totalOrders
+    : customerOrders.length;
+  const allOrdersCount =
+    ordersSummaryCounts.totalCount ||
+    (orderPaymentTypeFilter === "all" ? totalOrdersDisplayCount : 0);
+  const paidOrdersCount = ordersSummaryCounts.paidCount;
+  const creditOrdersCount = ordersSummaryCounts.creditCount;
 
   return (
     <div className="w-full">
@@ -400,13 +465,25 @@ export const CreditDetail: React.FC = () => {
             </button>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                {isMy ? "ဝယ်သူ အသေးစိတ်" : "Customer Details"}
+                {personName}
               </h1>
-              <p className="text-xs text-slate-400 mt-1 font-medium">
-                {isMy
-                  ? "ဝယ်သူ အချက်အလက်၊ ဝယ်ယူမှုအော်ဒါများနှင့် ငွေပေးချေမှုမှတ်တမ်းများ"
-                  : "Customer information, order records and credit payment history"}
-              </p>
+              <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 font-medium flex-wrap">
+                {personPhone && (
+                  <div className="flex items-center gap-1.5 text-slate-600">
+                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="font-semibold">{personPhone}</span>
+                  </div>
+                )}
+                {personAddress && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <div className="flex items-center gap-1.5 text-slate-500">
+                      <Store className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{personAddress}</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -447,57 +524,6 @@ export const CreditDetail: React.FC = () => {
           </div>
         ) : personaDetail ? (
           <div className="space-y-6">
-            {/* Customer Info Card */}
-            <div className="bg-[#fcfbf9] border border-gray-150 rounded-2xl p-6 flex flex-col md:flex-row gap-6 md:items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-indigo-50 rounded-2xl text-[#2216a8]">
-                  <User className="w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-800">
-                    {personName}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-bold mt-1">
-                    {isMy ? "ဝယ်သူ ID" : "Customer ID"}: {id}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-6 border-t md:border-t-0 md:border-l border-gray-200/60 pt-4 md:pt-0 md:pl-6">
-                {personPhone && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-green-50 rounded-xl text-green-700">
-                      <Phone className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {isMy ? "ဖုန်းနံပါတ်" : "Contact Phone"}
-                      </p>
-                      <p className="text-sm font-extrabold text-slate-700 mt-0.5">
-                        {personPhone}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {personAddress && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-50 rounded-xl text-blue-700">
-                      <Store className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {isMy ? "လိပ်စာ" : "Address"}
-                      </p>
-                      <p className="text-sm font-extrabold text-slate-700 mt-0.5">
-                        {personAddress}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Financial Stats Grid (Total Records, Total Paid, Outstanding) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Total Records */}
@@ -540,11 +566,10 @@ export const CreditDetail: React.FC = () => {
               {/* Outstanding Debt */}
               <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
                 <div
-                  className={`p-3.5 rounded-2xl ${
-                    personaDetail.summary.totalOutstandingAmount > 0
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-slate-50 text-slate-400"
-                  }`}
+                  className={`p-3.5 rounded-2xl ${personaDetail.summary.totalOutstandingAmount > 0
+                    ? "bg-amber-50 text-amber-700"
+                    : "bg-slate-50 text-slate-400"
+                    }`}
                 >
                   <AlertTriangle className="w-6 h-6" />
                 </div>
@@ -553,11 +578,10 @@ export const CreditDetail: React.FC = () => {
                     {isMy ? "ပေးရန်ကျန် အကြွေး စုစုပေါင်း" : "Outstanding Debt"}
                   </p>
                   <h4
-                    className={`text-lg font-black mt-0.5 ${
-                      personaDetail.summary.totalOutstandingAmount > 0
-                        ? "text-amber-700"
-                        : "text-slate-700"
-                    }`}
+                    className={`text-lg font-black mt-0.5 ${personaDetail.summary.totalOutstandingAmount > 0
+                      ? "text-amber-700"
+                      : "text-slate-700"
+                      }`}
                   >
                     {personaDetail.summary.totalOutstandingAmount.toLocaleString()}{" "}
                     <span className="text-xs font-bold text-slate-500">
@@ -573,20 +597,18 @@ export const CreditDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab("orders")}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-                  activeTab === "orders"
-                    ? "bg-[#2216a8] text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === "orders"
+                  ? "bg-[#2216a8] text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                  }`}
               >
                 <Receipt className="w-4 h-4" />
                 <span>{isMy ? "ဆက်စပ် အော်ဒါများ" : "Associated Orders"}</span>
                 <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
-                    activeTab === "orders"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 text-slate-700"
-                  }`}
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${activeTab === "orders"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-700"
+                    }`}
                 >
                   {customerOrders.length}
                 </span>
@@ -595,22 +617,20 @@ export const CreditDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab("products")}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-                  activeTab === "products"
-                    ? "bg-[#2216a8] text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === "products"
+                  ? "bg-[#2216a8] text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                  }`}
               >
                 <Box className="w-4 h-4" />
                 <span>
                   {isMy ? "ဝယ်ယူထားသော ပစ္စည်းများ" : "Purchased Products"}
                 </span>
                 <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
-                    activeTab === "products"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 text-slate-700"
-                  }`}
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${activeTab === "products"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-700"
+                    }`}
                 >
                   {productsReport?.data.totals.totalUniqueProducts || 0}
                 </span>
@@ -619,22 +639,20 @@ export const CreditDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab("payments")}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-                  activeTab === "payments"
-                    ? "bg-[#2216a8] text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === "payments"
+                  ? "bg-[#2216a8] text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                  }`}
               >
                 <CreditCard className="w-4 h-4" />
                 <span>
                   {isMy ? "ငွေပေးချေမှု မှတ်တမ်းများ" : "Payment Records"}
                 </span>
                 <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${
-                    activeTab === "payments"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 text-slate-700"
-                  }`}
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black ${activeTab === "payments"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-700"
+                    }`}
                 >
                   {personaDetail.summary.totalCreditRecords}
                 </span>
@@ -655,7 +673,7 @@ export const CreditDetail: React.FC = () => {
                         </span>
                       </h3>
                       <span className="text-xs font-semibold text-slate-500">
-                        {filteredCustomerOrders.length}{" "}
+                        {totalOrdersDisplayCount}{" "}
                         {isMy ? "စောင်" : "orders"}
                       </span>
                     </div>
@@ -664,42 +682,38 @@ export const CreditDetail: React.FC = () => {
                     <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/60 self-start sm:self-auto">
                       <button
                         type="button"
-                        onClick={() => setOrderPaymentTypeFilter("all")}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          orderPaymentTypeFilter === "all"
-                            ? "bg-[#2216a8] text-white shadow-xs"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                        }`}
+                        onClick={() => handleFilterChange("all")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${orderPaymentTypeFilter === "all"
+                          ? "bg-[#2216a8] text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                          }`}
                       >
                         <span>{isMy ? "အားလုံး" : "All"}</span>
                         <span
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                            orderPaymentTypeFilter === "all"
-                              ? "bg-white/20 text-white"
-                              : "bg-slate-200 text-slate-700"
-                          }`}
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${orderPaymentTypeFilter === "all"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200 text-slate-700"
+                            }`}
                         >
-                          {customerOrders.length}
+                          {allOrdersCount}
                         </span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => setOrderPaymentTypeFilter("paid")}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          orderPaymentTypeFilter === "paid"
-                            ? "bg-emerald-600 text-white shadow-xs"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                        }`}
+                        onClick={() => handleFilterChange("paid")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${orderPaymentTypeFilter === "paid"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                          }`}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                         <span>{isMy ? "ပေးချေပြီး" : "Paid"}</span>
                         <span
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                            orderPaymentTypeFilter === "paid"
-                              ? "bg-white/20 text-white"
-                              : "bg-slate-200 text-slate-700"
-                          }`}
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${orderPaymentTypeFilter === "paid"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200 text-slate-700"
+                            }`}
                         >
                           {paidOrdersCount}
                         </span>
@@ -707,21 +721,19 @@ export const CreditDetail: React.FC = () => {
 
                       <button
                         type="button"
-                        onClick={() => setOrderPaymentTypeFilter("credit")}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          orderPaymentTypeFilter === "credit"
-                            ? "bg-amber-600 text-white shadow-xs"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                        }`}
+                        onClick={() => handleFilterChange("credit")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${orderPaymentTypeFilter === "credit"
+                          ? "bg-amber-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                          }`}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                         <span>{isMy ? "အကြွေး" : "Credit"}</span>
                         <span
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                            orderPaymentTypeFilter === "credit"
-                              ? "bg-white/20 text-white"
-                              : "bg-slate-200 text-slate-700"
-                          }`}
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${orderPaymentTypeFilter === "credit"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200 text-slate-700"
+                            }`}
                         >
                           {creditOrdersCount}
                         </span>
@@ -731,11 +743,86 @@ export const CreditDetail: React.FC = () => {
 
                   <OrdersTable
                     loading={loadingOrders}
-                    orders={filteredCustomerOrders}
+                    orders={customerOrders}
                     onViewOrder={handleViewOrder}
-                    onOpenCreditPersonModal={() => {}}
+                    onOpenCreditPersonModal={() => { }}
                     onOrderDeleted={loadCreditDetail}
+                    maxHeight="29rem"
                   />
+
+                  {ordersPagination && ordersPagination.totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-white border border-gray-150 rounded-2xl shadow-xs">
+                      <div className="text-xs font-semibold text-slate-500">
+                        Showing{" "}
+                        <span className="font-bold text-slate-800">
+                          {(ordersPage - 1) * ordersPagination.limit + 1}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-bold text-slate-800">
+                          {Math.min(
+                            ordersPage * ordersPagination.limit,
+                            ordersPagination.totalOrders,
+                          )}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-bold text-slate-800">
+                          {ordersPagination.totalOrders}
+                        </span>{" "}
+                        orders
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            loadCustomerOrders(
+                              ordersPage - 1,
+                              orderPaymentTypeFilter,
+                            )
+                          }
+                          disabled={ordersPage <= 1 || loadingOrders}
+                          className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        <div className="flex gap-1">
+                          {Array.from(
+                            { length: ordersPagination.totalPages },
+                            (_, i) => i + 1,
+                          ).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() =>
+                                loadCustomerOrders(page, orderPaymentTypeFilter)
+                              }
+                              disabled={loadingOrders}
+                              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${page === ordersPage
+                                ? "bg-[#2216a8] text-white shadow-xs"
+                                : "text-slate-600 hover:bg-slate-50 border border-slate-200"
+                                }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            loadCustomerOrders(
+                              ordersPage + 1,
+                              orderPaymentTypeFilter,
+                            )
+                          }
+                          disabled={
+                            ordersPage >= ordersPagination.totalPages ||
+                            loadingOrders
+                          }
+                          className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -933,11 +1020,10 @@ export const CreditDetail: React.FC = () => {
                                   </td>
                                   <td className="py-3.5 px-4 text-right">
                                     <span
-                                      className={`font-black ${
-                                        record.remainingBalanceAfterPayment > 0
-                                          ? "text-amber-700"
-                                          : "text-emerald-600"
-                                      }`}
+                                      className={`font-black ${record.remainingBalanceAfterPayment > 0
+                                        ? "text-amber-700"
+                                        : "text-emerald-600"
+                                        }`}
                                     >
                                       {record.remainingBalanceAfterPayment?.toLocaleString()}{" "}
                                       MMK
@@ -964,7 +1050,7 @@ export const CreditDetail: React.FC = () => {
                               <span className="font-bold text-slate-800">
                                 {Math.min(
                                   paymentsPage *
-                                    paymentsPagination.itemsPerPage,
+                                  paymentsPagination.itemsPerPage,
                                   paymentsPagination.totalItems
                                 )}
                               </span>{" "}
@@ -994,11 +1080,10 @@ export const CreditDetail: React.FC = () => {
                                     key={page}
                                     onClick={() => loadPaymentRecords(page)}
                                     disabled={paymentsLoading}
-                                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                      page === paymentsPage
-                                        ? "bg-[#2216a8] text-white shadow-xs"
-                                        : "text-slate-600 hover:bg-slate-50 border border-slate-200"
-                                    }`}
+                                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${page === paymentsPage
+                                      ? "bg-[#2216a8] text-white shadow-xs"
+                                      : "text-slate-600 hover:bg-slate-50 border border-slate-200"
+                                      }`}
                                   >
                                     {page}
                                   </button>
@@ -1011,7 +1096,7 @@ export const CreditDetail: React.FC = () => {
                                 }
                                 disabled={
                                   paymentsPage >=
-                                    paymentsPagination.totalPages ||
+                                  paymentsPagination.totalPages ||
                                   paymentsLoading
                                 }
                                 className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
@@ -1173,6 +1258,7 @@ export const CreditDetail: React.FC = () => {
           setSelectedOrder(null);
           setLoadingOrderDetail(false);
         }}
+        onOrderUpdate={loadCreditDetail}
       />
       {/* Add Credit Model */}
       {showAddCreditModal && (

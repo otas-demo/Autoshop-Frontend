@@ -3,6 +3,7 @@ import { Modal } from "../Modal";
 import { ApiPurchaseOrder, Supplier } from "../../types";
 import { createGRN } from "../../services/Purchase/createGRN";
 import { toast } from "sonner";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface ExtendedGRNItem {
   productId: string;
@@ -35,6 +36,8 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
   onSuccess,
   selectedPOId: propSelectedPOId,
 }) => {
+  const { t } = useLanguage();
+
   const [internalSelectedPOId, setInternalSelectedPOId] = useState("");
   const [grnItems, setGRNItems] = useState<ExtendedGRNItem[]>([]);
   const [grnNote, setGRNNote] = useState("");
@@ -58,13 +61,6 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
   });
 
   const selectedPO = purchaseOrders.find((p) => p._id === selectedPOId);
-
-  // const getSupplierName = (supplierId: string) => {
-  //   const supplier = suppliers.find(
-  //     (s) => s.id === supplierId || s._id === supplierId
-  //   );
-  //   return supplier ? supplier.supplierName : "Unknown Supplier";
-  // };
 
   const loadPOItems = () => {
     if (!selectedPOId) return;
@@ -140,12 +136,12 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
 
   const submitGRN = async (selectedItemsOnly = false) => {
     if (!selectedPOId) {
-      toast.error("Please select a Purchase Order");
+      toast.error(t("purchasing.createGRN.errorSelectPO"));
       return;
     }
 
     if (grnItems.length === 0) {
-      toast.error("Please load PO items first");
+      toast.error(t("purchasing.createGRN.errorLoadItems"));
       return;
     }
 
@@ -154,14 +150,14 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
       : grnItems;
 
     if (itemsToProcess.length === 0) {
-      toast.error("Please select at least one item to create GRN");
+      toast.error(t("purchasing.createGRN.errorSelectOneItem"));
       return;
     }
 
     for (const item of itemsToProcess) {
       if (item.qtyReceived !== item.qtyGood + item.qtyBad) {
         toast.error(
-          `For ${item.name}: Received quantity must equal Good + Bad quantities`
+          t("purchasing.createGRN.errorQtyMismatch").replace("{name}", item.name)
         );
         return;
       }
@@ -186,16 +182,18 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
       const result = await createGRN(payload);
 
       if (result.success) {
-        toast.success("GRN Created Successfully!");
+        toast.success(t("purchasing.createGRN.successCreated"));
         resetForm();
         onSuccess();
         onClose();
       } else {
-        toast.error(result.message || "Failed to create GRN");
+        toast.error(
+          result.message || t("purchasing.createGRN.failedToCreate")
+        );
       }
     } catch (error) {
       console.error(error);
-      toast.error("An error occurred while creating GRN");
+      toast.error(t("purchasing.createGRN.errorOccurred"));
     } finally {
       setIsSubmitting(false);
     }
@@ -205,14 +203,14 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Create Goods Received Note"
+      title={t("purchasing.createGRN.title")}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Panel - PO Selection */}
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Select Purchase Order
+              {t("purchasing.createGRN.selectPO")}
             </label>
             <select
               className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -222,7 +220,9 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                 setGRNItems([]);
               }}
             >
-              <option value="">Select PO...</option>
+              <option value="">
+                {t("purchasing.createGRN.selectPOPlaceholder")}
+              </option>
               {pendingPOs.map((po) => (
                 <option key={po._id} value={po._id}>
                   {po.poNumber} - {po.supplierId.supplierName} ({po.status})
@@ -233,45 +233,55 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
 
           {selectedPO && (
             <div className="p-4 bg-slate-50 rounded-lg border">
-              <h3 className="font-semibold text-slate-800 mb-3">PO Details</h3>
+              <h3 className="font-semibold text-slate-800 mb-3">
+                {t("purchasing.createGRN.poDetails")}
+              </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Supplier:</span>
+                  <span className="text-slate-500">
+                    {t("purchasing.createGRN.supplier")}
+                  </span>
                   <span className="font-medium">
                     {selectedPO.supplierId.supplierName}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Date:</span>
+                  <span className="text-slate-500">
+                    {t("purchasing.createGRN.date")}
+                  </span>
                   <span className="font-medium">
                     {new Date(selectedPO.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Total Amount:</span>
+                  <span className="text-slate-500">
+                    {t("purchasing.createGRN.totalAmount")}
+                  </span>
                   <span className="font-medium">
                     {selectedPO.totalAmount.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Products:</span>
+                  <span className="text-slate-500">
+                    {t("purchasing.createGRN.products")}
+                  </span>
                   <span className="font-medium">
-                    {selectedPO.products.length} item(s)
+                    {selectedPO.products.length} {t("purchasing.createGRN.itemsCount")}
                   </span>
                 </div>
               </div>
               <button
                 onClick={loadPOItems}
-                className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
               >
-                Load PO Items
+                {t("purchasing.createGRN.loadPOItems")}
               </button>
             </div>
           )}
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              GRN Date
+              {t("purchasing.createGRN.grnDate")}
             </label>
             <input
               type="date"
@@ -283,13 +293,13 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Note (Optional)
+              {t("purchasing.createGRN.notesOptional")}
             </label>
             <textarea
               className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               value={grnNote}
               onChange={(e) => setGRNNote(e.target.value)}
-              placeholder="Additional notes..."
+              placeholder={t("purchasing.createGRN.notesPlaceholder")}
               rows={3}
             />
           </div>
@@ -299,7 +309,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
         <div className="flex flex-col">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-slate-800">
-              GRN Items - Select & Process
+              {t("purchasing.createGRN.itemsProcessing")}
             </h3>
             <div className="flex gap-2">
               <button
@@ -308,9 +318,9 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                     prev.map((item) => ({ ...item, isSelected: true }))
                   );
                 }}
-                className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 cursor-pointer font-medium"
               >
-                Select All
+                {t("purchasing.createGRN.selectAll")}
               </button>
               <button
                 onClick={() => {
@@ -318,16 +328,16 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                     prev.map((item) => ({ ...item, isSelected: false }))
                   );
                 }}
-                className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 cursor-pointer font-medium"
               >
-                Deselect All
+                {t("purchasing.createGRN.deselectAll")}
               </button>
             </div>
           </div>
           <div className="flex-1 overflow-auto border rounded-lg bg-slate-50 p-4">
             {grnItems.length === 0 ? (
               <div className="text-center text-slate-400 py-12">
-                Select a PO and click "Load PO Items" to start
+                {t("purchasing.createGRN.emptyItemsHelp")}
               </div>
             ) : (
               <div className="space-y-4">
@@ -348,7 +358,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                           onChange={(e) =>
                             updateGRNItem(index, "isSelected", e.target.checked)
                           }
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                         />
                         <div>
                           <div className="font-semibold text-slate-800">
@@ -358,8 +368,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                             </span>
                           </div>
                           <div className="text-xs text-slate-500">
-                            Ordered: {item.qtyOrdered} | Cost:{" "}
-                            {item.costPrice.toFixed(2)}
+                            {t("purchasing.createGRN.ordered")}: {item.qtyOrdered} | {t("purchasing.createGRN.cost")}: {item.costPrice.toLocaleString()}
                           </div>
                         </div>
                       </div>
@@ -368,7 +377,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                       <div className="space-y-3 ml-7">
                         <div>
                           <label className="text-xs text-slate-500 block mb-1">
-                            Received Qty:
+                            {t("purchasing.createGRN.receivedQty")}
                           </label>
                           <input
                             type="number"
@@ -388,7 +397,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs text-slate-500 block mb-1">
-                              Good:
+                              {t("purchasing.createGRN.goodQty")}
                             </label>
                             <input
                               type="number"
@@ -407,7 +416,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                           </div>
                           <div>
                             <label className="text-xs text-slate-500 block mb-1">
-                              Bad:
+                              {t("purchasing.createGRN.badQty")}
                             </label>
                             <input
                               type="number"
@@ -428,7 +437,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs text-slate-500 block mb-1">
-                              Batch Number (Optional):
+                              {t("purchasing.createGRN.batchNumberOptional")}
                             </label>
                             <input
                               type="text"
@@ -441,12 +450,12 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                                   e.target.value
                                 )
                               }
-                              placeholder="Auto-generated if blank"
+                              placeholder={t("purchasing.createGRN.batchAutoGenerated")}
                             />
                           </div>
                           <div>
                             <label className="text-xs text-slate-500 block mb-1">
-                              Expiry Date (Optional):
+                              {t("purchasing.createGRN.expiryDateOptional")}
                             </label>
                             <input
                               type="date"
@@ -465,7 +474,7 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                         </div>
                         {item.qtyReceived !== item.qtyGood + item.qtyBad && (
                           <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                            ⚠ Received must equal Good + Bad
+                            {t("purchasing.createGRN.qtyMismatchError")}
                           </div>
                         )}
                       </div>
@@ -478,15 +487,6 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
 
           <div className="mt-4 space-y-2">
             <div className="grid grid-cols-1 gap-2">
-              {/* <button
-                onClick={() => submitGRN(false)}
-                disabled={
-                  grnItems.length === 0 || !selectedPOId || isSubmitting
-                }
-                className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-              >
-                {isSubmitting ? "Creating..." : "Create GRN (All Items)"}
-              </button> */}
               <button
                 onClick={() => submitGRN(true)}
                 disabled={
@@ -494,14 +494,15 @@ export const CreateGRNModal: React.FC<CreateGRNModalProps> = ({
                   !selectedPOId ||
                   isSubmitting
                 }
-                className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors cursor-pointer"
               >
-                {isSubmitting ? "Creating..." : "Create GRN"}
+                {isSubmitting
+                  ? t("purchasing.createGRN.creating")
+                  : t("purchasing.createGRN.submitBtn")}
               </button>
             </div>
             <p className="text-xs text-slate-500 text-center">
-              Only good items will be added to Warehouse. Bad items are logged
-              but not added to stock.
+              {t("purchasing.createGRN.stockNotice")}
             </p>
           </div>
         </div>

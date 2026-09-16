@@ -233,11 +233,11 @@ export const Orders: React.FC = () => {
   };
 
   return (
-    <div className="w-full">
-      <div className="bg-white h-[calc(100vh-2rem)] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+    <div className="w-full lg:h-[calc(100vh-2rem)]">
+      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 lg:h-full lg:overflow-hidden">
 
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5 shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">
               {t("orders.title")}
@@ -277,30 +277,35 @@ export const Orders: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <OrdersFilters
-          search={search}
-          onSearchChange={setSearch}
-          storefronts={storefronts}
-          selectedStorefrontId={selectedStorefrontId}
-          onStorefrontChange={setSelectedStorefrontId}
-          paymentTypeFilter={paymentTypeFilter}
-          onPaymentTypeChange={setPaymentTypeFilter}
-          paymentMethodFilter={paymentMethodFilter}
-          onPaymentMethodChange={setPaymentMethodFilter}
-          orders={orders}
-          filteredOrders={filteredOrders}
-        />
+        <div className="shrink-0">
+          <OrdersFilters
+            search={search}
+            onSearchChange={setSearch}
+            storefronts={storefronts}
+            selectedStorefrontId={selectedStorefrontId}
+            onStorefrontChange={setSelectedStorefrontId}
+            paymentTypeFilter={paymentTypeFilter}
+            onPaymentTypeChange={setPaymentTypeFilter}
+            paymentMethodFilter={paymentMethodFilter}
+            onPaymentMethodChange={setPaymentMethodFilter}
+            orders={orders}
+            filteredOrders={filteredOrders}
+          />
+        </div>
 
         {/* Orders Table */}
-        <OrdersTable
-          loading={loading}
-          orders={filteredOrders}
-          onViewOrder={handleViewOrder}
-          onOpenCreditPersonModal={handleOpenCreditPersonModal}
-          onOrderDeleted={async () => {
-            await loadOrders();
-          }}
-        />
+        <div className="lg:flex-1 flex flex-col min-h-0">
+          <OrdersTable
+            loading={loading}
+            orders={filteredOrders}
+            onViewOrder={handleViewOrder}
+            onOpenCreditPersonModal={handleOpenCreditPersonModal}
+            onOrderDeleted={async () => {
+              await loadOrders();
+            }}
+            maxHeight="16rem"
+          />
+        </div>
 
         {/* Order Detail Modal */}
         <OrderDetailModal

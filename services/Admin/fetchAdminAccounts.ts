@@ -12,6 +12,7 @@ export interface AdminAccount {
   _id: string;
   name: string;
   role: string;
+  modules?: string[];
   locationId: LocationInfo | null;
   lastActiveAt: string | null;
   softDeleted: boolean;

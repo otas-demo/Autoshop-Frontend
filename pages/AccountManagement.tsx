@@ -36,6 +36,12 @@ import {
   LocationProfile,
 } from "../services/Location/fetchLocationProfiles";
 import { useLanguage } from "../context/LanguageContext";
+import {
+  AVAILABLE_MODULES,
+  DEFAULT_ROLE_MODULES,
+  AppModule,
+  getUserModules,
+} from "../hooks/useModulePermission";
 
 export const AccountManagement: React.FC = () => {
   const { t, language } = useLanguage();
@@ -83,9 +89,14 @@ export const AccountManagement: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<AdminAccount | null>(
     null,
   );
-  const [editFormData, setEditFormData] = useState({
+  const [editFormData, setEditFormData] = useState<{
+    name: string;
+    role: string;
+    modules: AppModule[];
+  }>({
     name: "",
     role: "",
+    modules: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -110,18 +121,68 @@ export const AccountManagement: React.FC = () => {
   // Create Account Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [createFormData, setCreateFormData] = useState({
+  const [createFormData, setCreateFormData] = useState<{
+    name: string;
+    password: string;
+    confirmPassword: string;
+    locationId: string;
+    role: string;
+    modules: AppModule[];
+  }>({
     name: "",
     password: "",
     confirmPassword: "",
     locationId: "",
     role: "cashier",
+    modules: [...(DEFAULT_ROLE_MODULES.cashier || [])],
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [locationProfiles, setLocationProfiles] = useState<LocationProfile[]>(
     [],
   );
+
+  const handleCreateRoleChange = (newRole: string) => {
+    const defaultMods = DEFAULT_ROLE_MODULES[newRole.toLowerCase()] || [];
+    setCreateFormData((prev) => ({
+      ...prev,
+      role: newRole,
+      modules: [...defaultMods],
+    }));
+  };
+
+  const toggleCreateModule = (modId: AppModule) => {
+    setCreateFormData((prev) => {
+      const exists = prev.modules.includes(modId);
+      return {
+        ...prev,
+        modules: exists
+          ? prev.modules.filter((m) => m !== modId)
+          : [...prev.modules, modId],
+      };
+    });
+  };
+
+  const handleEditRoleChange = (newRole: string) => {
+    const defaultMods = DEFAULT_ROLE_MODULES[newRole.toLowerCase()] || [];
+    setEditFormData((prev) => ({
+      ...prev,
+      role: newRole,
+      modules: [...defaultMods],
+    }));
+  };
+
+  const toggleEditModule = (modId: AppModule) => {
+    setEditFormData((prev) => {
+      const exists = prev.modules.includes(modId);
+      return {
+        ...prev,
+        modules: exists
+          ? prev.modules.filter((m) => m !== modId)
+          : [...prev.modules, modId],
+      };
+    });
+  };
 
   useEffect(() => {
     loadAccounts();
@@ -262,9 +323,11 @@ export const AccountManagement: React.FC = () => {
 
   const handleOpenEditModal = (account: AdminAccount) => {
     setSelectedAccount(account);
+    const mods = getUserModules(account);
     setEditFormData({
       name: account.name,
       role: account.role,
+      modules: [...mods],
     });
     setIsEditModalOpen(true);
   };
@@ -275,6 +338,7 @@ export const AccountManagement: React.FC = () => {
     setEditFormData({
       name: "",
       role: "",
+      modules: [],
     });
   };
 
@@ -298,6 +362,7 @@ export const AccountManagement: React.FC = () => {
       const response = await updateAdminAccount(selectedAccount._id, {
         name: editFormData.name.trim(),
         role: editFormData.role,
+        modules: editFormData.modules,
       });
 
       if (response.success) {
@@ -437,6 +502,7 @@ export const AccountManagement: React.FC = () => {
         password: createFormData.password,
         confirmPassword: createFormData.confirmPassword,
         role: createFormData.role,
+        modules: createFormData.modules,
         ...(createFormData.locationId && {
           locationId: createFormData.locationId,
         }),
@@ -453,6 +519,7 @@ export const AccountManagement: React.FC = () => {
           confirmPassword: "",
           locationId: "",
           role: "cashier",
+          modules: [...(DEFAULT_ROLE_MODULES.cashier || [])],
         });
         loadAccounts(); // Refresh the list
       } else {
@@ -653,6 +720,9 @@ export const AccountManagement: React.FC = () => {
                         Role
                       </th>
                       <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
+                        {language === "my" ? "လုပ်ပိုင်ခွင့်များ" : "Modules"}
+                      </th>
+                      <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
                         Location
                       </th>
                       <th className="px-6 py-4 font-bold text-slate-600 text-xs uppercase tracking-wider">
@@ -688,6 +758,34 @@ export const AccountManagement: React.FC = () => {
                                 account.role.slice(1).toLowerCase()
                               : ""}
                           </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {account.role?.toLowerCase() === "owner" ? (
+                            <span className="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-lg">
+                              <Shield className="w-3.5 h-3.5" />
+                              {language === "my" ? "အားလုံး (Owner)" : "All Modules (Owner)"}
+                            </span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {getUserModules(account).map((modId) => {
+                                const modDef = AVAILABLE_MODULES.find((m) => m.id === modId);
+                                return (
+                                  <span
+                                    key={modId}
+                                    className="inline-block bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                                    title={language === "my" ? modDef?.descriptionMy : modDef?.descriptionEn}
+                                  >
+                                    {language === "my" ? modDef?.labelMy : modDef?.labelEn}
+                                  </span>
+                                );
+                              })}
+                              {getUserModules(account).length === 0 && (
+                                <span className="text-xs text-slate-400 italic">
+                                  {language === "my" ? "Module မရှိပါ" : "No modules"}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           {account.locationId ? (
@@ -773,7 +871,7 @@ export const AccountManagement: React.FC = () => {
         {/* Edit Account Modal */}
         {isEditModalOpen && selectedAccount && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
                 <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
                   <Edit className="w-5 h-5 text-[#2216a8]" />
@@ -788,7 +886,7 @@ export const AccountManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateAccount} className="p-6 space-y-4">
+              <form onSubmit={handleUpdateAccount} className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
                     {language === "my" ? "အကောင့် နာမည်" : "Account Name"}{" "}
@@ -816,12 +914,7 @@ export const AccountManagement: React.FC = () => {
                       required
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
                       value={editFormData.role}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          role: e.target.value,
-                        })
-                      }
+                      onChange={(e) => handleEditRoleChange(e.target.value)}
                     >
                       <option value="">Select Role</option>
                       {availableRoles.map((role) => (
@@ -831,6 +924,71 @@ export const AccountManagement: React.FC = () => {
                       ))}
                     </select>
                     <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-bold text-slate-800">
+                      {language === "my" ? "လုပ်ပိုင်ခွင့်များ (Module Permissions)" : "Module Permissions"}
+                    </label>
+                    <div className="flex gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            modules: AVAILABLE_MODULES.map((m) => m.id),
+                          }))
+                        }
+                        className="text-[#2216a8] hover:underline font-semibold cursor-pointer"
+                      >
+                        {language === "my" ? "အားလုံးရွေးမည်" : "Select All"}
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            modules: [],
+                          }))
+                        }
+                        className="text-slate-500 hover:underline font-semibold cursor-pointer"
+                      >
+                        {language === "my" ? "အားလုံးဖြုတ်မည်" : "Clear All"}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1 bg-white/60 rounded-2xl border border-gray-200">
+                    {AVAILABLE_MODULES.map((mod) => {
+                      const isChecked = editFormData.modules.includes(mod.id);
+                      return (
+                        <label
+                          key={mod.id}
+                          className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                            isChecked
+                              ? "bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-sm"
+                              : "bg-white border-gray-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleEditModule(mod.id)}
+                            className="mt-0.5 rounded text-[#2216a8] focus:ring-[#2216a8] border-gray-300"
+                          />
+                          <div className="text-xs">
+                            <span className="font-bold block text-slate-800">
+                              {language === "my" ? mod.labelMy : mod.labelEn}
+                            </span>
+                            <span className="text-[10px] text-slate-500 leading-tight block">
+                              {language === "my" ? mod.descriptionMy : mod.descriptionEn}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1078,7 +1236,7 @@ export const AccountManagement: React.FC = () => {
         {/* Create Account Modal */}
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-md border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-[#f7f6f2] rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-white/40 overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="px-6 py-5 border-b border-gray-200/50 flex justify-between items-center bg-[#f7f6f2]">
                 <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
                   <Plus className="w-5 h-5 text-[#2216a8]" />
@@ -1094,6 +1252,7 @@ export const AccountManagement: React.FC = () => {
                       confirmPassword: "",
                       locationId: "",
                       role: "cashier",
+                      modules: [...(DEFAULT_ROLE_MODULES.cashier || [])],
                     });
                   }}
                   className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
@@ -1102,7 +1261,7 @@ export const AccountManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateAccount} className="p-6 space-y-4">
+              <form onSubmit={handleCreateAccount} className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div>
                   <label className="block text-sm font-bold text-slate-800 mb-1.5">
                     {getModalLabel("name")}{" "}
@@ -1134,18 +1293,83 @@ export const AccountManagement: React.FC = () => {
                       required
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white appearance-none pr-10"
                       value={createFormData.role}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          role: e.target.value,
-                        })
-                      }
+                      onChange={(e) => handleCreateRoleChange(e.target.value)}
                     >
                       <option value="cashier">Cashier</option>
                       <option value="warehouse">Warehouse</option>
                       <option value="owner">Owner</option>
                     </select>
                     <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-bold text-slate-800">
+                      {language === "my" ? "လုပ်ပိုင်ခွင့်များ (Module Permissions)" : "Module Permissions"}
+                    </label>
+                    <div className="flex gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCreateFormData((prev) => ({
+                            ...prev,
+                            modules: AVAILABLE_MODULES.map((m) => m.id),
+                          }))
+                        }
+                        className="text-[#2216a8] hover:underline font-semibold cursor-pointer"
+                      >
+                        {language === "my" ? "အားလုံးရွေးမည်" : "Select All"}
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCreateFormData((prev) => ({
+                            ...prev,
+                            modules: [],
+                          }))
+                        }
+                        className="text-slate-500 hover:underline font-semibold cursor-pointer"
+                      >
+                        {language === "my" ? "အားလုံးဖြုတ်မည်" : "Clear All"}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-2">
+                    {language === "my"
+                      ? "Role ရွေးချယ်မှုအရ Default အလိုအလျောက် သတ်မှတ်ပေးထားပါသည်။ လိုအပ်သလို စိတ်ကြိုက် ဖြုတ်/ထည့် ပြုလုပ်နိုင်ပါသည်။"
+                      : "Default modules are selected based on role. You can customize them below."}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1 bg-white/60 rounded-2xl border border-gray-200">
+                    {AVAILABLE_MODULES.map((mod) => {
+                      const isChecked = createFormData.modules.includes(mod.id);
+                      return (
+                        <label
+                          key={mod.id}
+                          className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                            isChecked
+                              ? "bg-indigo-50/70 border-indigo-300 text-indigo-950 shadow-sm"
+                              : "bg-white border-gray-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleCreateModule(mod.id)}
+                            className="mt-0.5 rounded text-[#2216a8] focus:ring-[#2216a8] border-gray-300"
+                          />
+                          <div className="text-xs">
+                            <span className="font-bold block text-slate-800">
+                              {language === "my" ? mod.labelMy : mod.labelEn}
+                            </span>
+                            <span className="text-[10px] text-slate-500 leading-tight block">
+                              {language === "my" ? mod.descriptionMy : mod.descriptionEn}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
 

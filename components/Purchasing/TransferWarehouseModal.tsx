@@ -7,6 +7,7 @@ import { fetchStorefrontProfiles, StorefrontProfile } from "../../services/Store
 import { transferGRN } from "../../services/Purchase/transferGRN";
 import { toast } from "sonner";
 import { Warehouse, Store, Package } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface WarehouseProfile {
   _id: string;
@@ -35,6 +36,8 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
   grnId,
   onSuccess,
 }) => {
+  const { t } = useLanguage();
+
   const [grn, setGrn] = useState<GRNData | null>(null);
   const [destinationType, setDestinationType] = useState<"warehouse" | "storefront">("warehouse");
   const [warehouses, setWarehouses] = useState<WarehouseProfile[]>([]);
@@ -69,7 +72,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
         setGrn(grnRes.data);
         const items: TransferItem[] = grnRes.data.lineItems.map((item) => ({
           productCode: item.inventoryId?.productCode || "",
-          productName: item.inventoryId?.productName || "Unknown Product",
+          productName: item.inventoryId?.productName || t("purchasing.grnDetail.unknownProduct"),
           availableQuantity: item.availableQuantity,
           quantity: item.availableQuantity,
           isSelected: true,
@@ -86,9 +89,26 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
       }
     } catch (error) {
       console.error("Failed to load data", error);
-      toast.error("Failed to load data");
+      toast.error(t("purchasing.transferStock.failedToLoadData"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return t("purchasing.grnDetail.statusPending");
+      case "verified":
+        return t("purchasing.grnDetail.statusVerified");
+      case "partial":
+        return t("purchasing.grnDetail.statusPartial");
+      case "transferred":
+        return t("purchasing.grnDetail.statusTransferred");
+      case "completed":
+        return t("purchasing.grnDetail.statusCompleted");
+      default:
+        return status?.toUpperCase() || "";
     }
   };
 
@@ -134,17 +154,17 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
 
   const handleSubmit = async (selectedItemsOnly = false) => {
     if (!grnId) {
-      toast.error("GRN ID is required");
+      toast.error(t("purchasing.transferStock.errorNoGRN"));
       return;
     }
 
     if (destinationType === "warehouse" && !selectedWarehouseId) {
-      toast.error("Please select a destination warehouse");
+      toast.error(t("purchasing.transferStock.errorSelectWarehouse"));
       return;
     }
 
     if (destinationType === "storefront" && !selectedStorefrontId) {
-      toast.error("Please select a destination storefront");
+      toast.error(t("purchasing.transferStock.errorSelectStorefront"));
       return;
     }
 
@@ -153,11 +173,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
       : transferItems.filter((item) => item.quantity > 0);
 
     if (itemsToProcess.length === 0) {
-      toast.error(
-        selectedItemsOnly
-          ? "Please select at least one item to transfer"
-          : "Please specify at least one item to transfer"
-      );
+      toast.error(t("purchasing.transferStock.errorSelectOneItem"));
       return;
     }
 
@@ -184,27 +200,27 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
       const result = await transferGRN(payload);
 
       if (result.success) {
-        toast.success("Transfer completed successfully!");
+        toast.success(t("purchasing.transferStock.successTransfer"));
         resetForm();
         onSuccess?.();
         onClose();
       } else {
-        toast.error(result.message || "Failed to transfer");
+        toast.error(result.message || t("purchasing.transferStock.failedTransfer"));
       }
     } catch (error) {
       console.error(error);
-      toast.error("An error occurred while transferring");
+      toast.error(t("purchasing.transferStock.errorOccurred"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Transfer GRN Stock">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t("purchasing.transferStock.title")}>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          <span className="ml-3 text-slate-500">Loading...</span>
+          <span className="ml-3 text-slate-500">{t("purchasing.transferDetail.loading")}</span>
         </div>
       ) : grn ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -213,23 +229,23 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
             {/* GRN Info */}
             <div className="bg-slate-50 p-4 rounded-lg border">
               <h3 className="font-semibold text-slate-800 mb-3">
-                GRN Information
+                {t("purchasing.transferStock.grnInfo")}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">GRN Number:</span>
+                  <span className="text-slate-500">{t("purchasing.transferStock.grnNumber")}</span>
                   <span className="font-medium text-blue-600">
                     {grn.grnNumber}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Status:</span>
+                  <span className="text-slate-500">{t("purchasing.transferStock.status")}</span>
                   <span className="font-medium text-purple-600">
-                    {grn.status.toUpperCase()}
+                    {getStatusText(grn.status)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Total Good Qty:</span>
+                  <span className="text-slate-500">{t("purchasing.transferStock.totalGoodQty")}</span>
                   <span className="font-medium text-green-600">
                     {grn.totalGoodQuantity}
                   </span>
@@ -241,7 +257,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Destination Type
+                  {t("purchasing.transferStock.destinationType")}
                 </label>
                 <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-lg">
                   <button
@@ -254,7 +270,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                     }`}
                   >
                     <Warehouse className="w-4 h-4" />
-                    Warehouse
+                    {t("purchasing.transferStock.warehouse")}
                   </button>
                   <button
                     type="button"
@@ -266,7 +282,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                     }`}
                   >
                     <Store className="w-4 h-4" />
-                    Storefront
+                    {t("purchasing.transferStock.storefront")}
                   </button>
                 </div>
               </div>
@@ -275,14 +291,14 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <Warehouse className="w-4 h-4" />
-                    Destination Warehouse
+                    {t("purchasing.transferStock.destWarehouse")}
                   </label>
                   <select
                     className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={selectedWarehouseId}
                     onChange={(e) => setSelectedWarehouseId(e.target.value)}
                   >
-                    <option value="">Select Warehouse...</option>
+                    <option value="">{t("purchasing.transferStock.selectWarehousePlaceholder")}</option>
                     {warehouses.map((wh) => (
                       <option key={wh._id} value={wh._id}>
                         {wh.locationName} ({wh.locationCode})
@@ -294,14 +310,14 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <Store className="w-4 h-4" />
-                    Destination Storefront
+                    {t("purchasing.transferStock.destStorefront")}
                   </label>
                   <select
                     className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={selectedStorefrontId}
                     onChange={(e) => setSelectedStorefrontId(e.target.value)}
                   >
-                    <option value="">Select Storefront...</option>
+                    <option value="">{t("purchasing.transferStock.selectStorefrontPlaceholder")}</option>
                     {storefronts.map((sf) => (
                       <option key={sf._id} value={sf._id}>
                         {sf.locationName} ({sf.locationCode})
@@ -315,7 +331,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
             {/* Transfer Date */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Transfer Date
+                {t("purchasing.transferStock.transferDate")}
               </label>
               <input
                 type="date"
@@ -328,13 +344,13 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
             {/* Notes */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Notes (Optional)
+                {t("purchasing.transferStock.notesOptional")}
               </label>
               <textarea
                 className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional notes..."
+                placeholder={t("purchasing.transferStock.notesPlaceholder")}
                 rows={3}
               />
             </div>
@@ -345,7 +361,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Items to Transfer
+                {t("purchasing.transferStock.itemsToTransfer")}
               </h3>
               <div className="flex gap-2">
                 <button
@@ -354,9 +370,9 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                       prev.map((item) => ({ ...item, isSelected: true }))
                     );
                   }}
-                  className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 cursor-pointer"
                 >
-                  Select All
+                  {t("purchasing.transferStock.selectAll")}
                 </button>
                 <button
                   onClick={() => {
@@ -364,16 +380,16 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                       prev.map((item) => ({ ...item, isSelected: false }))
                     );
                   }}
-                  className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 cursor-pointer"
                 >
-                  Deselect All
+                  {t("purchasing.transferStock.deselectAll")}
                 </button>
               </div>
             </div>
             <div className="flex-1 overflow-auto border rounded-lg bg-slate-50 p-4">
               {transferItems.length === 0 ? (
                 <div className="text-center text-slate-400 py-12">
-                  No items available for transfer
+                  {t("purchasing.transferStock.noItemsAvailable")}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -394,7 +410,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                             onChange={(e) =>
                               updateTransferSelection(index, e.target.checked)
                             }
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                           />
                           <div>
                             <div className="font-semibold text-slate-800">
@@ -404,7 +420,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                               </span>
                             </div>
                             <div className="text-xs text-slate-500">
-                              Available: {item.availableQuantity}
+                              {t("purchasing.transferStock.available")} {item.availableQuantity}
                             </div>
                           </div>
                         </div>
@@ -414,7 +430,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-green-50 p-2 rounded border border-green-200">
                               <label className="text-xs text-green-600">
-                                Available:
+                                {t("purchasing.transferStock.available")}
                               </label>
                               <div className="font-semibold text-green-700">
                                 {item.availableQuantity}
@@ -422,7 +438,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                             </div>
                             <div className="bg-green-50 p-2 rounded border border-green-200">
                               <label className="text-xs text-slate-500 block mb-1">
-                                Transfer Qty:
+                                {t("purchasing.transferStock.transferQty")}
                               </label>
                               <input
                                 type="number"
@@ -441,7 +457,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                           </div>
                           {item.quantity > item.availableQuantity && (
                             <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                              ⚠ Cannot exceed available quantity
+                              {t("purchasing.transferStock.cannotExceed")}
                             </div>
                           )}
                         </div>
@@ -454,18 +470,6 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
 
             <div className="mt-4 space-y-2">
               <div className="grid grid-cols-1 gap-2">
-                {/* <button
-                  onClick={() => handleSubmit(false)}
-                  disabled={
-                    !selectedWarehouseId ||
-                    transferItems.every((item) => item.quantity === 0) ||
-                    isSubmitting
-                  }
-                  className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <Warehouse className="w-5 h-5" />
-                  {isSubmitting ? "Transferring..." : "Transfer All"}
-                </button> */}
                 <button
                   onClick={() => handleSubmit(true)}
                   disabled={
@@ -475,21 +479,21 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                     ).length === 0 ||
                     isSubmitting
                   }
-                  className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors flex items-center justify-center gap-2"
+                  className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Package className="w-5 h-5" />
-                  {isSubmitting ? "Transferring..." : "Transfer Selected"}
+                  {isSubmitting ? t("purchasing.transferStock.transferring") : t("purchasing.transferStock.transferSelected")}
                 </button>
               </div>
               <p className="text-xs text-slate-500 text-center">
-                Items will be transferred to the selected {destinationType} inventory.
+                {t("purchasing.transferStock.notice").replace("{type}", destinationType === "warehouse" ? t("purchasing.transferStock.warehouse") : t("purchasing.transferStock.storefront"))}
               </p>
             </div>
           </div>
         </div>
       ) : (
         <div className="text-center py-12 text-slate-400">
-          No GRN data available
+          {t("purchasing.transferStock.noData")}
         </div>
       )}
     </Modal>

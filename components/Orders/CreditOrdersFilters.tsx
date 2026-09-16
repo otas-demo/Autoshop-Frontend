@@ -11,6 +11,8 @@ interface CreditOrdersFiltersProps {
   onStorefrontChange: (value: string) => void;
   paymentMethodFilter: string;
   onPaymentMethodChange: (value: string) => void;
+  statusFilter?: string;
+  onStatusChange?: (value: string) => void;
   orders: any[];
   filteredOrders: any[];
 }
@@ -23,6 +25,8 @@ export const CreditOrdersFilters: React.FC<CreditOrdersFiltersProps> = ({
   onStorefrontChange,
   paymentMethodFilter,
   onPaymentMethodChange,
+  statusFilter = "all",
+  onStatusChange,
   orders,
   filteredOrders,
 }) => {
@@ -42,45 +46,59 @@ export const CreditOrdersFilters: React.FC<CreditOrdersFiltersProps> = ({
           />
         </div>
 
-        <div className="flex flex-row items-center justify-between gap-3 w-full md:w-auto">
+        <div className="flex flex-row items-center justify-between gap-3 w-full md:w-auto flex-wrap">
           {/* Storefront Filter */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <select
-                className="border border-gray-200/80 rounded-full px-4 py-2.5 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 transition-all"
-                value={selectedStorefrontId}
-                onChange={(e) => onStorefrontChange(e.target.value)}
-              >
-                <option value="all">{t("creditOrders.allstorefront")}</option>
-                {storefronts.map((sf) => (
-                  <option key={sf._id} value={sf._id}>
-                    {sf.locationName || sf.storefrontName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Payment Method Filter - Hot and Normal only */}
-            <div className="flex items-center gap-2">
-              <select
-                className="border border-gray-200/80 rounded-full px-4 py-2.5 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 transition-all"
-                value={paymentMethodFilter}
-                onChange={(e) => onPaymentMethodChange(e.target.value)}
-              >
-                <option value="all">{t("creditOrders.allmethod")}</option>
-                <option value="cash">Cash</option>
-                <option value="kpay">KBZ Pay</option>
-                <option value="wavepay">Wave Pay</option>
-                <option value="ayapay">AYA Pay</option>
-                <option value="uabpay">UAB Pay</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="MMQR">MMQR</option>
-                <option value="normal">Normal</option>
-                <option value="hot">Hot</option>
-                <option value="foc">FOC</option>
-              </select>
-            </div>
+            <select
+              className="border border-gray-200/80 rounded-full px-4 py-2.5 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 transition-all"
+              value={selectedStorefrontId}
+              onChange={(e) => onStorefrontChange(e.target.value)}
+            >
+              <option value="all">{t("creditOrders.allstorefront")}</option>
+              {storefronts.map((sf) => (
+                <option key={sf._id} value={sf._id}>
+                  {sf.locationName || sf.storefrontName}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {/* Payment Method Filter */}
+          <div className="flex items-center gap-2">
+            <select
+              className="border border-gray-200/80 rounded-full px-4 py-2.5 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 transition-all"
+              value={paymentMethodFilter}
+              onChange={(e) => onPaymentMethodChange(e.target.value)}
+            >
+              <option value="all">{t("creditOrders.allmethod")}</option>
+              <option value="cash">Cash</option>
+              <option value="kpay">KBZ Pay</option>
+              <option value="wavepay">Wave Pay</option>
+              <option value="ayapay">AYA Pay</option>
+              <option value="uabpay">UAB Pay</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="MMQR">MMQR</option>
+              <option value="normal">Normal</option>
+              <option value="hot">Hot</option>
+              <option value="foc">FOC</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          {onStatusChange && (
+            <div className="flex items-center gap-2">
+              <select
+                className="border border-gray-200/80 rounded-full px-4 py-2.5 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 transition-all"
+                value={statusFilter}
+                onChange={(e) => onStatusChange(e.target.value)}
+              >
+                <option value="all">{t("creditOrders.allStatus")}</option>
+                <option value="fully_paid">{t("creditOrders.fullyPaid")}</option>
+                <option value="partial_paid">{t("creditOrders.partialPaid")}</option>
+                <option value="unpaid">{t("creditOrders.unpaid")}</option>
+              </select>
+            </div>
+          )}
 
 
         </div>

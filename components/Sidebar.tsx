@@ -25,6 +25,7 @@ import { useApp } from "../context/AppContext";
 import { removeAuthToken } from "../services/axios";
 import { toast } from "sonner";
 import { useLanguage } from "../context/LanguageContext";
+import { hasModuleAccess, AppModule } from "../hooks/useModulePermission";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -61,15 +62,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
     onClose();
   };
 
-  const menuGroups = [
+  const user = adminData || currentUser;
+
+  const menuGroups: {
+    id: string;
+    label: string;
+    icon: any;
+    items: {
+      path: string;
+      label: string;
+      icon: any;
+      module: AppModule | AppModule[];
+    }[];
+  }[] = [
     {
       id: "sales",
       label: t("sidebar.salesGroup"),
       icon: ShoppingBag,
       items: [
-        { path: "/pos", label: t("sidebar.checkout"), icon: ShoppingCart },
-        { path: "/storefront", label: t("sidebar.storefront"), icon: Store },
-        { path: "/orders", label: t("sidebar.orders"), icon: Receipt },
+        { path: "/pos", label: t("sidebar.checkout"), icon: ShoppingCart, module: "sales" },
+        { path: "/storefront", label: t("sidebar.storefront"), icon: Store, module: ["sales", "inventory"] },
+        { path: "/orders", label: t("sidebar.orders"), icon: Receipt, module: "sales" },
       ],
     },
     {
@@ -77,8 +90,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       label: t("sidebar.creditsGroup"),
       icon: Users,
       items: [
-        { path: "/credit-orders", label: t("sidebar.creditOrder"), icon: CreditCard },
-        { path: "/credits", label: t("sidebar.creditSales"), icon: Users },
+        { path: "/credit-orders", label: t("sidebar.creditOrder"), icon: CreditCard, module: "credits" },
+        { path: "/credits", label: t("sidebar.creditSales"), icon: Users, module: "credits" },
       ],
     },
     {
@@ -86,10 +99,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       label: t("sidebar.inventoryGroup"),
       icon: Package,
       items: [
-        { path: "/inventory", label: t("sidebar.inventory"), icon: Package },
-        { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package },
-        { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield },
-        { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck },
+        { path: "/inventory", label: t("sidebar.inventory"), icon: Package, module: "inventory" },
+        { path: "/warehouse", label: t("sidebar.warehouse"), icon: Package, module: "warehouse" },
+        { path: "/suppliers", label: t("sidebar.suppliers"), icon: Shield, module: "purchasing" },
+        { path: "/purchasing", label: t("sidebar.purchasing"), icon: Truck, module: "purchasing" },
       ],
     },
     {
@@ -97,10 +110,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       label: t("sidebar.financeGroup"),
       icon: PieChart,
       items: [
-        { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart },
-        { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard },
-        { path: "/purchasing-report", label: t("sidebar.purchasingReport"), icon: BarChart3 },
-        // { path: "/daily-reports", label: t("sidebar.dailyReports"), icon: Bell },
+        { path: "/expenses", label: t("sidebar.expenses"), icon: PieChart, module: "expenses" },
+        { path: "/reports", label: t("sidebar.reports"), icon: LayoutDashboard, module: "reports" },
+        { path: "/purchasing-report", label: t("sidebar.purchasingReport"), icon: BarChart3, module: ["reports", "purchasing"] },
       ],
     },
     {
@@ -108,38 +120,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
       label: t("sidebar.systemGroup"),
       icon: Settings,
       items: [
-        { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield },
-        // { path: "/ai-chat", label: t("sidebar.aiChat"), icon: Bot },
+        { path: "/accounts", label: t("sidebar.accountManagement"), icon: Shield, module: "accounts" },
       ],
     },
   ];
 
-  const userRole = adminData?.role || currentUser?.role;
-
-  const hasPermission = (path: string) => {
-    // Warehouse role has all permissions like an owner except order and account management
-    if (userRole === "warehouse") {
-      if (["/pos", "/orders", "/credit-orders", "/accounts"].includes(path)) {
-        return false;
-      }
-      return true;
-    }
-
-    if (path === "/accounts" && userRole !== "owner") return false;
-    if (
-      ["/warehouse", "/suppliers"].includes(path) &&
-      userRole !== "admin" &&
-      userRole !== "owner"
-    ) {
-      return false;
-    }
-    if (
-      ["/purchasing", "/purchasing-report"].includes(path) &&
-      userRole !== "admin" &&
-      userRole !== "owner" &&
-      userRole !== "cashier"
-    ) {
-      return false;
+  const hasPermission = (item: { module?: AppModule | AppModule[]; path: string }) => {
+    if (item.module) {
+      return hasModuleAccess(user, item.module);
     }
     return true;
   };
@@ -147,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
   const visibleGroups = menuGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => hasPermission(item.path)),
+      items: group.items.filter(hasPermission),
     }))
     .filter((group) => group.items.length > 0);
 

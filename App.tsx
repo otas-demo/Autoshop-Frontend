@@ -32,38 +32,44 @@ import { AIChat } from "./components/AIChat";
 import { DailyReports } from "./pages/DailyReports";
 import MobilePrint from "./pages/MobilePrint";
 import { AIFloatingIcon } from "./components/AIFloatingIcon";
+import { hasModuleAccess, AppModule } from "./hooks/useModulePermission";
 
-const PosRoute: React.FC = () => {
-  let role = "";
+const getDefaultAccessibleRoute = (user: any): string => {
+  if (!user) return "/login";
+  if (hasModuleAccess(user, "sales")) return "/pos";
+  if (hasModuleAccess(user, "inventory")) return "/inventory";
+  if (hasModuleAccess(user, "warehouse")) return "/warehouse";
+  if (hasModuleAccess(user, "purchasing")) return "/purchasing";
+  if (hasModuleAccess(user, "credits")) return "/credits";
+  if (hasModuleAccess(user, "expenses")) return "/expenses";
+  if (hasModuleAccess(user, "reports")) return "/reports";
+  if (hasModuleAccess(user, "accounts")) return "/accounts";
+  return "/login";
+};
+
+const RequireModule: React.FC<{
+  module: AppModule | AppModule[];
+  children: React.ReactNode;
+}> = ({ module, children }) => {
+  let user = null;
   try {
     const storedAdmin = localStorage.getItem("adminData");
-    role = storedAdmin ? JSON.parse(storedAdmin)?.role : "";
+    user = storedAdmin ? JSON.parse(storedAdmin) : null;
   } catch (e) {}
-  if (role === "warehouse") {
-    return <Navigate to="/warehouse" replace />;
+
+  if (!hasModuleAccess(user, module)) {
+    return <Navigate to={getDefaultAccessibleRoute(user)} replace />;
   }
-  return <POS />;
+  return <>{children}</>;
 };
 
 const RootRedirect: React.FC = () => {
-  let role = "";
+  let user = null;
   try {
     const storedAdmin = localStorage.getItem("adminData");
-    role = storedAdmin ? JSON.parse(storedAdmin)?.role : "";
+    user = storedAdmin ? JSON.parse(storedAdmin) : null;
   } catch (e) {}
-  return <Navigate to={role === "warehouse" ? "/warehouse" : "/pos"} replace />;
-};
-
-const RestrictWarehouseRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  let role = "";
-  try {
-    const storedAdmin = localStorage.getItem("adminData");
-    role = storedAdmin ? JSON.parse(storedAdmin)?.role : "";
-  } catch (e) {}
-  if (role === "warehouse") {
-    return <Navigate to="/warehouse" replace />;
-  }
-  return <>{children}</>;
+  return <Navigate to={getDefaultAccessibleRoute(user)} replace />;
 };
 
 const AppLayout: React.FC = () => {
@@ -117,7 +123,9 @@ const AppLayout: React.FC = () => {
             path="/pos"
             element={
               <ProtectedRoute>
-                <PosRoute />
+                <RequireModule module="sales">
+                  <POS />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -125,9 +133,9 @@ const AppLayout: React.FC = () => {
             path="/orders/edit/:id"
             element={
               <ProtectedRoute>
-                <RestrictWarehouseRoute>
+                <RequireModule module="sales">
                   <OrderEditPOS />
-                </RestrictWarehouseRoute>
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -135,7 +143,9 @@ const AppLayout: React.FC = () => {
             path="/inventory"
             element={
               <ProtectedRoute>
-                <Inventory />
+                <RequireModule module="inventory">
+                  <Inventory />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -143,7 +153,9 @@ const AppLayout: React.FC = () => {
             path="/warehouse"
             element={
               <ProtectedRoute>
-                <Warehouse />
+                <RequireModule module="warehouse">
+                  <Warehouse />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -151,7 +163,9 @@ const AppLayout: React.FC = () => {
             path="/warehouse/:id"
             element={
               <ProtectedRoute>
-                <WarehouseDetail />
+                <RequireModule module="warehouse">
+                  <WarehouseDetail />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -159,7 +173,9 @@ const AppLayout: React.FC = () => {
             path="/storefront"
             element={
               <ProtectedRoute>
-                <Storefront />
+                <RequireModule module={["sales", "inventory"]}>
+                  <Storefront />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -167,7 +183,9 @@ const AppLayout: React.FC = () => {
             path="/storefront/:id"
             element={
               <ProtectedRoute>
-                <StorefrontDetail />
+                <RequireModule module={["sales", "inventory"]}>
+                  <StorefrontDetail />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -175,7 +193,9 @@ const AppLayout: React.FC = () => {
             path="/suppliers"
             element={
               <ProtectedRoute>
-                <Suppliers />
+                <RequireModule module="purchasing">
+                  <Suppliers />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -183,7 +203,9 @@ const AppLayout: React.FC = () => {
             path="/suppliers/:id"
             element={
               <ProtectedRoute>
-                <SupplierDetail />
+                <RequireModule module="purchasing">
+                  <SupplierDetail />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -191,7 +213,9 @@ const AppLayout: React.FC = () => {
             path="/purchasing"
             element={
               <ProtectedRoute>
-                <Purchasing />
+                <RequireModule module="purchasing">
+                  <Purchasing />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -199,9 +223,9 @@ const AppLayout: React.FC = () => {
             path="/orders"
             element={
               <ProtectedRoute>
-                <RestrictWarehouseRoute>
+                <RequireModule module="sales">
                   <Orders />
-                </RestrictWarehouseRoute>
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -209,9 +233,9 @@ const AppLayout: React.FC = () => {
             path="/credit-orders"
             element={
               <ProtectedRoute>
-                <RestrictWarehouseRoute>
+                <RequireModule module="credits">
                   <CreditOrders />
-                </RestrictWarehouseRoute>
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -219,7 +243,9 @@ const AppLayout: React.FC = () => {
             path="/credits"
             element={
               <ProtectedRoute>
-                <Credits />
+                <RequireModule module="credits">
+                  <Credits />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -227,7 +253,9 @@ const AppLayout: React.FC = () => {
             path="/credits/:id"
             element={
               <ProtectedRoute>
-                <CreditDetail />
+                <RequireModule module="credits">
+                  <CreditDetail />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -235,7 +263,9 @@ const AppLayout: React.FC = () => {
             path="/expenses"
             element={
               <ProtectedRoute>
-                <Expenses />
+                <RequireModule module="expenses">
+                  <Expenses />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -243,7 +273,9 @@ const AppLayout: React.FC = () => {
             path="/reports"
             element={
               <ProtectedRoute>
-                <Reports />
+                <RequireModule module="reports">
+                  <Reports />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -251,7 +283,9 @@ const AppLayout: React.FC = () => {
             path="/purchasing-report"
             element={
               <ProtectedRoute>
-                <POReport />
+                <RequireModule module={["reports", "purchasing"]}>
+                  <POReport />
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -267,9 +301,9 @@ const AppLayout: React.FC = () => {
             path="/accounts"
             element={
               <ProtectedRoute>
-                <RestrictWarehouseRoute>
+                <RequireModule module="accounts">
                   <AccountManagement />
-                </RestrictWarehouseRoute>
+                </RequireModule>
               </ProtectedRoute>
             }
           />
@@ -285,7 +319,9 @@ const AppLayout: React.FC = () => {
             path="/daily-reports"
             element={
               <ProtectedRoute>
-                <DailyReports />
+                <RequireModule module="reports">
+                  <DailyReports />
+                </RequireModule>
               </ProtectedRoute>
             }
           />

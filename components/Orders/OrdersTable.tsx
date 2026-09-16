@@ -19,6 +19,9 @@ import {
   getPaymentMethodLabel,
   getPaymentTypeColor,
   formatDate,
+  getCreditPaymentStatus,
+  getCreditPaymentStatusColor,
+  getTranslatedCreditStatus,
 } from "./orderUtils";
 import { toast } from "sonner";
 import { useApp } from "../../context/AppContext";
@@ -30,6 +33,7 @@ interface OrdersTableProps {
   onViewOrder: (orderId: string) => void;
   onOpenCreditPersonModal: (order: Order) => void;
   onOrderDeleted?: () => void; // Callback to refresh orders after deletion
+  maxHeight?: string;
 }
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({
@@ -38,6 +42,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   onViewOrder,
   onOpenCreditPersonModal,
   onOrderDeleted,
+  maxHeight = "800px",
 }) => {
   const { t } = useLanguage();
   const adminData = JSON.parse(localStorage.getItem("adminData") || "{}");
@@ -97,17 +102,39 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   return (
     <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
       {/* Table container with horizontal scroll on mobile */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[800px]">
-        <table className="w-full text-sm text-left min-w-[800px]">
+      <div
+        className={`overflow-x-auto overflow-y-auto h-[calc(100vh-${maxHeight})]`}
+      >
+        <table className="w-full text-sm text-left min-w-[950px]">
           <thead className="text-slate-500">
             <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
-              <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
-              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Order Num</th>
-              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Items</th>
-              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Final Amount</th>
-              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid</th>
-              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Method</th>
-              <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
+              <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.no") || "No"}
+              </th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.orderNumber") || "Order Num"}
+              </th>
+              <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.orderType") || "Type"}
+              </th>
+              <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.status") || "Status"}
+              </th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.items") || "Items"}
+              </th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.total") || "Final Amount"}
+              </th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.paid") || "Paid"}
+              </th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("orders.paymentMethod") || "Method"}
+              </th>
+              <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">
+                {t("creditOrders.actions") || "Actions"}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -121,9 +148,65 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                 {/* Order Num */}
                 <td
                   onClick={() => onViewOrder(order._id)}
-                  className="px-4 py-4 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs sm:text-sm"
+                  className="px-4 py-4 font-bold text-[#2216a8] hover:underline cursor-pointer text-xs sm:text-sm whitespace-nowrap"
                 >
                   {order.orderNumber}
+                </td>
+
+                {/* Type: Credit Order or Paid Order */}
+                <td className="px-4 py-4 text-center whitespace-nowrap">
+                  {order.paymentType === "credit" ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200 shadow-2xs">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500" />
+                      {t("creditOrders.creditOrder") || "Credit"}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-indigo-50 text-[#2216a8] border-indigo-200 shadow-2xs">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-[#2216a8]" />
+                      {t("creditOrders.paidOrder") || "Paid"}
+                    </span>
+                  )}
+                </td>
+
+                {/* Status */}
+                <td className="px-4 py-4 text-center whitespace-nowrap">
+                  {(() => {
+                    if (order.orderStatus === "cancelled") {
+                      return (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-rose-50 text-rose-700 border-rose-200">
+                          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-rose-500" />
+                          {t("orders.statusCancelled") || "Cancelled"}
+                        </span>
+                      );
+                    }
+                    if (order.paymentType === "credit") {
+                      const status = getCreditPaymentStatus(order);
+                      return (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${getCreditPaymentStatusColor(
+                            status,
+                          )}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                              status === "fully_paid"
+                                ? "bg-emerald-500"
+                                : status === "partial_paid"
+                                  ? "bg-amber-500"
+                                  : "bg-rose-500"
+                            }`}
+                          />
+                          {getTranslatedCreditStatus(status, t)}
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-500" />
+                        {t("orders.paidType") || "Paid"}
+                      </span>
+                    );
+                  })()}
                 </td>
 
                 {/* Items */}

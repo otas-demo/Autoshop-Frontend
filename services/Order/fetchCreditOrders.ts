@@ -11,6 +11,7 @@ export const fetchCreditOrders = async (
   startDate?: string | null,
   endDate?: string | null,
   paymentMethod?: string | null,
+  creditStatus?: string | null,
 ): Promise<FetchCreditOrdersResponse> => {
   try {
     let url = "/order";
@@ -26,6 +27,15 @@ export const fetchCreditOrders = async (
       paymentMethod.trim() !== ""
     ) {
       params.append("paymentMethod", paymentMethod);
+    }
+
+    // Add creditStatus filter only if it's not "all", not null, and not empty
+    if (
+      creditStatus &&
+      creditStatus !== "all" &&
+      creditStatus.trim() !== ""
+    ) {
+      params.append("creditStatus", creditStatus);
     }
 
     if (startDate) {

@@ -59,14 +59,32 @@ export interface Order {
   updatedAt: string;
   totalPaidAmount?: Record<string, unknown>;
   remainingBalance?: number;
+  creditPaymentStatus?: "fully_paid" | "partial_paid" | "unpaid" | string;
   note?: string;
   id?: string;
 }
 
-interface FetchOrdersResponse {
+export interface OrdersPagination {
+  currentPage: number;
+  totalPages: number;
+  totalOrders: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface OrdersSummaryCounts {
+  totalCount: number;
+  paidCount: number;
+  creditCount: number;
+}
+
+export interface FetchOrdersResponse {
   success: boolean;
   message: string;
   data: Order[];
+  pagination?: OrdersPagination;
+  summaryCounts?: OrdersSummaryCounts;
 }
 
 export const fetchOrders = async (
@@ -75,6 +93,9 @@ export const fetchOrders = async (
   paymentType?: string | null,
   paymentMethod?: string | null,
   creditPersonId?: string | null,
+  page?: number | null,
+  limit?: number | null,
+  creditStatus?: string | null,
 ): Promise<FetchOrdersResponse> => {
   try {
     let url = "/order";
@@ -104,6 +125,16 @@ export const fetchOrders = async (
     }
     if (endDate) {
       params.append("endDate", endDate);
+    }
+
+    if (page && page > 0) {
+      params.append("page", String(page));
+    }
+    if (limit && limit > 0) {
+      params.append("limit", String(limit));
+    }
+    if (creditStatus && creditStatus !== "all") {
+      params.append("creditStatus", creditStatus);
     }
 
     if (params.toString()) {

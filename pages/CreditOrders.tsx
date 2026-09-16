@@ -34,6 +34,11 @@ import {
   createDateRangeInitializer,
   saveStoredDateRange,
 } from "../utils/dateRangeStorage";
+import {
+  getCreditPaymentStatus,
+  getCreditPaymentStatusColor,
+  CreditPaymentStatus,
+} from "../components/Orders/orderUtils";
 
 export const CreditOrders: React.FC = () => {
   const { t } = useLanguage();
@@ -46,6 +51,7 @@ export const CreditOrders: React.FC = () => {
   const [selectedStorefrontId, setSelectedStorefrontId] =
     useState<string>("all");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [creditPersonas, setCreditPersonas] = useState<CreditPersona[]>([]);
   const [showCreditPersonModal, setShowCreditPersonModal] = useState(false);
   const [selectedOrderForCredit, setSelectedOrderForCredit] =
@@ -77,7 +83,7 @@ export const CreditOrders: React.FC = () => {
   useEffect(() => {
     loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStorefrontId, startDate, endDate, paymentMethodFilter]);
+  }, [selectedStorefrontId, startDate, endDate, paymentMethodFilter, statusFilter]);
 
   const loadInitialData = async () => {
     // Load storefronts and credit personas
@@ -117,6 +123,7 @@ export const CreditOrders: React.FC = () => {
         startDateStr,
         endDateStr,
         paymentMethodFilter === "all" ? null : paymentMethodFilter,
+        statusFilter === "all" ? null : statusFilter,
       );
 
       if (response.success && response.data) {
@@ -143,7 +150,26 @@ export const CreditOrders: React.FC = () => {
     }
   };
 
+  const getTranslatedCreditStatus = (status: string) => {
+    switch (status) {
+      case "fully_paid":
+        return t("creditOrders.fullyPaid");
+      case "partial_paid":
+        return t("creditOrders.partialPaid");
+      case "unpaid":
+        return t("creditOrders.unpaid");
+      default:
+        return status;
+    }
+  };
+
   const filteredOrders = orders.filter((order) => {
+    // Status filter
+    if (statusFilter !== "all") {
+      const orderStatus = getCreditPaymentStatus(order);
+      if (orderStatus !== statusFilter) return false;
+    }
+
     const searchLower = search.toLowerCase();
 
     const matchesOrderNumber = order.orderNumber
@@ -318,7 +344,7 @@ export const CreditOrders: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+      <div className="bg-white h-[calc(100vh-2rem)] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
 
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
@@ -369,11 +395,12 @@ export const CreditOrders: React.FC = () => {
           onStorefrontChange={setSelectedStorefrontId}
           paymentMethodFilter={paymentMethodFilter}
           onPaymentMethodChange={setPaymentMethodFilter}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
           orders={orders}
           filteredOrders={filteredOrders}
         />
 
-        {/* Orders Table */}
         {/* Orders Table */}
         <div className="bg-white border border-gray-150 rounded-2xl overflow-hidden flex flex-col min-h-0">
           {loading ? (
@@ -389,19 +416,20 @@ export const CreditOrders: React.FC = () => {
           ) : (
             <div>
               {/* Table container with horizontal scroll on mobile */}
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+              <div className="overflow-x-auto overflow-y-auto h-[calc(100vh-16rem)]">
                 <table className="w-full text-sm text-left min-w-[1000px]">
                   <thead className="text-slate-500">
                     <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
                       <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">No</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Credit Order Num</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Shop</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Customer</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Items</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Total</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Paid</th>
-                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Left</th>
-                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">Actions</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.orderNumber")}</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.storefront")}</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.customer")}</th>
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.status")}</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.items")}</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.total")}</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.paid")}</th>
+                      <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.balance")}</th>
+                      <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50">{t("creditOrders.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
@@ -451,6 +479,30 @@ export const CreditOrders: React.FC = () => {
                               </div>
                             </>
                           )}
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-4 text-center whitespace-nowrap">
+                          {(() => {
+                            const status = getCreditPaymentStatus(order);
+                            return (
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${getCreditPaymentStatusColor(
+                                  status,
+                                )}`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status === "fully_paid"
+                                    ? "bg-emerald-500"
+                                    : status === "partial_paid"
+                                      ? "bg-amber-500"
+                                      : "bg-rose-500"
+                                    }`}
+                                />
+                                {getTranslatedCreditStatus(status)}
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         {/* Items */}

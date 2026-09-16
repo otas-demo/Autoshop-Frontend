@@ -305,8 +305,8 @@ export const Suppliers: React.FC = () => {
                 setSearch("");
               }}
               className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${!showDeleted
-                  ? "bg-white text-[#2216a8] shadow-sm"
-                  : "text-slate-600 hover:text-slate-850"
+                ? "bg-white text-[#2216a8] shadow-sm"
+                : "text-slate-600 hover:text-slate-850"
                 }`}
             >
               {t("suppliers.active")}
@@ -317,8 +317,8 @@ export const Suppliers: React.FC = () => {
                 setSearch("");
               }}
               className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${showDeleted
-                  ? "bg-white text-[#2216a8] shadow-sm"
-                  : "text-slate-600 hover:text-slate-850"
+                ? "bg-white text-[#2216a8] shadow-sm"
+                : "text-slate-600 hover:text-slate-850"
                 }`}
             >
               <Archive className="w-3.5 h-3.5" />
@@ -345,7 +345,7 @@ export const Suppliers: React.FC = () => {
               {search ? "No suppliers match search criteria." : t("suppliers.noSuppliers")}
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+            <div className="overflow-x-auto overflow-y-auto h-[calc(100vh-27rem)]">
               <table className="w-full text-sm text-left min-w-[700px]">
                 <thead className="text-slate-500">
                   <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">

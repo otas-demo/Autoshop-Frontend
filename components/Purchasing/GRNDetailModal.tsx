@@ -5,6 +5,7 @@ import { fetchGRNById } from "../../services/Purchase/fetchGRNById";
 import { updateGRNLineItems } from "../../services/Purchase/updateGRNLineItems";
 import { UpdateLineItemModal } from "./UpdateLineItemModal";
 import { toast } from "sonner";
+import { useLanguage } from "../../context/LanguageContext";
 import {
   Package,
   Calendar,
@@ -27,6 +28,8 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
   grnId,
   onGRNUpdate,
 }) => {
+  const { t } = useLanguage();
+
   const [grn, setGrn] = useState<GRNData | null>(null);
   const [loading, setLoading] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
@@ -59,20 +62,36 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
       case "pending":
         return "bg-yellow-100 text-yellow-700 border-yellow-300";
       case "verified":
+        return "bg-blue-100 text-blue-700 border-blue-300";
+      case "partial":
         return "bg-purple-100 text-purple-700 border-purple-300";
+      case "transferred":
       case "completed":
         return "bg-green-100 text-green-700 border-green-300";
-      case "transferred":
-        return "bg-blue-100 text-blue-700 border-blue-300";
       default:
         return "bg-gray-100 text-gray-700 border-gray-300";
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return t("purchasing.grnDetail.statusPending");
+      case "verified":
+        return t("purchasing.grnDetail.statusVerified");
+      case "partial":
+        return t("purchasing.grnDetail.statusPartial");
+      case "transferred":
+        return t("purchasing.grnDetail.statusTransferred");
+      case "completed":
+        return t("purchasing.grnDetail.statusCompleted");
+      default:
+        return status?.toUpperCase() || "";
+    }
+  };
+
   const handleClose = () => {
     setGrn(null);
-    setUpdateModalOpen(false);
-    setSelectedLineItem(null);
     onClose();
   };
 
@@ -85,8 +104,8 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
     lineItemId: string,
     goodQuantity: number,
     badQuantity: number,
-    notes: string,
-    expiryDate: string | null
+    notes?: string,
+    expiryDate?: string
   ) => {
     if (!grnId) return;
 
@@ -109,24 +128,34 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
         onGRNUpdate?.();
         setUpdateModalOpen(false);
         setSelectedLineItem(null);
+        toast.success(t("purchasing.grnDetail.lineItemUpdated"));
       } else {
         console.error("Failed to update line item:", result.message);
-        toast.error("Failed to update line item: " + result.message);
+        toast.error(
+          t("purchasing.grnDetail.failedToUpdateLineItem") +
+            result.message
+        );
       }
     } catch (error) {
       console.error("Error updating line item:", error);
-      toast.error("Error updating line item: " + error);
+      toast.error(t("purchasing.grnDetail.errorUpdatingLineItem") + error);
     } finally {
       setUpdating(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="GRN Details">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={t("purchasing.grnDetail.title")}
+    >
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          <span className="ml-3 text-slate-500">Loading GRN details...</span>
+          <span className="ml-3 text-slate-500">
+            {t("purchasing.grnDetail.loading")}
+          </span>
         </div>
       ) : grn ? (
         <div className="space-y-6">
@@ -135,7 +164,7 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <Hash className="w-4 h-4" />
-                GRN Number
+                {t("purchasing.grnDetail.grnNumber")}
               </div>
               <div className="font-bold text-lg text-blue-600">
                 {grn.grnNumber}
@@ -144,7 +173,7 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <Calendar className="w-4 h-4" />
-                GRN Date
+                {t("purchasing.grnDetail.grnDate")}
               </div>
               <div className="font-bold text-lg">
                 {new Date(grn.grnDate).toLocaleDateString()}
@@ -153,7 +182,7 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <DollarSign className="w-4 h-4" />
-                Total Amount
+                {t("purchasing.grnDetail.totalAmount")}
               </div>
               <div className="font-bold text-lg text-green-600">
                 {grn.totalAmount.toLocaleString()}
@@ -162,14 +191,14 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <FileText className="w-4 h-4" />
-                Status
+                {t("purchasing.grnDetail.status")}
               </div>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(
                   grn.status
                 )}`}
               >
-                {grn.status.toUpperCase()}
+                {getStatusText(grn.status)}
               </span>
             </div>
           </div>
@@ -180,19 +209,25 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
               <div className="text-2xl font-bold text-blue-600">
                 {grn.totalReceivedQuantity}
               </div>
-              <div className="text-sm text-blue-600">Total Received</div>
+              <div className="text-sm text-blue-600">
+                {t("purchasing.grnDetail.totalReceived")}
+              </div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
               <div className="text-2xl font-bold text-green-600">
                 {grn.totalGoodQuantity}
               </div>
-              <div className="text-sm text-green-600">Good Quantity</div>
+              <div className="text-sm text-green-600">
+                {t("purchasing.grnDetail.goodQuantity")}
+              </div>
             </div>
             <div className="bg-red-50 p-4 rounded-lg border border-red-200 text-center">
               <div className="text-2xl font-bold text-red-600">
                 {grn.totalBadQuantity}
               </div>
-              <div className="text-sm text-red-600">Bad Quantity</div>
+              <div className="text-sm text-red-600">
+                {t("purchasing.grnDetail.badQuantity")}
+              </div>
             </div>
           </div>
 
@@ -201,7 +236,7 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
             <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
               <div className="flex items-center gap-2 text-amber-700 text-sm font-semibold mb-2">
                 <FileText className="w-4 h-4" />
-                Notes
+                {t("purchasing.grnDetail.notes")}
               </div>
               <p className="text-amber-800">{grn.notes}</p>
             </div>
@@ -211,21 +246,36 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
           <div>
             <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
               <Package className="w-5 h-5" />
-              Line Items ({grn.lineItems.length})
+              {t("purchasing.grnDetail.lineItems")} ({grn.lineItems.length})
             </h3>
             <div className="bg-white rounded-lg border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b">
                   <tr>
-                    <th className="p-3 text-left">Product</th>
-                    {/* <th className="p-3 text-left">SKU</th> */}
-                    <th className="p-3 text-center">Received</th>
-                    <th className="p-3 text-center">Good</th>
-                    <th className="p-3 text-center">Bad</th>
-                    <th className="p-3 text-center">Available</th>
-                    <th className="p-3 text-right">Unit Price</th>
-                    <th className="p-3 text-right">Total Price</th>
-                    <th className="p-3 text-center">Actions</th>
+                    <th className="p-3 text-left">
+                      {t("purchasing.grnDetail.product")}
+                    </th>
+                    <th className="p-3 text-center">
+                      {t("purchasing.grnDetail.received")}
+                    </th>
+                    <th className="p-3 text-center">
+                      {t("purchasing.grnDetail.good")}
+                    </th>
+                    <th className="p-3 text-center">
+                      {t("purchasing.grnDetail.bad")}
+                    </th>
+                    <th className="p-3 text-center">
+                      {t("purchasing.grnDetail.available")}
+                    </th>
+                    <th className="p-3 text-right">
+                      {t("purchasing.grnDetail.unitPrice")}
+                    </th>
+                    <th className="p-3 text-right">
+                      {t("purchasing.grnDetail.totalPrice")}
+                    </th>
+                    <th className="p-3 text-center">
+                      {t("purchasing.grnDetail.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -233,20 +283,19 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                     <tr key={item._id} className="hover:bg-slate-50">
                       <td className="p-3">
                         <div className="font-medium">
-                          {item.inventoryId?.productName || "Unknown Product"}
+                          {item.inventoryId?.productName ||
+                            t("purchasing.grnDetail.unknownProduct")}
                         </div>
                         <div className="text-xs text-slate-500">
                           {item.inventoryId?.productCode || "-"}
                         </div>
                         {item.expiryDate && (
                           <div className="text-[11px] text-orange-600 font-semibold mt-0.5">
-                            Expiry: {new Date(item.expiryDate).toLocaleDateString()}
+                            {t("purchasing.grnDetail.expiry")}
+                            {new Date(item.expiryDate).toLocaleDateString()}
                           </div>
                         )}
                       </td>
-                      {/* <td className="p-3 text-slate-600">
-                        {item.inventoryId?.SKU || "-"}
-                      </td> */}
                       <td className="p-3 text-center font-medium">
                         {item.receivedQuantity}
                       </td>
@@ -277,8 +326,8 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                         ) && (
                           <button
                             onClick={() => handleUpdateLineItem(item)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Update Line Item"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title={t("purchasing.grnDetail.updateLineItem")}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -293,13 +342,19 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
 
           {/* Footer Info */}
           <div className="flex justify-between text-xs text-slate-500 pt-4 border-t">
-            <div>Created: {new Date(grn.createdAt).toLocaleString()}</div>
-            <div>Updated: {new Date(grn.updatedAt).toLocaleString()}</div>
+            <div>
+              {t("purchasing.grnDetail.created")}
+              {new Date(grn.createdAt).toLocaleString()}
+            </div>
+            <div>
+              {t("purchasing.grnDetail.updated")}
+              {new Date(grn.updatedAt).toLocaleString()}
+            </div>
           </div>
         </div>
       ) : (
         <div className="text-center py-12 text-slate-400">
-          No GRN data available
+          {t("purchasing.grnDetail.noData")}
         </div>
       )}
 

@@ -15,6 +15,7 @@ import {
   Warehouse,
   CheckCircle,
 } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface TransferDetailModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
   onClose,
   transferId,
 }) => {
+  const { t } = useLanguage();
   const [transfer, setTransfer] = useState<TransferData | null>(null);
   const [loading, setLoading] = useState(false);
   const [productDetails, setProductDetails] = useState<
@@ -92,6 +94,21 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
         return "bg-red-100 text-red-700 border-red-300";
       default:
         return "bg-gray-100 text-gray-700 border-gray-300";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return t("purchasing.transferDetail.statusPending");
+      case "completed":
+        return t("purchasing.transferDetail.statusCompleted");
+      case "received":
+        return t("purchasing.transferDetail.statusReceived");
+      case "cancelled":
+        return t("purchasing.transferDetail.statusCancelled");
+      default:
+        return status?.toUpperCase() || "";
     }
   };
 
@@ -169,12 +186,12 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
   // console.log(transfer);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Transfer Details">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t("purchasing.transferDetail.title")}>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           <span className="ml-3 text-slate-500">
-            Loading transfer details...
+            {t("purchasing.transferDetail.loading")}
           </span>
         </div>
       ) : transfer ? (
@@ -184,7 +201,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <Hash className="w-4 h-4" />
-                Transfer Number
+                {t("purchasing.transferDetail.transferNumber")}
               </div>
               <div className="font-bold text-lg text-blue-600">
                 {transfer.transferNumber}
@@ -193,7 +210,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <Calendar className="w-4 h-4" />
-                Transfer Date
+                {t("purchasing.transferDetail.transferDate")}
               </div>
               <div className="font-bold text-lg">
                 {new Date(transfer.transferDate).toDateString()}
@@ -202,7 +219,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <Truck className="w-4 h-4" />
-                Source Type
+                {t("purchasing.transferDetail.sourceType")}
               </div>
               <span className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-purple-100 text-purple-700 border border-purple-300">
                 {transfer.sourceType}
@@ -211,14 +228,14 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <CheckCircle className="w-4 h-4" />
-                Status
+                {t("purchasing.transferDetail.status")}
               </div>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(
                   transfer.status,
                 )}`}
               >
-                {transfer.status.toUpperCase()}
+                {getStatusText(transfer.status)}
               </span>
             </div>
           </div>
@@ -228,7 +245,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
               <div className="flex items-center gap-2 text-purple-700 text-sm font-semibold mb-2">
                 <FileText className="w-4 h-4" />
-                Source ID
+                {t("purchasing.transferDetail.sourceId")}
               </div>
               <div
                 className="text-purple-800 font-mono text-sm truncate"
@@ -247,7 +264,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <div className="flex items-center gap-2 text-green-700 text-sm font-semibold mb-2">
                   <Warehouse className="w-4 h-4" />
-                  Destination Storefront
+                  {t("purchasing.transferDetail.destStorefront")}
                 </div>
                 <div
                   className="text-green-800 font-mono text-sm truncate"
@@ -270,7 +287,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <div className="flex items-center gap-2 text-green-700 text-sm font-semibold mb-2">
                   <Warehouse className="w-4 h-4" />
-                  Destination Warehouse
+                  {t("purchasing.transferDetail.destWarehouse")}
                 </div>
                 <div
                   className="text-green-800 font-mono text-sm truncate"
@@ -298,13 +315,13 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
               <div className="text-2xl font-bold text-blue-600">
                 {transfer.lineItems.length}
               </div>
-              <div className="text-sm text-blue-600">Total Items</div>
+              <div className="text-sm text-blue-600">{t("purchasing.transferDetail.totalItems")}</div>
             </div>
             <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200 text-center">
               <div className="text-2xl font-bold text-indigo-600">
                 {totalQuantity}
               </div>
-              <div className="text-sm text-indigo-600">Total Quantity</div>
+              <div className="text-sm text-indigo-600">{t("purchasing.transferDetail.totalQuantity")}</div>
             </div>
           </div>
 
@@ -313,7 +330,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 text-green-700 text-sm font-semibold mb-2">
                 <Calendar className="w-4 h-4" />
-                Received Date
+                {t("purchasing.transferDetail.receivedDate")}
               </div>
               <div className="text-green-800 font-medium">
                 {new Date(transfer.receivedDate).toLocaleString()}
@@ -326,7 +343,7 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
             <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
               <div className="flex items-center gap-2 text-amber-700 text-sm font-semibold mb-2">
                 <FileText className="w-4 h-4" />
-                Notes
+                {t("purchasing.transferDetail.notes")}
               </div>
               <p className="text-amber-800">{transfer.notes}</p>
             </div>
@@ -336,17 +353,16 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
           <div>
             <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
               <Package className="w-5 h-5" />
-              Line Items ({transfer.lineItems.length})
+              {t("purchasing.transferDetail.lineItems")} ({transfer.lineItems.length})
             </h3>
             <div className="bg-white rounded-lg border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b">
                   <tr>
                     <th className="p-3 text-left">#</th>
-                    <th className="p-3 text-left">Product Name</th>
-                    <th className="p-3 text-center">Quantity</th>
-                    {/* <th className="p-3 text-left">GRN Line Item ID</th> */}
-                    <th className="p-3 text-left">Notes</th>
+                    <th className="p-3 text-left">{t("purchasing.transferDetail.productName")}</th>
+                    <th className="p-3 text-center">{t("purchasing.transferDetail.quantity")}</th>
+                    <th className="p-3 text-left">{t("purchasing.transferDetail.notes")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -374,13 +390,13 @@ export const TransferDetailModal: React.FC<TransferDetailModalProps> = ({
 
           {/* Footer Info */}
           <div className="flex justify-between text-xs text-slate-500 pt-4 border-t">
-            <div>Created: {new Date(transfer.createdAt).toLocaleString()}</div>
-            <div>Updated: {new Date(transfer.updatedAt).toLocaleString()}</div>
+            <div>{t("purchasing.transferDetail.created")}{new Date(transfer.createdAt).toLocaleString()}</div>
+            <div>{t("purchasing.transferDetail.updated")}{new Date(transfer.updatedAt).toLocaleString()}</div>
           </div>
         </div>
       ) : (
         <div className="text-center py-12 text-slate-400">
-          No transfer data available
+          {t("purchasing.transferDetail.noData")}
         </div>
       )}
     </Modal>

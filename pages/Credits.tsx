@@ -166,7 +166,7 @@ export const Credits: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
+      <div className="bg-white h-[calc(100vh-2rem)] border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6">
 
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
@@ -263,7 +263,7 @@ export const Credits: React.FC = () => {
           ) : (
             <div>
               {/* Table container with horizontal scroll on mobile */}
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+              <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-23rem)]">
                 <table className="w-full text-sm text-left min-w-[800px]">
                   <thead className="text-slate-500">
                     <tr className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">

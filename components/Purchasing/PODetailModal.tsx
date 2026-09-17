@@ -490,13 +490,10 @@ export const PODetailModal: React.FC<PODetailModalProps> = ({
                         {product.receivedQuantity}
                       </td>
                       <td className="p-3 text-right text-slate-600">
-                        {product.buyingPrice.toLocaleString()} MMK
+                        {(product.buyingPrice * ((product as any).factor || 1)).toLocaleString()} MMK
                       </td>
                       <td className="p-3 text-right font-bold text-slate-900">
-                        {(
-                          product.buyingPrice * product.purchaseQuantity
-                        ).toLocaleString()}{" "}
-                        MMK
+                        {(product.buyingPrice * ((product as any).factor || 1) * product.purchaseQuantity).toLocaleString()} MMK
                       </td>
                     </tr>
                   ))}

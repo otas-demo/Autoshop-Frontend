@@ -12,6 +12,7 @@ import {
 import { ProductDetail } from "../../services/Inventory/fetchProductById";
 import { useLanguage } from "../../context/LanguageContext";
 import { formatExpiryDate, getExpiryStatus, ExpiryStatus } from "../../utils/expiryUtils";
+import { formatUOMBreakdown } from "../../utils/uomUtils";
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -246,31 +247,83 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       )}
                   </div>
 
+                  {/* UOM Conversions */}
+                  {product.uomConversions && product.uomConversions.length > 0 && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Package className="w-4 h-4 text-slate-500" />
+                        <p className="text-sm text-slate-600 font-bold uppercase tracking-wider">UOM CONVERSIONS</p>
+                      </div>
+                      <div className="grid grid-cols-4 text-xs font-bold text-slate-500 pb-2 border-b border-slate-200 uppercase tracking-wider">
+                        <span>Unit</span>
+                        <span>Factor</span>
+                        <span>Convert From</span>
+                        <span>Default</span>
+                      </div>
+                      <div className="divide-y divide-slate-100">
+                        {product.uomConversions.map((uom: any, idx: number) => (
+                          <div key={idx} className="grid grid-cols-4 py-2.5 text-sm items-center">
+                            <span className="font-bold text-slate-800">{uom.unit}</span>
+                            <span className="text-slate-600 font-medium">{uom.factor}</span>
+                            <span className="text-slate-600">{uom.convertFrom || "-"}</span>
+                            <span>
+                              {uom.isDefault && (
+                                <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md text-[10px] font-bold">DEFAULT</span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Product Details Grid */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
+                      <p className="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">
                         {t("inventory.category")}
                       </p>
-                      <p className="text-sm text-slate-800">
+                      <p className="text-sm font-semibold text-slate-800">
                         {product.category}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
+                      <p className="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">
                         {t("inventory.brand")}
                       </p>
-                      <p className="text-sm text-slate-800">
+                      <p className="text-sm font-semibold text-slate-800">
                         {product.brand || "-"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 font-medium mb-1">
+                      <p className="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider">
                         {t("inventory.unitOfMeasureLabel")}
                       </p>
-                      <p className="text-sm text-slate-800">
+                      <p className="text-sm font-semibold text-slate-800">
                         {product.unitOfMeasure}
                       </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 font-bold mb-1 uppercase tracking-wider flex items-center gap-1">
+                        <Truck className="w-3 h-3" /> Suppliers
+                      </p>
+                      {product.supplierIds && product.supplierIds.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {product.supplierIds.map((sup: any, idx: number) => {
+                            const name = typeof sup === "object" ? sup.supplierName : sup;
+                            return (
+                              <span
+                                key={idx}
+                                className="inline-block px-2 py-0.5 rounded bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-sm"
+                              >
+                                {name}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic font-medium">None</p>
+                      )}
                     </div>
                   </div>
 
@@ -306,64 +359,79 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Suppliers Section */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    <p className="text-xs text-slate-600 font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <Truck className="w-4 h-4 text-[#2216a8]" />
-                      <span>{t("suppliers.title") || "Suppliers"} (ကုန်ပစ္စည်းတင်သွင်းသူများ)</span>
-                    </p>
-                    {product.supplierIds && product.supplierIds.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {product.supplierIds.map((sup: any, idx: number) => {
-                          const name = typeof sup === "object" ? sup.supplierName : sup;
-                          const phone = typeof sup === "object" ? sup.contactNumber : null;
-                          return (
-                            <div
-                              key={sup._id || sup.id || idx}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs"
-                            >
-                              <span className="font-bold text-slate-800">{name}</span>
-                              {phone && <span className="text-slate-400 font-medium">({phone})</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400 italic">
-                        Supplier ချိတ်ဆက်ထားခြင်း မရှိသေးပါ
-                      </p>
-                    )}
-                  </div>
+
 
                   {/* Total Quantity Summary */}
                   {(() => {
-                    // If viewing from a specific storefront, show that location's quantity
                     let displayQuantity = product.stockAvailability.totalQuantity;
-                    let displayLabel = t("inventory.productTotalQuantity");
+                    let displayLabel = "PRODUCT TOTAL QUANTITY";
 
                     if (restrictLocationType === "storefront" && restrictLocationId) {
                       const locationQty = product.stockAvailability.storefronts.locations
                         .filter((loc) => String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
                         .reduce((sum, loc) => sum + loc.quantity, 0);
                       displayQuantity = locationQty;
-                      displayLabel = "Storefront Quantity";
+                      displayLabel = "STOREFRONT TOTAL QUANTITY";
                     } else if (restrictLocationType === "warehouse" && restrictLocationId) {
                       const locationQty = product.stockAvailability.warehouses.locations
                         .filter((loc) => String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase())
                         .reduce((sum, loc) => sum + loc.quantity, 0);
                       displayQuantity = locationQty;
-                      displayLabel = "Warehouse Quantity";
+                      displayLabel = "WAREHOUSE TOTAL QUANTITY";
                     }
 
                     return (
-                      <div className="bg-[#FEFEB0] p-6 rounded-lg border-2 border-[#FEFEB0]">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[16px] font-medium text-[#585800]">
+                      <div className="bg-yellow-50 p-6 rounded-xl border border-yellow-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-1">
                             {displayLabel}
                           </p>
                           <p className="text-4xl font-bold text-slate-800">
                             {displayQuantity.toLocaleString()}
                           </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="bg-white border border-slate-200 text-slate-800 px-4 py-1.5 rounded-lg font-bold shadow-sm">
+                            {displayQuantity.toLocaleString()} {product.unitOfMeasure || "piece"}
+                          </span>
+                          {displayQuantity > 0 && product.uomConversions && product.uomConversions.length > 0 && formatUOMBreakdown(displayQuantity, product.unitOfMeasure || "piece", product.uomConversions) && (
+                            <span className="bg-green-50 text-green-500 border border-green-200 px-4 py-1.5 rounded-lg font-normal shadow-sm whitespace-nowrap">
+                              {formatUOMBreakdown(displayQuantity, product.unitOfMeasure || "piece", product.uomConversions)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Summary Cards */}
+                  {(() => {
+                    const allLocations = [
+                      ...product.stockAvailability.warehouses.locations,
+                      ...product.stockAvailability.storefronts.locations,
+                    ].filter(loc => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase());
+                    
+                    const validCount = allLocations.filter(l => l.expiryDate && getExpiryStatus(l.expiryDate) === ExpiryStatus.VALID).length;
+                    const expiringCount = allLocations.filter(l => l.expiryDate && getExpiryStatus(l.expiryDate) === ExpiryStatus.EXPIRING_SOON).length;
+                    const expiredCount = allLocations.filter(l => l.expiryDate && getExpiryStatus(l.expiryDate) === ExpiryStatus.EXPIRED).length;
+
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">TOTAL BATCHES</p>
+                          <p className="text-2xl font-bold text-slate-800">{allLocations.length}</p>
+                        </div>
+                        <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">VALID</p>
+                          <p className="text-2xl font-bold text-green-800">{validCount}</p>
+                        </div>
+                        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-1">EXPIRING SOON</p>
+                          <p className="text-2xl font-bold text-yellow-800">{expiringCount}</p>
+                        </div>
+                        <div className="bg-red-50 border border-red-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-red-700 uppercase tracking-wider mb-1">EXPIRED</p>
+                          <p className="text-2xl font-bold text-red-800">{expiredCount}</p>
                         </div>
                       </div>
                     );
@@ -445,10 +513,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                     {location.locationAddress || "-"}
                                   </p>
                                 </div>
-                                <div className="text-right">
-                                  <span className="text-sm font-bold text-slate-850">
-                                    Quantity: {location.quantity.toLocaleString()}
-                                  </span>
+                                <div className="flex flex-col items-end gap-1.5">
+                                  {restrictLocationId && String(location.locationId).toLowerCase() === String(restrictLocationId).toLowerCase() && (
+                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mb-1">
+                                      Current Location
+                                    </span>
+                                  )}
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">AVAILABLE QUANTITY</span>
+                                  <div className="flex gap-2">
+                                    <span className="bg-white px-2 py-1 rounded text-slate-800 font-bold border border-slate-200 text-sm">
+                                      {location.quantity.toLocaleString()} {product.unitOfMeasure || "piece"}
+                                    </span>
+                                    {location.quantity > 0 && product.uomConversions && product.uomConversions.length > 0 && formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions) && (
+                                      <span className="bg-green-50 text-green-500 px-2 py-1 rounded font-normal border border-green-200 text-sm whitespace-nowrap">
+                                        {formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             ));
@@ -508,10 +589,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                     {location.locationAddress || "-"}
                                   </p>
                                 </div>
-                                <div className="text-right">
-                                  <span className="text-sm font-bold text-slate-850">
-                                    Quantity: {location.quantity.toLocaleString()}
-                                  </span>
+                                <div className="flex flex-col items-end gap-1.5">
+                                  {restrictLocationId && String(location.locationId).toLowerCase() === String(restrictLocationId).toLowerCase() && (
+                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mb-1">
+                                      Current Location
+                                    </span>
+                                  )}
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">AVAILABLE QUANTITY</span>
+                                  <div className="flex gap-2">
+                                    <span className="bg-white px-2 py-1 rounded text-slate-800 font-bold border border-slate-200 text-sm">
+                                      {location.quantity.toLocaleString()} {product.unitOfMeasure || "piece"}
+                                    </span>
+                                    {location.quantity > 0 && product.uomConversions && product.uomConversions.length > 0 && formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions) && (
+                                      <span className="bg-green-50 text-green-500 px-2 py-1 rounded font-normal border border-green-200 text-sm whitespace-nowrap">
+                                        {formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             ));
@@ -541,6 +635,39 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </div>
               ) : activeTab === "batches" ? (
                 <div className="space-y-6">
+                  {/* Summary Cards */}
+                  {(() => {
+                    const allLocations = [
+                      ...product.stockAvailability.warehouses.locations,
+                      ...product.stockAvailability.storefronts.locations,
+                    ].filter(loc => !restrictLocationId || String(loc.locationId).toLowerCase() === String(restrictLocationId).toLowerCase());
+                    
+                    const validCount = allLocations.filter(l => l.expiryDate && getExpiryStatus(l.expiryDate) === ExpiryStatus.VALID).length;
+                    const expiringCount = allLocations.filter(l => l.expiryDate && getExpiryStatus(l.expiryDate) === ExpiryStatus.EXPIRING_SOON).length;
+                    const expiredCount = allLocations.filter(l => l.expiryDate && getExpiryStatus(l.expiryDate) === ExpiryStatus.EXPIRED).length;
+
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">TOTAL BATCHES</p>
+                          <p className="text-2xl font-bold text-slate-800">{allLocations.length}</p>
+                        </div>
+                        <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">VALID</p>
+                          <p className="text-2xl font-bold text-green-800">{validCount}</p>
+                        </div>
+                        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-1">EXPIRING SOON</p>
+                          <p className="text-2xl font-bold text-yellow-800">{expiringCount}</p>
+                        </div>
+                        <div className="bg-red-50 border border-red-200 p-4 rounded-xl">
+                          <p className="text-xs font-bold text-red-700 uppercase tracking-wider mb-1">EXPIRED</p>
+                          <p className="text-2xl font-bold text-red-800">{expiredCount}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Stock Tabs */}
                   {!restrictLocationType && (
                     <div className="flex gap-5">
@@ -565,8 +692,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </div>
                   )}
 
-                  {/* Batches Cards */}
-                  <div className="grid grid-cols-1 gap-4">
+                  {/* Batches Table */}
+                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider text-xs">Location</th>
+                          <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider text-xs">Batch & Expiry</th>
+                          <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Available Quantity</th>
+                          <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
                     {stockTab === "warehouse" ? (
                       (() => {
                         const warehouseLocations = product.stockAvailability.warehouses.locations.filter(
@@ -574,58 +711,62 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         );
                         return warehouseLocations.length > 0 ? (
                           warehouseLocations.map((location, idx) => (
-                            <div
-                              key={location.locationId + "-" + location.batchNumber + "-" + idx}
-                              className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-                            >
-                              <div>
-                                <h4 className="font-semibold text-slate-800 mb-1">
-                                  {location.locationName}
-                                </h4>
-                                <p className="text-xs text-slate-600 mb-1">
-                                  {location.locationAddress || "-"}
-                                </p>
-                                <div className="flex px-3 rounded-xl py-2 bg-[#2216a8]/10 flex-wrap items-center justify-center gap-2 mt-2 text-xs">
-                                  <span className=" text-[#2216a8] font-bold">
+                            <tr key={location.locationId + "-" + location.batchNumber + "-" + idx} className="hover:bg-slate-50/50">
+                              <td className="px-4 py-4">
+                                <h4 className="font-bold text-slate-800">{location.locationName}</h4>
+                                <p className="text-xs text-slate-500 mt-0.5">{location.locationAddress || "-"}</p>
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <span className="text-indigo-700 font-bold text-xs bg-indigo-50 px-2 py-1 rounded w-fit">
                                     Batch: {location.batchNumber || "__LEGACY__"}
                                   </span>
                                   {location.expiryDate && (
-                                    <span className=" text-orange-700 flex items-center gap-1">
+                                    <span className="text-orange-700 font-bold text-xs bg-orange-50 px-2 py-1 rounded w-fit">
                                       Expiry: {formatExpiryDate(location.expiryDate)}
                                     </span>
                                   )}
                                 </div>
-                              </div>
-                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                <div className="text-right sm:mr-2">
-                                  <span className="text-sm font-bold text-slate-850">
-                                    Quantity: {location.quantity.toLocaleString()}
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <div className="flex flex-col items-end gap-1.5">
+                                  <span className="bg-white px-2 py-1 rounded text-slate-800 font-bold border border-slate-200 text-sm shadow-sm">
+                                    {location.quantity.toLocaleString()} {product.unitOfMeasure || "piece"}
                                   </span>
+                                  {location.quantity > 0 && product.uomConversions && product.uomConversions.length > 0 && formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions) && (
+                                    <span className="bg-green-50 text-green-500 px-2 py-1 rounded font-normal border border-green-200 text-sm whitespace-nowrap shadow-sm">
+                                      {formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions)}
+                                    </span>
+                                  )}
                                 </div>
+                              </td>
+                              <td className="px-4 py-4 text-right">
                                 {onTransfer && location.quantity > 0 && (
-                                  <div className="flex gap-2">
+                                  <div className="flex justify-end gap-2">
                                     <button
                                       onClick={() => onTransfer("storefront", location)}
-                                      className="text-xs bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                      className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 font-bold transition-colors"
                                     >
                                       To Store
                                     </button>
                                     <button
                                       onClick={() => onTransfer("warehouse", location)}
-                                      className="text-xs bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                      className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-200 font-bold transition-colors"
                                     >
                                       To Whse
                                     </button>
                                   </div>
                                 )}
-                              </div>
-                            </div>
+                              </td>
+                            </tr>
                           ))
                         ) : (
-                          <div className="text-center py-8 text-slate-500">
-                            <Warehouse className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                            <p>No warehouse batches found</p>
-                          </div>
+                          <tr>
+                            <td colSpan={4} className="text-center py-8 text-slate-500">
+                              <Warehouse className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                              <p>No warehouse batches found</p>
+                            </td>
+                          </tr>
                         );
                       })()
                     ) : (
@@ -635,62 +776,67 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         );
                         return storefrontLocations.length > 0 ? (
                           storefrontLocations.map((location, idx) => (
-                            <div
-                              key={location.locationId + "-" + location.batchNumber + "-" + idx}
-                              className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-                            >
-                              <div>
-                                <h4 className="font-semibold text-slate-800 mb-1">
-                                  {location.locationName}
-                                </h4>
-                                <p className="text-xs text-slate-600 mb-1">
-                                  {location.locationAddress || "-"}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                                  <span className="bg-[#2216a8]/10 text-[#2216a8] font-bold px-2 py-0.5 rounded">
+                            <tr key={location.locationId + "-" + location.batchNumber + "-" + idx} className="hover:bg-slate-50/50">
+                              <td className="px-4 py-4">
+                                <h4 className="font-bold text-slate-800">{location.locationName}</h4>
+                                <p className="text-xs text-slate-500 mt-0.5">{location.locationAddress || "-"}</p>
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <span className="text-indigo-700 font-bold text-xs bg-indigo-50 px-2 py-1 rounded w-fit">
                                     Batch: {location.batchNumber || "__LEGACY__"}
                                   </span>
                                   {location.expiryDate && (
-                                    <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                                    <span className="text-orange-700 font-bold text-xs bg-orange-50 px-2 py-1 rounded w-fit">
                                       Expiry: {formatExpiryDate(location.expiryDate)}
-                                      {getExpiryStatusBadge(location.expiryDate)}
                                     </span>
                                   )}
                                 </div>
-                              </div>
-                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                <div className="text-right sm:mr-2">
-                                  <span className="text-sm font-bold text-slate-850">
-                                    Quantity: {location.quantity.toLocaleString()}
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <div className="flex flex-col items-end gap-1.5">
+                                  <span className="bg-white px-2 py-1 rounded text-slate-800 font-bold border border-slate-200 text-sm shadow-sm">
+                                    {location.quantity.toLocaleString()} {product.unitOfMeasure || "piece"}
                                   </span>
+                                  {location.quantity > 0 && product.uomConversions && product.uomConversions.length > 0 && formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions) && (
+                                    <span className="bg-green-50 text-green-500 px-2 py-1 rounded font-normal border border-green-200 text-sm whitespace-nowrap shadow-sm">
+                                      {formatUOMBreakdown(location.quantity, product.unitOfMeasure || "piece", product.uomConversions)}
+                                    </span>
+                                  )}
                                 </div>
+                              </td>
+                              <td className="px-4 py-4 text-right">
                                 {onTransfer && location.quantity > 0 && (
-                                  <div className="flex gap-2">
+                                  <div className="flex justify-end gap-2">
                                     <button
                                       onClick={() => onTransfer("storefront", location)}
-                                      className="text-xs bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                      className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 font-bold transition-colors"
                                     >
                                       To Store
                                     </button>
                                     <button
                                       onClick={() => onTransfer("warehouse", location)}
-                                      className="text-xs bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                      className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-200 font-bold transition-colors"
                                     >
                                       To Whse
                                     </button>
                                   </div>
                                 )}
-                              </div>
-                            </div>
+                              </td>
+                            </tr>
                           ))
                         ) : (
-                          <div className="text-center py-8 text-slate-500">
-                            <Store className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                            <p>No storefront batches found</p>
-                          </div>
+                          <tr>
+                            <td colSpan={4} className="text-center py-8 text-slate-500">
+                              <Store className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                              <p>No storefront batches found</p>
+                            </td>
+                          </tr>
                         );
                       })()
                     )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               ) : null}

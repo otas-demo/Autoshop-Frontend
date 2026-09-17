@@ -51,9 +51,22 @@ enum PaymentMethod {
   FOC = "FOC",
 }
 
+export interface DisplayUnit {
+  id: string; // `${stockItem._id}_${unit}`
+  stockItem: StorefrontStockItem;
+  unit: string;
+  factor: number;
+  pricePerUnit: number;
+  availableInThisUnit: number;
+}
+
 interface CartItem {
+  id: string;
   stockItem: StorefrontStockItem;
   qty: number;
+  unit: string;
+  factor: number;
+  price: number;
 }
 
 export const POS: React.FC = () => {
@@ -262,87 +275,137 @@ export const POS: React.FC = () => {
     return !hideProduct;
   });
 
+  const getEffectiveFactor = (
+    targetUnit: string,
+    baseUnit: string,
+    uomConversions: any[] = []
+  ): number => {
+    if (!targetUnit || targetUnit === baseUnit) return 1;
+    let factor = 1;
+    let currentUnit = targetUnit;
+    let maxDepth = 10;
+    while (currentUnit !== baseUnit && maxDepth > 0) {
+      const conversion = uomConversions.find(c => c.unit === currentUnit);
+      if (!conversion) break;
+      factor *= conversion.factor;
+      currentUnit = conversion.convertFrom;
+      maxDepth--;
+    }
+    return factor;
+  };
+
+  const getItemPrice = (item: StorefrontStockItem, qty: number = 1) => {
+    const basePrice = item.inventoryId.sellingPrice || 0;
+    const wholesaleTiers = item.inventoryId.wholesalePrices || [];
+
+    if (wholesaleTiers.length === 0) return basePrice;
+
+    const eligibleTier = wholesaleTiers
+      .slice()
+      .sort((a, b) => a.quantity - b.quantity)
+      .filter((tier) => qty >= tier.quantity)
+      .pop();
+
+    return eligibleTier?.price ?? basePrice;
+  };
+
+  const getDisplayUnits = (stockItem: StorefrontStockItem): DisplayUnit[] => {
+    const units: DisplayUnit[] = [];
+    const baseUnit = stockItem.inventoryId.unitOfMeasure || "piece";
+    const availableBaseQty = Number(stockItem.availableQuantity ?? stockItem.quantity ?? 0);
+    
+    // 1. Base Unit
+    units.push({
+      id: `${stockItem._id}_${baseUnit}`,
+      stockItem,
+      unit: baseUnit,
+      factor: 1,
+      pricePerUnit: stockItem.inventoryId.sellingPrice || 0,
+      availableInThisUnit: availableBaseQty,
+    });
+
+    // 2. Conversion Units
+    const conversions = stockItem.inventoryId.uomConversions || [];
+    conversions.forEach(conv => {
+      const factor = getEffectiveFactor(conv.unit, baseUnit, conversions);
+      if (factor <= 1) return;
+      const pricePerPiece = getItemPrice(stockItem, factor);
+      const pricePerUnit = pricePerPiece * factor;
+      units.push({
+        id: `${stockItem._id}_${conv.unit}`,
+        stockItem,
+        unit: conv.unit,
+        factor: factor,
+        pricePerUnit: pricePerUnit,
+        availableInThisUnit: Math.floor(availableBaseQty / factor),
+      });
+    });
+
+    return units;
+  };
+
+  const explodedProducts = filteredProducts.flatMap(getDisplayUnits);
+
   // Get unique categories from current storefront products
   // (Categories are now fetched from API and stored in categories state)
 
-  const addToCart = (stockItem: StorefrontStockItem) => {
-    if (stockItem.availableQuantity <= 0) {
+  const addToCart = (displayUnit: DisplayUnit) => {
+    if (displayUnit.availableInThisUnit <= 0) {
       toast.error(t("pos.outOfStock"));
       return;
     }
 
     setCart((prev) => {
-      const existing = prev.find(
-        (item) => item.stockItem._id === stockItem._id,
-      );
+      // Check total base quantity across all units for this stock item in cart
+      const currentBaseQtyInCart = prev
+        .filter(item => item.stockItem._id === displayUnit.stockItem._id)
+        .reduce((sum, item) => sum + (item.qty * item.factor), 0);
+      
+      const newTotalBaseQty = currentBaseQtyInCart + displayUnit.factor;
+      
+      if (newTotalBaseQty > Number(displayUnit.stockItem.availableQuantity ?? displayUnit.stockItem.quantity ?? 0)) {
+        toast.error(t("pos.cannotExceedStock"));
+        return prev;
+      }
+
+      const existing = prev.find((item) => item.id === displayUnit.id);
+
       if (existing) {
-        if (existing.qty + 1 > stockItem.availableQuantity) {
-          toast.error(t("pos.cannotExceedStock"));
-          return prev;
-        }
         return prev.map((item) =>
-          item.stockItem._id === stockItem._id
+          item.id === displayUnit.id
             ? { ...item, qty: item.qty + 1 }
             : item,
         );
       }
-      return [...prev, { stockItem, qty: 1 }];
-    });
-  };
-
-  const applyWholesaleTierQuantity = (
-    stockItem: StorefrontStockItem,
-    tierQuantity: number,
-  ) => {
-    const availableQty = Number(
-      stockItem.availableQuantity ?? stockItem.quantity,
-    );
-    const parsedTierQty = Number(tierQuantity);
-
-    if (!Number.isFinite(availableQty) || availableQty <= 0) {
-      toast.error(t("pos.outOfStock"));
-      return;
-    }
-
-    if (!Number.isFinite(parsedTierQty) || parsedTierQty <= 0) {
-      toast.error("Invalid wholesale quantity");
-      return;
-    }
-
-    const requestedQty = Math.max(1, Math.floor(parsedTierQty));
-    const finalQty = Math.min(requestedQty, availableQty);
-
-    if (requestedQty > availableQty) {
-      toast.error(t("pos.cannotExceedStock"));
-    }
-
-    setCart((prev) => {
-      const existing = prev.find(
-        (item) => item.stockItem._id === stockItem._id,
-      );
-
-      if (existing) {
-        return prev.map((item) =>
-          item.stockItem._id === stockItem._id
-            ? { ...item, qty: finalQty }
-            : item,
-        );
-      }
-
-      return [...prev, { stockItem, qty: finalQty }];
+      
+      return [...prev, { 
+        id: displayUnit.id,
+        stockItem: displayUnit.stockItem, 
+        qty: 1,
+        unit: displayUnit.unit,
+        factor: displayUnit.factor,
+        price: displayUnit.pricePerUnit
+      }];
     });
   };
 
   const updateQty = (id: string, delta: number) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.stockItem._id === id) {
+        if (item.id === id) {
           const newQty = item.qty + delta;
-          if (newQty > item.stockItem.availableQuantity) {
+          if (newQty < 1) return item;
+
+          // Check against availableInThisUnit by recalculating based on availableQuantity
+          const currentBaseQtyInCart = prev
+            .filter(c => c.stockItem._id === item.stockItem._id && c.id !== item.id)
+            .reduce((sum, c) => sum + (c.qty * c.factor), 0);
+          
+          if (currentBaseQtyInCart + (newQty * item.factor) > Number(item.stockItem.availableQuantity ?? item.stockItem.quantity ?? 0)) {
             toast.error(t("pos.cannotExceedStock"));
             return item;
           }
-          if (newQty < 1) return item;
+
           return { ...item, qty: newQty };
         }
         return item;
@@ -353,15 +416,22 @@ export const POS: React.FC = () => {
   const setQty = (id: string, newQty: number) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.stockItem._id === id) {
-          // Validate quantity
+        if (item.id === id) {
           if (newQty < 1) {
             return { ...item, qty: 1 };
           }
-          if (newQty > item.stockItem.availableQuantity) {
+
+          const currentBaseQtyInCart = prev
+            .filter(c => c.stockItem._id === item.stockItem._id && c.id !== item.id)
+            .reduce((sum, c) => sum + (c.qty * c.factor), 0);
+          
+          const maxAllowedQty = Math.floor((Number(item.stockItem.availableQuantity ?? item.stockItem.quantity ?? 0) - currentBaseQtyInCart) / item.factor);
+
+          if (newQty > maxAllowedQty) {
             toast.error(t("pos.cannotExceedStock"));
-            return { ...item, qty: item.stockItem.availableQuantity };
+            return { ...item, qty: maxAllowedQty };
           }
+
           return { ...item, qty: newQty };
         }
         return item;
@@ -370,7 +440,7 @@ export const POS: React.FC = () => {
   };
 
   const removeFromCart = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.stockItem._id !== id));
+    setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
   // Handle barcode scanning from search input
@@ -391,14 +461,17 @@ export const POS: React.FC = () => {
         const matchingProduct = response.data[0];
 
         // Check if product is in stock
-        if (matchingProduct.availableQuantity <= 0) {
+        if (Number(matchingProduct.availableQuantity ?? matchingProduct.quantity ?? 0) <= 0) {
           toast.error(t("pos.outOfStock"));
           setSearch(""); // Clear search
           return;
         }
 
         // Add to cart (will increment if already exists)
-        addToCart(matchingProduct);
+        const displayUnits = getDisplayUnits(matchingProduct);
+        if (displayUnits.length > 0) {
+          addToCart(displayUnits[0]); // Add base unit by default
+        }
 
         // Show success feedback
         toast.success(
@@ -419,22 +492,6 @@ export const POS: React.FC = () => {
     }
   };
 
-  // Calculate unit price with wholesale tiers (if eligible)
-  const getItemPrice = (item: StorefrontStockItem, qty: number = 1) => {
-    const basePrice = item.inventoryId.sellingPrice || 0;
-    const wholesaleTiers = item.inventoryId.wholesalePrices || [];
-
-    if (wholesaleTiers.length === 0) return basePrice;
-
-    const eligibleTier = wholesaleTiers
-      .slice()
-      .sort((a, b) => a.quantity - b.quantity)
-      .filter((tier) => qty >= tier.quantity)
-      .pop();
-
-    return eligibleTier?.price ?? basePrice;
-  };
-
   const getSortedWholesaleTiers = (item: StorefrontStockItem) =>
     (item.inventoryId.wholesalePrices || [])
       .slice()
@@ -445,7 +502,7 @@ export const POS: React.FC = () => {
 
   const subtotal = cart.reduce((sum, item) => {
     const qty = getSafeQty(item.qty);
-    return sum + getItemPrice(item.stockItem, qty || 1) * qty;
+    return sum + item.price * qty;
   }, 0);
 
   const totalAfterDiscount = Math.round(
@@ -514,7 +571,11 @@ export const POS: React.FC = () => {
         storefrontId: selectedStorefrontId,
         ordersProducts: cart.map((item) => ({
           inventoryId: item.stockItem.inventoryId._id,
-          quantity: item.qty,
+          quantity: item.qty * item.factor,
+          unitPrice: item.price / item.qty,
+          saleUnit: item.unit,
+          saleQuantity: item.qty,
+          salePrice: item.price / item.qty,
         })),
         subTotal: subtotal,
         discount: discountAmount,
@@ -541,10 +602,10 @@ export const POS: React.FC = () => {
           invoiceNumber: result.data?.orderNumber || `INV-${Date.now()}`,
           storefrontName: "HONGCHI Myanmar",
           items: cart.map((i) => ({
-            name: i.stockItem.inventoryId.productName,
+            name: `${i.stockItem.inventoryId.productName} (${i.unit})`,
             code: i.stockItem.inventoryId.productCode,
             qty: i.qty,
-            price: getItemPrice(i.stockItem, i.qty),
+            price: i.price,
           })),
           subtotal,
           discountPercent: discount,
@@ -897,94 +958,38 @@ export const POS: React.FC = () => {
                 : t("pos.pleaseSelectStorefront")}
             </div>
           ) : (
-            filteredProducts.map((stockItem) => (
+            explodedProducts.map((displayUnit) => (
               <div
-                key={stockItem._id}
-                onClick={() => addToCart(stockItem)}
-                className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 cursor-pointer transition-all hover:shadow-lg hover:border-primary hover:scale-[1.02] flex flex-col ${stockItem.quantity === 0
+                key={displayUnit.id}
+                onClick={() => addToCart(displayUnit)}
+                className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 cursor-pointer transition-all hover:shadow-lg hover:border-primary hover:scale-[1.02] flex flex-col relative ${displayUnit.availableInThisUnit === 0
                   ? "opacity-50 grayscale pointer-events-none"
                   : ""
                   }`}
               >
                 <div className="">
                   <h3 className="font-bold text-gray-800 text-xs sm:text-[16px] line-clamp-2">
-                    {stockItem.inventoryId.productName}
+                    <span>{displayUnit.stockItem.inventoryId.productName}</span>{" "}
+                    <span className="text-blue-700 font-normal text-sm">
+                      ({displayUnit.unit})
+                    </span>
                   </h3>
                   <p className="text-[10px] sm:text-xs mt-1 font-mono">
-                    {stockItem.inventoryId.productCode}
+                    {displayUnit.stockItem.inventoryId.productCode}
                   </p>
                   <p className="text-[10px] sm:text-xs mt-1">
-                    {stockItem.inventoryId.category}
+                    {displayUnit.stockItem.inventoryId.category}
                   </p>
                 </div>
                 <div className="mt-2 sm:mt-4 flex justify-between items-end">
                   <span className="font-bold text-primary-600 text-xs sm:text-sm">
-                    {getItemPrice(stockItem).toLocaleString()} MMK
+                    {displayUnit.pricePerUnit.toLocaleString()} MMK
                   </span>
-                  {stockItem.inventoryId.wholesalePrices &&
-                    stockItem.inventoryId.wholesalePrices.length > 0 && (
-                      <div
-                        className="relative"
-                        data-wholesale-container={stockItem._id}
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveWholesalePopoverId((prev) =>
-                              prev === stockItem._id ? null : stockItem._id,
-                            );
-                          }}
-                          className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 hover:bg-amber-100 transition-colors"
-                        >
-                          Wholesale
-                        </button>
-
-                        {activeWholesalePopoverId === stockItem._id && (
-                          <div
-                            className="absolute right-0 top-7 z-20 w-52 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="text-[11px] font-semibold text-slate-600 mb-2">
-                              Wholesale prices
-                            </div>
-                            <div className="grid grid-cols-2 text-[11px] font-semibold text-slate-500 pb-1">
-                              <span>Quantity</span>
-                              <span className="text-right">Price</span>
-                            </div>
-                            <div className="border-t border-slate-200">
-                              {getSortedWholesaleTiers(stockItem).map(
-                                (tier) => (
-                                  <button
-                                    type="button"
-                                    key={
-                                      tier._id ||
-                                      `${tier.quantity}-${tier.price}`
-                                    }
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      applyWholesaleTierQuantity(
-                                        stockItem,
-                                        Number(tier.quantity),
-                                      );
-                                      setActiveWholesalePopoverId(null);
-                                    }}
-                                    className="w-full grid grid-cols-2 py-1.5 px-1 border-b border-slate-100 last:border-b-0 text-[11px] rounded hover:bg-amber-50 hover:text-amber-900 transition-colors cursor-pointer"
-                                  >
-                                    <span className="text-slate-700">
-                                      {tier.quantity}+
-                                    </span>
-                                    <span className="text-right text-slate-800 font-medium">
-                                      {tier.price.toLocaleString()}
-                                    </span>
-                                  </button>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                </div>
+                <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4">
+                  <span className={`text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full ${displayUnit.availableInThisUnit > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    In stock: {displayUnit.availableInThisUnit}
+                  </span>
                 </div>
               </div>
             ))
@@ -1017,29 +1022,26 @@ export const POS: React.FC = () => {
           ) : (
             cart.map((item) => (
               <div
-                key={item.stockItem._id}
+                key={item.id}
                 className="flex justify-between items-start border-b border-gray-200 pb-4"
               >
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-800">
-                    {item.stockItem.inventoryId.productName}
+                    <span>{item.stockItem.inventoryId.productName}</span>{" "}
+                    <span className="text-blue-700 font-normal text-sm">
+                      ({item.unit})
+                    </span>
                   </p>
                   <p className="text-xs text-gray-500">
-                    {getItemPrice(
-                      item.stockItem,
-                      getSafeQty(item.qty) || 1,
-                    ).toLocaleString()}{" "}
+                    {item.price.toLocaleString()}{" "}
                     MMK x {getSafeQty(item.qty)} ={" "}
-                    {(
-                      getItemPrice(item.stockItem, getSafeQty(item.qty) || 1) *
-                      getSafeQty(item.qty)
-                    ).toLocaleString()}{" "}
+                    {(item.price * getSafeQty(item.qty)).toLocaleString()}{" "}
                     MMK
                   </p>
                 </div>
                 <div className="cart-item-controls flex items-center gap-2 ml-2">
                   <button
-                    onClick={() => updateQty(item.stockItem._id, -1)}
+                    onClick={() => updateQty(item.id, -1)}
                     className="p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                   >
                     <Minus className="w-3 h-3" />
@@ -1047,29 +1049,29 @@ export const POS: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    max={item.stockItem.availableQuantity}
+                    max={Math.floor(Number(item.stockItem.availableQuantity ?? item.stockItem.quantity ?? 0) / item.factor)}
                     value={item.qty}
                     onChange={(e) => {
                       const value = parseInt(e.target.value) || 1;
-                      setQty(item.stockItem._id, value);
+                      setQty(item.id, value);
                     }}
                     onBlur={(e) => {
                       // Ensure quantity is at least 1 when input loses focus
                       const value = parseInt(e.target.value) || 1;
                       if (value < 1) {
-                        setQty(item.stockItem._id, 1);
+                        setQty(item.id, 1);
                       }
                     }}
                     className="text-sm font-medium w-12 text-center border border-gray-300 rounded px-1 py-1 focus:ring-2 focus:ring-primary focus:border-primary outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <button
-                    onClick={() => updateQty(item.stockItem._id, 1)}
+                    onClick={() => updateQty(item.id, 1)}
                     className="p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
                   <button
-                    onClick={() => removeFromCart(item.stockItem._id)}
+                    onClick={() => removeFromCart(item.id)}
                     className="p-1 text-red-500 hover:bg-red-50 rounded ml-2 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1160,31 +1162,26 @@ export const POS: React.FC = () => {
               ) : (
                 cart.map((item) => (
                   <div
-                    key={item.stockItem._id}
+                    key={item.id}
                     className="flex justify-between items-start border-b border-gray-200 pb-4"
                   >
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-800">
-                        {item.stockItem.inventoryId.productName}
+                        <span>{item.stockItem.inventoryId.productName}</span>{" "}
+                        <span className="text-blue-700 font-normal text-sm">
+                          ({item.unit})
+                        </span>
                       </p>
                       <p className="text-xs text-gray-500">
-                        {getItemPrice(
-                          item.stockItem,
-                          getSafeQty(item.qty) || 1,
-                        ).toLocaleString()}{" "}
+                        {item.price.toLocaleString()}{" "}
                         MMK x {getSafeQty(item.qty)} ={" "}
-                        {(
-                          getItemPrice(
-                            item.stockItem,
-                            getSafeQty(item.qty) || 1,
-                          ) * getSafeQty(item.qty)
-                        ).toLocaleString()}{" "}
+                        {(item.price * getSafeQty(item.qty)).toLocaleString()}{" "}
                         MMK
                       </p>
                     </div>
                     <div className="flex items-center gap-2 ml-2">
                       <button
-                        onClick={() => updateQty(item.stockItem._id, -1)}
+                        onClick={() => updateQty(item.id, -1)}
                         className="p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                       >
                         <Minus className="w-3 h-3" />
@@ -1192,22 +1189,22 @@ export const POS: React.FC = () => {
                       <input
                         type="number"
                         min="1"
-                        max={item.stockItem.availableQuantity}
+                        max={Math.floor(Number(item.stockItem.availableQuantity ?? item.stockItem.quantity ?? 0) / item.factor)}
                         value={item.qty}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 1;
-                          setQty(item.stockItem._id, value);
+                          setQty(item.id, value);
                         }}
                         className="text-sm font-medium w-12 text-center border border-gray-300 rounded px-1 py-1 focus:ring-2 focus:ring-primary focus:border-primary outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
-                        onClick={() => updateQty(item.stockItem._id, 1)}
+                        onClick={() => updateQty(item.id, 1)}
                         className="p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                       <button
-                        onClick={() => removeFromCart(item.stockItem._id)}
+                        onClick={() => removeFromCart(item.id)}
                         className="p-1 text-red-500 hover:bg-red-50 rounded ml-1 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />

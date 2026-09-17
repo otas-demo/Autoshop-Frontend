@@ -11,6 +11,7 @@ export interface GRNLineItem {
     sellingPrice: number;
     profitMargin: number;
     profitAmount: number;
+    unitOfMeasure?: string;
     id: string;
   };
   receivedQuantity: number;

@@ -459,7 +459,9 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                   <th className="p-4 whitespace-nowrap">Payment & Debt</th>
                   <th className="p-4">Status</th>
                   {/* <th className="p-4">Note</th> */}
-                  <th className="p-4 whitespace-nowrap">Total Remaining</th>
+                  {poFilter !== "pending" && poFilter !== "arrived" && (
+                    <th className="p-4 whitespace-nowrap">Total Remaining</th>
+                  )}
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -539,7 +541,13 @@ export const PurchaseOrderList: React.FC<PurchaseOrderListProps> = ({
                       {/* <td className="p-4 text-slate-500 truncate max-w-xs">
                         {po.note}
                       </td> */}
-                      <td className="p-4 font-bold text-slate-800">{po.totalRemainingQuantity ?? 0}</td>
+                      {poFilter !== "pending" && poFilter !== "arrived" && (
+                        <td className="p-4 font-bold text-slate-800">
+                          {po.totalRemainingBreakdown && po.totalRemainingBreakdown.length > 0 
+                            ? po.totalRemainingBreakdown.map((b: any) => `${b.quantity} ${b.unit}`).join(" + ")
+                            : po.totalRemainingQuantity ?? 0}
+                        </td>
+                      )}
                       <td className="p-4">
                         <div className="flex flex-row items-center gap-2 whitespace-nowrap">
                           {poFilter === "deleted" ? (

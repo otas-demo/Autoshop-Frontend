@@ -423,7 +423,7 @@ export const SaleStatisticsTab: React.FC<SaleStatisticsTabProps> = ({
                                   )}
                                 </td>
                                 <td className="px-8 py-6 text-right font-black text-blue-600">
-                                  {orderProduct?.quantity || 0}
+                                  {orderProduct?.quantity || 0} {orderProduct?.saleUnit || orderProduct?.unit || ''}
                                 </td>
                                 <td className="px-8 py-6 text-right text-slate-600">
                                   {orderProduct?.unitPrice.toLocaleString()}

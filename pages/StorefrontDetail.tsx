@@ -16,12 +16,11 @@ import {
   ArrowRightLeft,
   Trash2,
   Plus,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  fetchStorefrontStock,
-  StorefrontStockItem,
-} from "../services/Storefront/fetchStorefrontStock";
+import { fetchStorefrontStock, StorefrontStockItem } from "../services/Storefront/fetchStorefrontStock";
+import { formatUOMBreakdown } from "../utils/uomUtils";
 import { fetchStorefrontExpiringStock } from "../services/Storefront/fetchStorefrontExpiringStock";
 import { formatExpiryDate, getExpiryStatus, ExpiryStatus } from "../utils/expiryUtils";
 import {
@@ -1017,8 +1016,17 @@ export const StorefrontDetail: React.FC = () => {
                             {item.inventoryId.category}
                           </span>
                         </td>
-                        <td className="px-2 sm:px-4 py-3 text-right font-bold text-slate-800 text-xs sm:text-sm">
-                          {item.quantity}
+                        <td className="px-2 sm:px-4 py-3 text-right">
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-bold text-xs sm:text-sm">
+                              {item.quantity} {item.inventoryId.unitOfMeasure || "piece"}
+                            </span>
+                            {item.quantity > 0 && item.inventoryId.uomConversions && item.inventoryId.uomConversions.length > 0 && formatUOMBreakdown(item.availableQuantity ?? item.quantity, item.inventoryId.unitOfMeasure || "piece", item.inventoryId.uomConversions) && (
+                              <span className="bg-green-50 text-green-500 px-2 py-0.5 rounded font-normal text-[10px] border border-green-200 whitespace-nowrap">
+                                {formatUOMBreakdown(item.availableQuantity ?? item.quantity, item.inventoryId.unitOfMeasure || "piece", item.inventoryId.uomConversions)}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         {/* <td className="px-2 sm:px-4 py-3 text-right text-slate-600 text-xs sm:text-sm">
                         {item.availableQuantity}
@@ -1088,42 +1096,10 @@ export const StorefrontDetail: React.FC = () => {
                           <div className="flex items-center gap-1 sm:gap-2">
                             <button
                               onClick={() => handleViewDetails(item.inventoryId._id)}
-                              className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-indigo-100 border border-indigo-200 font-medium transition-colors"
+                              className="text-xs text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-indigo-100 font-medium transition-colors flex items-center gap-1"
                             >
-                              Check
+                              <Eye className="w-3 h-3" /> View
                             </button>
-                            {userRole === "owner" && (
-                              <>
-                                {/* <button
-                                  onClick={() => openTransferModal("warehouse", item)}
-                                  disabled={item.quantity === 0}
-                                  className="text-xs bg-blue-50 text-primary-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-blue-100 border border-blue-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <ArrowRightLeft className="w-3 h-3" />{" "}
-                                  <span className="hidden sm:inline">Transfer</span>
-                                  <span className="sm:hidden">T</span>
-                                </button>  */}
-                                <button
-                                  onClick={() =>
-                                    openAdjustmentModal(item, "increase")
-                                  }
-                                  className="text-xs bg-green-50 text-green-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-green-100 border border-green-200 font-medium transition-colors flex items-center gap-1"
-                                  title="Increase Stock"
-                                >
-                                  <TrendingUp className="w-3 h-3" /> +
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    openAdjustmentModal(item, "decrease")
-                                  }
-                                  disabled={item.quantity === 0}
-                                  className="text-xs bg-red-50 text-red-600 px-2 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-red-100 border border-red-200 font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Decrease Stock"
-                                >
-                                  <TrendingDown className="w-3 h-3" /> -
-                                </button>
-                              </>
-                            )}
                           </div>
                         </td>
                       </tr>

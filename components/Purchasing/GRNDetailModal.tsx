@@ -248,21 +248,21 @@ export const GRNDetailModal: React.FC<GRNDetailModalProps> = ({
                         {item.inventoryId?.SKU || "-"}
                       </td> */}
                       <td className="p-3 text-center font-medium">
-                        {item.receivedQuantity}
+                        {item.receivedQuantity} {item.inventoryId?.unitOfMeasure || ''}
                       </td>
                       <td className="p-3 text-center">
                         <span className="bg-green-100 text-green-700 px-2 py-1 rounded font-medium">
-                          {item.goodQuantity}
+                          {item.goodQuantity} {item.inventoryId?.unitOfMeasure || ''}
                         </span>
                       </td>
                       <td className="p-3 text-center">
                         <span className="bg-red-100 text-red-700 px-2 py-1 rounded font-medium">
-                          {item.badQuantity}
+                          {item.badQuantity} {item.inventoryId?.unitOfMeasure || ''}
                         </span>
                       </td>
                       <td className="p-3 text-center">
                         <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
-                          {item.availableQuantity}
+                          {item.availableQuantity} {item.inventoryId?.unitOfMeasure || ''}
                         </span>
                       </td>
                       <td className="p-3 text-right text-slate-600">

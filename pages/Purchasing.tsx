@@ -49,6 +49,7 @@ export const Purchasing: React.FC = () => {
     handleViewPO,
     handleViewGRN,
     handleTransferGRN,
+    transferDestination,
   } = usePurchasing();
 
   const [editingPO, setEditingPO] = useState<any>(null);
@@ -213,6 +214,7 @@ export const Purchasing: React.FC = () => {
         onClose={() => setIsTransferModalOpen(false)}
         grnId={transferGRNId}
         onSuccess={handleGRNSuccess}
+        destination={transferDestination}
       />
     </div>
   );

@@ -7,7 +7,9 @@ interface TransferLineItem {
 
 interface TransferGRNRequest {
   grnId: string;
-  destinationWarehouseId: string;
+  destination: 'warehouse' | 'storefront';
+  destinationWarehouseId?: string;
+  destinationStorefrontId?: string;
   lineItems: TransferLineItem[];
   transferDate: string;
   notes?: string;

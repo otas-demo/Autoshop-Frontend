@@ -12,6 +12,11 @@ export interface OrderProduct {
   };
   quantity: number;
   unitPrice: number;
+  unit?: string;
+  saleUnit?: string;
+  saleQuantity?: number;
+  salePrice?: number;
+  price?: number;
   _id: string;
 }
 

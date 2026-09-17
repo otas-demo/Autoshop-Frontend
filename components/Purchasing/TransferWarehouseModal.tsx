@@ -3,11 +3,12 @@ import { Modal } from "../Modal";
 import { GRNData } from "../../services/Purchase/fetchGRNs";
 import { fetchGRNById } from "../../services/Purchase/fetchGRNById";
 import { fetchWarehouseProfiles } from "../../services/Warehouse/fetchWarehouseProfiles";
+import { fetchStorefrontProfiles } from "../../services/Storefront/fetchStorefrontProfiles";
 import { transferGRN } from "../../services/Purchase/transferGRN";
 import { toast } from "sonner";
 import { Warehouse, Package } from "lucide-react";
 
-interface WarehouseProfile {
+interface DestinationProfile {
   _id: string;
   locationName: string;
   locationCode: string;
@@ -26,6 +27,7 @@ interface TransferWarehouseModalProps {
   onClose: () => void;
   grnId: string | null;
   onSuccess?: () => void;
+  destination?: 'warehouse' | 'storefront';
 }
 
 export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
@@ -33,10 +35,11 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
   onClose,
   grnId,
   onSuccess,
+  destination = 'warehouse',
 }) => {
   const [grn, setGrn] = useState<GRNData | null>(null);
-  const [warehouses, setWarehouses] = useState<WarehouseProfile[]>([]);
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
+  const [destinations, setDestinations] = useState<DestinationProfile[]>([]);
+  const [selectedDestinationId, setSelectedDestinationId] = useState("");
   const [transferItems, setTransferItems] = useState<TransferItem[]>([]);
   const [transferDate, setTransferDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -55,9 +58,9 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
     if (!grnId) return;
     setLoading(true);
     try {
-      const [grnRes, warehouseRes] = await Promise.all([
+      const [grnRes, destRes] = await Promise.all([
         fetchGRNById(grnId),
-        fetchWarehouseProfiles(),
+        destination === 'storefront' ? fetchStorefrontProfiles() : fetchWarehouseProfiles(),
       ]);
 
       if (grnRes.success && grnRes.data) {
@@ -72,8 +75,8 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
         setTransferItems(items);
       }
 
-      if (warehouseRes.success && warehouseRes.data) {
-        setWarehouses(warehouseRes.data);
+      if (destRes.success && destRes.data) {
+        setDestinations(destRes.data);
       }
     } catch (error) {
       console.error("Failed to load data", error);
@@ -110,7 +113,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
 
   const resetForm = () => {
     setGrn(null);
-    setSelectedWarehouseId("");
+    setSelectedDestinationId("");
     setTransferItems([]);
     setTransferDate(new Date().toISOString().split("T")[0]);
     setNotes("");
@@ -127,8 +130,8 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
       return;
     }
 
-    if (!selectedWarehouseId) {
-      toast.error("Please select a destination warehouse");
+    if (!selectedDestinationId) {
+      toast.error(`Please select a destination ${destination}`);
       return;
     }
 
@@ -148,17 +151,26 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const payload = {
+      const payload: any = {
         sourceType: "GRN" as const,
         grnId,
-        destinationWarehouseId: selectedWarehouseId,
+        destination,
         lineItems: itemsToProcess.map((item) => ({
           productCode: item.productCode,
           quantity: item.quantity,
         })),
         transferDate,
-        notes: notes || undefined,
       };
+
+      if (destination === 'warehouse') {
+        payload.destinationWarehouseId = selectedDestinationId;
+      } else {
+        payload.destinationStorefrontId = selectedDestinationId;
+      }
+
+      if (notes) {
+        payload.notes = notes;
+      }
 
       const result = await transferGRN(payload);
 
@@ -179,7 +191,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Transfer to Warehouse">
+    <Modal isOpen={isOpen} onClose={handleClose} title={destination === 'storefront' ? 'Transfer to Storefront' : 'Transfer to Warehouse'}>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
@@ -216,21 +228,21 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
               </div>
             </div>
 
-            {/* Warehouse Selection */}
+            {/* Warehouse/Storefront Selection */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                 <Warehouse className="w-4 h-4" />
-                Destination Warehouse
+                {destination === 'storefront' ? 'Destination Storefront' : 'Destination Warehouse'}
               </label>
               <select
                 className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                value={selectedWarehouseId}
-                onChange={(e) => setSelectedWarehouseId(e.target.value)}
+                value={selectedDestinationId}
+                onChange={(e) => setSelectedDestinationId(e.target.value)}
               >
-                <option value="">Select Warehouse...</option>
-                {warehouses.map((wh) => (
-                  <option key={wh._id} value={wh._id}>
-                    {wh.locationName} ({wh.locationCode})
+                <option value="">Select {destination === 'storefront' ? 'Storefront' : 'Warehouse'}...</option>
+                {destinations.map((dest) => (
+                  <option key={dest._id} value={dest._id}>
+                    {dest.locationName} ({dest.locationCode})
                   </option>
                 ))}
               </select>
@@ -393,7 +405,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                 <button
                   onClick={() => handleSubmit(true)}
                   disabled={
-                    !selectedWarehouseId ||
+                    !selectedDestinationId ||
                     transferItems.filter(
                       (item) => item.isSelected && item.quantity > 0
                     ).length === 0 ||
@@ -406,7 +418,7 @@ export const TransferWarehouseModal: React.FC<TransferWarehouseModalProps> = ({
                 </button>
               </div>
               <p className="text-xs text-slate-500 text-center">
-                Items will be transferred to the selected warehouse inventory.
+                Items will be transferred to the selected {destination} inventory.
               </p>
             </div>
           </div>

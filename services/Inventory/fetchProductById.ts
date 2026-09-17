@@ -36,6 +36,7 @@ export interface StockAvailability {
 }
 
 export interface ProductDetail {
+  uomConversions?: any[];
   _id: string;
   productName: string;
   productCode: string;

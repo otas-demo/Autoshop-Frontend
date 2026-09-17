@@ -11,6 +11,8 @@ export interface WarehouseStockInventory {
   sellingPrice?: number;
   profitMargin: number | null;
   profitAmount: number | null;
+  unitOfMeasure?: string;
+  uomConversions?: any[];
 }
 
 export interface WarehouseStockWarehouse {

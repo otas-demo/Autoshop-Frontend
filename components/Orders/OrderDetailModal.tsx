@@ -9,8 +9,7 @@ import {
   Package,
   UserCircle,
   User,
-  Plus,
-  Minus,
+  Edit,
   Printer,
 } from "lucide-react";
 import { Order } from "../../services/Order/fetchOrders";
@@ -25,8 +24,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import { getSavedPrintPaperSize } from "../../utils/printPaperSize";
 import { detectDevice } from "../../utils/deviceDetect";
 import { useNavigate } from "react-router-dom";
-import { AddItemsToOrderModal } from "./AddItemsToOrderModal";
-import { RemoveItemsFromOrderModal } from "./RemoveItemsFromOrderModal";
+
 
 interface OrderDetailModalProps {
   isOpen: boolean;
@@ -48,8 +46,6 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const navigate = useNavigate();
   const adminData = JSON.parse(localStorage.getItem("adminData") || "{}");
   const userRole = adminData.role;
-  const [showAddItemsModal, setShowAddItemsModal] = useState(false);
-  const [showRemoveItemsModal, setShowRemoveItemsModal] = useState(false);
 
   const handlePrintOrder = () => {
     if (!order) return;
@@ -61,10 +57,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       date: order.createdAt,
       items:
         order.ordersProducts?.map((item) => ({
-          name: item.inventoryId?.productName || "Unknown Product",
+          name: `${item.inventoryId?.productName || "Unknown Product"} (${item.saleUnit || item.unit || "Base"})`,
           code: item.inventoryId?.productCode,
-          qty: item.quantity,
-          price: item.unitPrice || 0,
+          qty: item.saleQuantity || item.quantity,
+          price: item.salePrice || item.unitPrice || item.price || 0,
         })) || [],
       subtotal: order.subTotal || 0,
       discountPercent: order.discount
@@ -117,26 +113,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </button>
             )}
             {order && userRole === "owner" && (
-              <>
-                <button
-                  onClick={() => setShowRemoveItemsModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                >
-                  <Minus className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {t("orders.removeItems") || "Remove Items"}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setShowAddItemsModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {t("orders.addItems") || "Add Items"}
-                  </span>
-                </button>
-              </>
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate(`/orders/edit/${order._id}`);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+              >
+                <Edit className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {t("orders.editOrder") || "Edit Order"}
+                </span>
+              </button>
             )}
             <button
               onClick={onClose}
@@ -276,24 +264,28 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       {order.ordersProducts?.map((item, index) => (
                         <tr key={item._id || index}>
                           <td className="p-3">
-                            <div>
-                              <p className="font-medium text-slate-800">
-                                {item.inventoryId?.productName || "Unknown"}
-                              </p>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1 font-medium text-slate-800">
+                                <span>{item.inventoryId?.productName || "Unknown"}</span>
+                                <span className="text-slate-500 font-normal">
+                                  ({item.saleUnit || item.unit || "Base"})
+                                </span>
+                              </div>
                               <p className="text-xs text-slate-400">
                                 {item.inventoryId?.productCode}
                               </p>
                             </div>
                           </td>
                           <td className="p-3 text-center font-medium">
-                            {item.quantity}
+                            {item.saleQuantity || item.quantity}
                           </td>
                           <td className="p-3 text-right text-slate-600">
-                            {item.unitPrice?.toLocaleString()} MMK
+                            {(item.salePrice || item.unitPrice || item.price)?.toLocaleString()} MMK
                           </td>
                           <td className="p-3 text-right font-medium text-slate-800">
                             {(
-                              item.quantity * (item.unitPrice || 0)
+                              (item.saleQuantity || item.quantity) *
+                              (item.salePrice || item.unitPrice || item.price || 0)
                             ).toLocaleString()}{" "}
                             MMK
                           </td>
@@ -385,31 +377,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </div>
       </div>
 
-      {/* Add Items Modal */}
-      <AddItemsToOrderModal
-        isOpen={showAddItemsModal}
-        order={order}
-        onClose={() => setShowAddItemsModal(false)}
-        onSuccess={() => {
-          setShowAddItemsModal(false);
-          if (onOrderUpdate) {
-            onOrderUpdate();
-          }
-        }}
-      />
 
-      {/* Remove Items Modal */}
-      <RemoveItemsFromOrderModal
-        isOpen={showRemoveItemsModal}
-        order={order}
-        onClose={() => setShowRemoveItemsModal(false)}
-        onSuccess={() => {
-          setShowRemoveItemsModal(false);
-          if (onOrderUpdate) {
-            onOrderUpdate();
-          }
-        }}
-      />
     </div>
   );
 };

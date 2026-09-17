@@ -59,7 +59,13 @@ export const GRNList: React.FC<GRNListProps> = ({
       const res = await updateGRNStatus(grnId, newStatus);
       if (res.success) {
         toast.success("GRN status updated successfully");
-        onStatusChange?.(pagination.currentPage, pagination.itemsPerPage);
+        if (newStatus === "verified" || newStatus === "completed") {
+          setGrnFilter("completed");
+          sessionStorage.setItem("grnFilter", "completed");
+          onStatusChange?.(1, pagination.itemsPerPage);
+        } else {
+          onStatusChange?.(pagination.currentPage, pagination.itemsPerPage);
+        }
       } else {
         toast.error(res.message || "Failed to update status");
       }
@@ -138,8 +144,8 @@ export const GRNList: React.FC<GRNListProps> = ({
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded-lg text-sm font-medium ${page === currentPage
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-600 hover:bg-slate-50 border"
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-600 hover:bg-slate-50 border"
                   }`}
               >
                 {page}
@@ -184,8 +190,8 @@ export const GRNList: React.FC<GRNListProps> = ({
         <button
           onClick={() => setGrnFilter("pending")}
           className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${grnFilter === "pending"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
             }`}
         >
           {isMy ? "စောင့်ဆိုင်းနေဆဲ" : "Pending"}
@@ -193,8 +199,8 @@ export const GRNList: React.FC<GRNListProps> = ({
         <button
           onClick={() => setGrnFilter("completed")}
           className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${grnFilter === "completed"
-              ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
-              : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
+            ? "border-[#2216a8] text-[#2216a8] bg-indigo-50/50"
+            : "border-gray-200 text-gray-400 bg-white hover:bg-slate-50"
             }`}
         >
           {isMy ? "စာရင်း လက်ခံပြီး" : "Completed"}
@@ -318,15 +324,23 @@ export const GRNList: React.FC<GRNListProps> = ({
                             <>
                               <button
                                 onClick={() => onTransferGRN?.(grn, 'warehouse')}
-                                className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-green-200 bg-green-50 text-green-600 transition-colors hover:bg-green-100 cursor-pointer"
                               >
-                                <Warehouse className="w-3.5 h-3.5" /> {isMy ? "ဂိုဒေါင်သို့ လွှဲမယ်" : "Transfer to Warehouse"}
+                                <Warehouse className="w-4 h-4 shrink-0" />
+                                <div className="flex flex-col text-left text-[11px] font-medium leading-tight">
+                                  <span>{isMy ? "ဂိုဒေါင်သို့" : "Transfer to"}</span>
+                                  <span>{isMy ? "လွှဲမယ်" : "Warehouse"}</span>
+                                </div>
                               </button>
                               <button
                                 onClick={() => onTransferGRN?.(grn, 'storefront')}
-                                className="text-xs bg-teal-50 text-teal-600 px-3 py-1.5 rounded-lg hover:bg-teal-100 border border-teal-200 font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-blue-200 bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 cursor-pointer"
                               >
-                                <Store className="w-3.5 h-3.5" /> {isMy ? "ဆိုင်သို့ လွှဲမယ်" : "Transfer to Storefront"}
+                                <Store className="w-4 h-4 shrink-0" />
+                                <div className="flex flex-col text-left text-[11px] font-medium leading-tight">
+                                  <span>{isMy ? "ဆိုင်သို့" : "Transfer to"}</span>
+                                  <span>{isMy ? "လွှဲမယ်" : "Storefront"}</span>
+                                </div>
                               </button>
                             </>
                           )}

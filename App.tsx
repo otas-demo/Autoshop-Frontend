@@ -22,6 +22,7 @@ import { Expenses } from "./pages/Expenses";
 import { Suppliers } from "./pages/Suppliers";
 import { SupplierDetail } from "./pages/SupplierDetail";
 import { Orders } from "./pages/Orders";
+import { EditOrder } from "./pages/EditOrder";
 import { CreditOrders } from "./pages/CreditOrders";
 import { AccountManagement } from "./pages/AccountManagement";
 import { Login } from "./pages/Login";
@@ -154,6 +155,14 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/edit/:orderId"
+            element={
+              <ProtectedRoute>
+                <EditOrder />
               </ProtectedRoute>
             }
           />

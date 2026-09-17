@@ -52,6 +52,7 @@ export const usePurchasing = () => {
   const [isGRNDetailModalOpen, setIsGRNDetailModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [transferGRNId, setTransferGRNId] = useState<string | null>(null);
+  const [transferDestination, setTransferDestination] = useState<'warehouse' | 'storefront'>('warehouse');
 
   // Fetch Suppliers and Products
   useEffect(() => {
@@ -141,7 +142,13 @@ export const usePurchasing = () => {
   };
 
   const handleGRNSuccess = () => {
-    loadGRNs(grnPagination.currentPage);
+    // Switch to GRN tab and set to pending stage
+    setActiveTab("grn");
+    sessionStorage.setItem("grnFilter", "pending");
+    
+    // Load fresh GRN data (page 1)
+    loadGRNs(1);
+    
     if (poFilter === "deleted") {
       loadDeletedPurchases(deletedPoPagination.currentPage, deletedPoPagination.itemsPerPage);
     } else {
@@ -164,8 +171,9 @@ export const usePurchasing = () => {
     setIsGRNDetailModalOpen(true);
   };
 
-  const handleTransferGRN = (grn: GRNData) => {
+  const handleTransferGRN = (grn: GRNData, destination: 'warehouse' | 'storefront' = 'warehouse') => {
     setTransferGRNId(grn._id);
+    setTransferDestination(destination);
     setIsTransferModalOpen(true);
   };
 
@@ -205,5 +213,6 @@ export const usePurchasing = () => {
     handleViewPO,
     handleViewGRN,
     handleTransferGRN,
+    transferDestination,
   };
 };

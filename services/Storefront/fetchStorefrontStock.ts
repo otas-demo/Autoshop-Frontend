@@ -14,6 +14,8 @@ export interface StorefrontStockInventory {
     quantity: number;
     price: number;
   }[];
+  unitOfMeasure?: string;
+  uomConversions?: any[];
 }
 
 export interface StorefrontStockStorefront {

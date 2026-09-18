@@ -36,6 +36,8 @@ export const RemoveItemsFromOrderModal: React.FC<
   const [markup, setMarkup] = useState(0); // Add markup state
   const [markupAmount, setMarkupAmount] = useState(0); // Add markup amount state
   const [paidAmount, setPaidAmount] = useState(0);
+  const [paidAmountManuallyChanged, setPaidAmountManuallyChanged] =
+    useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [discountManuallyChanged, setDiscountManuallyChanged] = useState(false);
   const [useMarkup, setUseMarkup] = useState(false); // Add useMarkup state
@@ -73,6 +75,7 @@ export const RemoveItemsFromOrderModal: React.FC<
       }
 
       setPaidAmount(order.paidAmount || 0);
+      setPaidAmountManuallyChanged(false);
       setDiscountManuallyChanged(false);
       // Initialize selected items from order products
       const initialItems: SelectedItemToRemove[] =
@@ -95,6 +98,7 @@ export const RemoveItemsFromOrderModal: React.FC<
       setMarkup(0);
       setMarkupAmount(0);
       setPaidAmount(0);
+      setPaidAmountManuallyChanged(false);
       setDiscountManuallyChanged(false);
       setUseMarkup(false);
     }
@@ -202,8 +206,12 @@ export const RemoveItemsFromOrderModal: React.FC<
       );
     }
 
-    // Extra change = paidAmount - finalAmount (if paidAmount > finalAmount)
-    const extraChange = Math.max(0, paidAmount - finalAmount);
+    const isPaidOrder = order?.paymentType?.toLowerCase() === "paid";
+    const currentPaidAmount =
+      isPaidOrder && !paidAmountManuallyChanged ? finalAmount : paidAmount;
+
+    // Extra change = currentPaidAmount - finalAmount (if currentPaidAmount > finalAmount)
+    const extraChange = Math.max(0, currentPaidAmount - finalAmount);
 
     return {
       subTotal: totalSubtotal,
@@ -211,9 +219,30 @@ export const RemoveItemsFromOrderModal: React.FC<
       discount: calculatedDiscount,
       finalAmount,
       extraChange,
-      paidAmount,
+      paidAmount: currentPaidAmount,
     };
   };
+
+  // Auto-update paidAmount when finalAmount changes (for paid orders, if not manually changed)
+  useEffect(() => {
+    if (
+      order &&
+      order.paymentType?.toLowerCase() === "paid" &&
+      !paidAmountManuallyChanged
+    ) {
+      const totals = calculateTotals();
+      setPaidAmount(totals.finalAmount);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedItems,
+    tax,
+    discountPercent,
+    markupAmount,
+    useMarkup,
+    paidAmountManuallyChanged,
+    order,
+  ]);
 
   const handleSubmitRemoveItems = async () => {
     // Filter items where removeQuantity > 0
@@ -555,21 +584,52 @@ export const RemoveItemsFromOrderModal: React.FC<
                   </div>
                 )}
               </div>
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  {t("orders.paidAmount") || "Paid Amount"} (MMK)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={paidAmount}
-                  onChange={(e) =>
-                    setPaidAmount(parseFloat(e.target.value) || 0)
-                  }
-                  className="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
+              {(() => {
+                const isPaidAmountChanged =
+                  order && paidAmount !== (order.paidAmount || 0);
+                return (
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-medium text-slate-700">
+                        {t("orders.paidAmount") || "Paid Amount"} (MMK)
+                      </label>
+                      {isPaidAmountChanged && (
+                        <span className="text-[11px] px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                          {t("orders.amountChanged") || "Amount Changed"}
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={paidAmount}
+                      onChange={(e) => {
+                        setPaidAmount(parseFloat(e.target.value) || 0);
+                        setPaidAmountManuallyChanged(true);
+                      }}
+                      className={`w-full rounded-lg p-2 text-sm outline-none transition-colors ${
+                        isPaidAmountChanged
+                          ? "border-2 border-red-500 bg-red-50/40 text-red-900 font-semibold focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          : "border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary"
+                      }`}
+                    />
+                    {isPaidAmountChanged && (
+                      <div className="flex items-center justify-between text-xs text-red-600 mt-1 font-medium">
+                        <span>
+                          {t("orders.paidAmountNotice") ||
+                            "Paid amount updated from original"}
+                        </span>
+                        <span>
+                          ({t("orders.original") || "Original"}:{" "}
+                          {(order?.paidAmount || 0).toLocaleString()} MMK)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               <div className="bg-slate-50 p-3 rounded-lg space-y-1.5 text-xs mb-3">
                 {(() => {
                   const totals = calculateTotals();

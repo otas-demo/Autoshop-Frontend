@@ -128,7 +128,8 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <span className="hidden sm:inline">Print</span>
               </button>
             )}
-            {order && userRole === "owner" && (
+
+            {order && (userRole === "owner" || userRole === "admin" || userRole === "cashier") && (
               <>
                 <button
                   onClick={() => setShowRemoveItemsModal(true)}
@@ -150,6 +151,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 </button>
               </>
             )}
+
             <button
               onClick={onClose}
               className="p-1 hover:bg-slate-200 rounded-lg transition-colors"

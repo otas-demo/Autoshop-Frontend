@@ -1,25 +1,50 @@
 import axios from "../axios";
 import { Supplier } from "../../types";
 
+export interface SupplierPagination {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
 interface FetchSuppliersResponse {
   success: boolean;
   message: string;
   data: Supplier[];
+  pagination?: SupplierPagination;
 }
 
 /**
- * Fetch all supplier profiles via API
+ * Fetch supplier profiles via API with optional pagination and search
  * @param {boolean} isDeleted - Optional: Set to true to fetch soft-deleted suppliers
+ * @param {number} page - Optional: Page number
+ * @param {number} limit - Optional: Number of items per page
+ * @param {string} search - Optional: Search keyword (name or contact)
  * @returns {Promise<FetchSuppliersResponse>} Response from API
  */
 export const fetchSuppliers = async (
-  isDeleted?: boolean
+  isDeleted?: boolean,
+  page?: number,
+  limit?: number,
+  search?: string
 ): Promise<FetchSuppliersResponse> => {
   try {
-    const url =
-      isDeleted !== undefined
-        ? `/supplier-profile?isDeleted=${isDeleted}`
-        : "/supplier-profile";
+    const params = new URLSearchParams();
+    if (isDeleted !== undefined) {
+      params.append("isDeleted", String(isDeleted));
+    }
+    if (page !== undefined) {
+      params.append("page", String(page));
+    }
+    if (limit !== undefined) {
+      params.append("limit", String(limit));
+    }
+    if (search && search.trim()) {
+      params.append("search", search.trim());
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/supplier-profile?${queryString}` : "/supplier-profile";
     const response = await axios.get(url);
 
     return response.data;

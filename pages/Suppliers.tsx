@@ -15,13 +15,15 @@ import {
   Search,
   RefreshCw,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { createSupplier } from "../services/Supplier/createSupplier";
 import { updateSupplier } from "../services/Supplier/updateSupplier";
 import { softDeleteSupplier } from "../services/Supplier/softDeleteSupplier";
 import { restoreSupplier } from "../services/Supplier/restoreSupplier";
 import { deleteSupplier } from "../services/Supplier/deleteSupplier";
-import { fetchSuppliers } from "../services/Supplier/fetchSuppliers";
+import { fetchSuppliers, SupplierPagination } from "../services/Supplier/fetchSuppliers";
 import { ConfirmModal } from "../components/Common/ConfirmModal";
 import { toast } from "sonner";
 import { Supplier } from "../types";
@@ -42,6 +44,14 @@ export const Suppliers: React.FC = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [pagination, setPagination] = useState<SupplierPagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+  });
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(
     null,
   );
@@ -57,15 +67,37 @@ export const Suppliers: React.FC = () => {
   const userRole = adminData.role;
 
   useEffect(() => {
-    loadSuppliers();
-  }, [showDeleted]);
+    const timer = setTimeout(() => {
+      loadSuppliers(currentPage, itemsPerPage, search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [showDeleted, currentPage, itemsPerPage, search]);
 
-  const loadSuppliers = async () => {
+  const loadSuppliers = async (
+    page = currentPage,
+    limit = itemsPerPage,
+    searchQuery = search
+  ) => {
     setIsLoading(true);
     try {
-      const response = await fetchSuppliers(showDeleted ? true : undefined);
+      const response = await fetchSuppliers(
+        showDeleted ? true : undefined,
+        page,
+        limit,
+        searchQuery
+      );
       if (response.success && response.data) {
         setSuppliers(response.data);
+        if (response.pagination) {
+          setPagination(response.pagination);
+        } else {
+          setPagination({
+            currentPage: page,
+            totalPages: 1,
+            totalItems: response.data.length,
+            itemsPerPage: limit,
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to load suppliers:", error);
@@ -76,7 +108,7 @@ export const Suppliers: React.FC = () => {
   };
 
   const handleRefresh = async () => {
-    await loadSuppliers();
+    await loadSuppliers(currentPage, itemsPerPage, search);
     toast.success(t("storefront.refresh"));
   };
 
@@ -132,7 +164,7 @@ export const Suppliers: React.FC = () => {
 
       handleCloseModal();
       // Reload list
-      loadSuppliers();
+      loadSuppliers(currentPage, itemsPerPage, search);
     } catch (error: any) {
       toast.error(
         error.message ||
@@ -160,7 +192,7 @@ export const Suppliers: React.FC = () => {
       await softDeleteSupplier(supplierId);
       toast.success(t("suppliers.supplierDeactivated"));
       setSupplierToDelete(null);
-      loadSuppliers();
+      loadSuppliers(currentPage, itemsPerPage, search);
     } catch (error: any) {
       toast.error(error.message || t("suppliers.failedToDeactivate"));
     } finally {
@@ -176,7 +208,7 @@ export const Suppliers: React.FC = () => {
     try {
       await restoreSupplier(supplierId);
       toast.success(t("suppliers.supplierRestored"));
-      loadSuppliers();
+      loadSuppliers(currentPage, itemsPerPage, search);
     } catch (error: any) {
       toast.error(error.message || t("suppliers.failedToRestore"));
     } finally {
@@ -200,22 +232,13 @@ export const Suppliers: React.FC = () => {
       await deleteSupplier(supplierId);
       toast.success(t("suppliers.supplierDeleted"));
       setSupplierToPermanentlyDelete(null);
-      loadSuppliers();
+      loadSuppliers(currentPage, itemsPerPage, search);
     } catch (error: any) {
       toast.error(error.message || t("suppliers.failedToDelete"));
     } finally {
       setProcessingId(null);
     }
   };
-
-  // Search Filter
-  const filteredSuppliers = suppliers.filter((supplier) => {
-    const searchLower = search.toLowerCase();
-    return (
-      supplier.supplierName.toLowerCase().includes(searchLower) ||
-      supplier.contactNumber.includes(search)
-    );
-  });
 
   return (
     <div className="w-full">
@@ -263,7 +286,7 @@ export const Suppliers: React.FC = () => {
                 {showDeleted ? t("suppliers.deletedSuppliers") : t("suppliers.registeredSuppliers")}
               </p>
               <p className="text-lg font-black text-slate-800 mt-1">
-                {suppliers.length} <span className="text-xs font-semibold text-slate-400">ဦး</span>
+                {pagination.totalItems} <span className="text-xs font-semibold text-slate-400">ဦး</span>
               </p>
             </div>
           </div>
@@ -293,7 +316,10 @@ export const Suppliers: React.FC = () => {
               placeholder="Search by supplier name or phone..."
               className="w-full pl-11 pr-4 py-2.5 border border-gray-200/80 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-700 bg-white"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
 
@@ -303,6 +329,7 @@ export const Suppliers: React.FC = () => {
               onClick={() => {
                 setShowDeleted(false);
                 setSearch("");
+                setCurrentPage(1);
               }}
               className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${!showDeleted
                   ? "bg-white text-[#2216a8] shadow-sm"
@@ -315,6 +342,7 @@ export const Suppliers: React.FC = () => {
               onClick={() => {
                 setShowDeleted(true);
                 setSearch("");
+                setCurrentPage(1);
               }}
               className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${showDeleted
                   ? "bg-white text-[#2216a8] shadow-sm"
@@ -331,7 +359,7 @@ export const Suppliers: React.FC = () => {
         <div className="bg-white shadow-sm border rounded-xl overflow-hidden">
           <div className="p-4 border-b bg-slate-50">
             <h2 className="font-semibold text-slate-800">
-              {showDeleted ? t("suppliers.deletedSuppliers") : t("suppliers.registeredSuppliers")} ({filteredSuppliers.length})
+              {showDeleted ? t("suppliers.deletedSuppliers") : t("suppliers.registeredSuppliers")} ({pagination.totalItems})
             </h2>
           </div>
 
@@ -340,7 +368,7 @@ export const Suppliers: React.FC = () => {
               <Loader2 className="w-5 h-5 animate-spin" />
               {t("suppliers.loading")}
             </div>
-          ) : filteredSuppliers.length === 0 ? (
+          ) : suppliers.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
               {search ? "No suppliers match search criteria." : t("suppliers.noSuppliers")}
             </div>
@@ -360,148 +388,254 @@ export const Suppliers: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
-                  {filteredSuppliers.map((supplier, index) => (
-                    <tr
-                      key={supplier.id || supplier._id}
-                      onClick={() => {
-                        if (!supplier.isDeleted) {
-                          navigate(`/suppliers/${supplier.id || supplier._id}`);
-                        }
-                      }}
-                      className="hover:bg-slate-50/40 transition-colors cursor-pointer"
-                    >
-                      {/* No */}
-                      <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
-                        {String(index + 1).padStart(2, "0")}
-                      </td>
+                  {suppliers.map((supplier, index) => {
+                    const rowNumber = (pagination.currentPage - 1) * pagination.itemsPerPage + index + 1;
+                    return (
+                      <tr
+                        key={supplier.id || supplier._id}
+                        onClick={() => {
+                          if (!supplier.isDeleted) {
+                            navigate(`/suppliers/${supplier.id || supplier._id}`);
+                          }
+                        }}
+                        className="hover:bg-slate-50/40 transition-colors cursor-pointer"
+                      >
+                        {/* No */}
+                        <td className="px-4 py-4 text-center font-bold text-slate-400 text-xs">
+                          {String(rowNumber).padStart(2, "0")}
+                        </td>
 
-                      {/* Name */}
-                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
-                        {supplier.supplierName}
-                      </td>
+                        {/* Name */}
+                        <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                          {supplier.supplierName}
+                        </td>
 
-                      {/* Contact */}
-                      <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
-                        {supplier.contactNumber}
-                      </td>
+                        {/* Contact */}
+                        <td className="px-4 py-4 font-bold text-slate-800 text-xs sm:text-sm">
+                          {supplier.contactNumber}
+                        </td>
 
-                      {/* Status */}
-                      <td className="px-4 py-4">
-                        {supplier.isDeleted ? (
-                          <span className="border border-red-200 text-red-650 bg-red-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                            {t("suppliers.inactive")}
-                          </span>
-                        ) : (
-                          <span className="border border-green-200 text-green-650 bg-green-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                            {t("suppliers.active")}
-                          </span>
-                        )}
-                      </td>
+                        {/* Status */}
+                        <td className="px-4 py-4">
+                          {supplier.isDeleted ? (
+                            <span className="border border-red-200 text-red-650 bg-red-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              {t("suppliers.inactive")}
+                            </span>
+                          ) : (
+                            <span className="border border-green-200 text-green-650 bg-green-50/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              {t("suppliers.active")}
+                            </span>
+                          )}
+                        </td>
 
-                      {/* Date */}
-                      <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
-                        {supplier.isDeleted && supplier.deletedAt ? (
-                          <span className="text-red-500 font-semibold">
-                            {new Date(supplier.deletedAt).toLocaleDateString()}
-                          </span>
-                        ) : supplier.createdAt ? (
-                          <span>
-                            {new Date(supplier.createdAt).toLocaleDateString()}
-                          </span>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
+                        {/* Date */}
+                        <td className="px-4 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
+                          {supplier.isDeleted && supplier.deletedAt ? (
+                            <span className="text-red-500 font-semibold">
+                              {new Date(supplier.deletedAt).toLocaleDateString()}
+                            </span>
+                          ) : supplier.createdAt ? (
+                            <span>
+                              {new Date(supplier.createdAt).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
 
-                      {/* Actions */}
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {(userRole === "owner" || userRole === "warehouse") && (
-                            <>
-                              {!supplier.isDeleted && (
-                                <>
+                        {/* Actions */}
+                        <td className="px-4 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            {(userRole === "owner" || userRole === "warehouse") && (
+                              <>
+                                {!supplier.isDeleted && (
+                                  <>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/suppliers/${supplier.id || supplier._id}`);
+                                      }}
+                                      className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
+                                      title={t("common.view")}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenEdit(supplier);
+                                      }}
+                                      className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
+                                      title={t("common.edit")}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
+                                {supplier.isDeleted ? (
+                                  <>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRestore(supplier);
+                                      }}
+                                      disabled={processingId === (supplier.id || supplier._id)}
+                                      className="p-1.5 text-green-650 hover:text-green-700 hover:bg-green-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                      title={t("suppliers.restore")}
+                                    >
+                                      {processingId === (supplier.id || supplier._id) ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <RotateCcw className="w-4 h-4" />
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenPermanentDelete(supplier);
+                                      }}
+                                      disabled={processingId === (supplier.id || supplier._id)}
+                                      className="p-1.5 text-red-650 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                      title={t("suppliers.delete")}
+                                    >
+                                      {processingId === (supplier.id || supplier._id) ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="w-4 h-4" />
+                                      )}
+                                    </button>
+                                  </>
+                                ) : (
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      navigate(`/suppliers/${supplier.id || supplier._id}`);
-                                    }}
-                                    className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
-                                    title={t("common.view")}
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenEdit(supplier);
-                                    }}
-                                    className="p-1.5 text-slate-600 hover:text-[#2216a8] hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"
-                                    title={t("common.edit")}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </button>
-                                </>
-                              )}
-                              {supplier.isDeleted ? (
-                                <>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRestore(supplier);
-                                    }}
-                                    disabled={processingId === (supplier.id || supplier._id)}
-                                    className="p-1.5 text-green-650 hover:text-green-700 hover:bg-green-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
-                                    title={t("suppliers.restore")}
-                                  >
-                                    {processingId === (supplier.id || supplier._id) ? (
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <RotateCcw className="w-4 h-4" />
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenPermanentDelete(supplier);
+                                      handleOpenDeactivate(supplier);
                                     }}
                                     disabled={processingId === (supplier.id || supplier._id)}
                                     className="p-1.5 text-red-650 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
-                                    title={t("suppliers.delete")}
+                                    title={t("suppliers.deactivate")}
                                   >
                                     {processingId === (supplier.id || supplier._id) ? (
                                       <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
-                                      <Trash2 className="w-4 h-4" />
+                                      <Ban className="w-4 h-4" />
                                     )}
                                   </button>
-                                </>
-                              ) : (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenDeactivate(supplier);
-                                  }}
-                                  disabled={processingId === (supplier.id || supplier._id)}
-                                  className="p-1.5 text-red-650 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
-                                  title={t("suppliers.deactivate")}
-                                >
-                                  {processingId === (supplier.id || supplier._id) ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Ban className="w-4 h-4" />
-                                  )}
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
+
+          {/* Pagination Controls */}
+          <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 border-t border-gray-200/80">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-xs sm:text-sm text-slate-500 font-medium">
+                {pagination.totalItems > 0 ? (
+                  <>
+                    Showing{" "}
+                    <span className="font-semibold text-slate-700">
+                      {(pagination.currentPage - 1) * pagination.itemsPerPage + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-semibold text-slate-700">
+                      {Math.min(
+                        pagination.currentPage * pagination.itemsPerPage,
+                        pagination.totalItems
+                      )}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-slate-700">
+                      {pagination.totalItems}
+                    </span>{" "}
+                    results
+                  </>
+                ) : (
+                  "No results"
+                )}
+              </span>
+
+              <div className="flex items-center gap-2">
+                <label className="text-xs sm:text-sm text-slate-500 font-medium">
+                  Show:
+                </label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    const newLimit = Number(e.target.value);
+                    setItemsPerPage(newLimit);
+                    setCurrentPage(1);
+                  }}
+                  className="text-xs sm:text-sm border border-slate-250 rounded-lg px-2.5 py-1 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] cursor-pointer"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-xs sm:text-sm text-slate-500 font-medium">
+                  entries
+                </span>
+              </div>
+            </div>
+
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={pagination.currentPage <= 1 || isLoading}
+                  className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer text-slate-600"
+                  title="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (pagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (pagination.currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                    pageNum = pagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = pagination.currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      disabled={isLoading}
+                      className={`min-w-[34px] h-[34px] px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                        pagination.currentPage === pageNum
+                          ? "bg-[#2216a8] text-white shadow-sm shadow-[#2216a8]/20"
+                          : "bg-white border border-slate-200 hover:bg-slate-100/80 text-slate-700"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))}
+                  disabled={pagination.currentPage >= pagination.totalPages || isLoading}
+                  className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer text-slate-600"
+                  title="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

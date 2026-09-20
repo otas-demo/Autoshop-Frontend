@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X, CreditCard, Calendar, DollarSign, Clock, Edit3 } from "lucide-react";
+import { Plus, Trash2, X, CreditCard, Calendar, DollarSign, Clock, Edit3, Search, ChevronDown, Check } from "lucide-react";
 import { Modal } from "../Modal";
 import { Supplier, Product, PurchaseOrderItem } from "../../types";
 import { createPurchase } from "../../services/Purchase/createPurchase";
 import { updatePurchase } from "../../services/Purchase/updatePurchase";
 import { PurchaseDetail } from "../../services/Purchase/fetchPurchaseById";
+import { fetchSuppliers } from "../../services/Supplier/fetchSuppliers";
 import { useLanguage } from "../../context/LanguageContext";
 import { toast } from "sonner";
 
@@ -30,7 +31,12 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   const { language } = useLanguage();
   const isMy = language === "my";
 
+  const [allSuppliers, setAllSuppliers] = useState<Supplier[]>(suppliers || []);
   const [poSupplierId, setPOSupplierId] = useState(defaultSupplierId || "");
+  const [supplierSearchQuery, setSupplierSearchQuery] = useState("");
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+  const supplierDropdownRef = useRef<HTMLDivElement>(null);
+
   const [poItems, setPOItems] = useState<PurchaseOrderItem[]>([]);
   const [poSelectedProduct, setPOSelectedProduct] = useState("");
   const [poQty, setPOQty] = useState(1);
@@ -50,6 +56,26 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
   >("cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync suppliers from props
+  useEffect(() => {
+    if (suppliers && suppliers.length > 0) {
+      setAllSuppliers(suppliers);
+    }
+  }, [suppliers]);
+
+  // Always fetch all active suppliers without limit when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchSuppliers(false)
+        .then((res) => {
+          if (res && res.success && Array.isArray(res.data)) {
+            setAllSuppliers(res.data);
+          }
+        })
+        .catch((err) => console.error("Failed to load all suppliers:", err));
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       if (editingPO) {
@@ -58,6 +84,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
             ? (editingPO.supplierId as any)?._id || (editingPO.supplierId as any)?.id
             : editingPO.supplierId;
         setPOSupplierId(supId || "");
+
+        if (typeof editingPO.supplierId === "object" && (editingPO.supplierId as any)?.supplierName) {
+          setSupplierSearchQuery((editingPO.supplierId as any).supplierName);
+        } else if (supId) {
+          const found = allSuppliers.find((s) => String(s.id || s._id) === String(supId));
+          if (found) setSupplierSearchQuery(found.supplierName);
+        }
 
         const mappedItems: PurchaseOrderItem[] = (editingPO.products || []).map((p) => {
           const invId =
@@ -87,8 +120,13 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       } else {
         if (defaultSupplierId) {
           setPOSupplierId(defaultSupplierId);
+          const found = allSuppliers.find((s) => String(s.id || s._id) === String(defaultSupplierId));
+          if (found) {
+            setSupplierSearchQuery(found.supplierName);
+          }
         } else {
           setPOSupplierId("");
+          setSupplierSearchQuery("");
         }
         setPOItems([]);
         setPONote("");
@@ -104,6 +142,18 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
       setPOItemNote("");
     }
   }, [isOpen, editingPO, defaultSupplierId]);
+
+  // Synchronize supplier search query text if supplier list finishes loading after initial open
+  useEffect(() => {
+    if (poSupplierId && allSuppliers.length > 0 && !supplierSearchQuery) {
+      const found = allSuppliers.find(
+        (s) => String(s.id || s._id) === String(poSupplierId)
+      );
+      if (found) {
+        setSupplierSearchQuery(found.supplierName);
+      }
+    }
+  }, [poSupplierId, allSuppliers, supplierSearchQuery]);
 
   const isProductSupplied = (p: Product, supplierId: string) => {
     if (!supplierId) return false;
@@ -138,6 +188,15 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
     return nameMatch || codeMatch;
   });
 
+  // Filtered suppliers by search query (name or contactNumber)
+  const filteredSuppliers = allSuppliers.filter((s) => {
+    const query = supplierSearchQuery.trim().toLowerCase();
+    if (!query) return true;
+    const nameMatch = (s.supplierName || "").toLowerCase().includes(query);
+    const phoneMatch = (s.contactNumber || "").toLowerCase().includes(query);
+    return nameMatch || phoneMatch;
+  });
+
   const handleSupplierChange = (newSupplierId: string) => {
     setPOSupplierId(newSupplierId);
     setPOSelectedProduct("");
@@ -166,6 +225,12 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
         !productDropdownRef.current.contains(event.target as Node)
       ) {
         setShowProductDropdown(false);
+      }
+      if (
+        supplierDropdownRef.current &&
+        !supplierDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowSupplierDropdown(false);
       }
     };
 
@@ -373,30 +438,119 @@ export const CreatePOModal: React.FC<CreatePOModalProps> = ({
                 <span>
                   Supplier Name <span className="text-red-500">*</span>
                 </span>
-                {!poSupplierId && (
+                {!poSupplierId ? (
                   <span className="text-[10px] text-amber-600 font-semibold">
                     (ရွေးချယ်ရန် လိုအပ်သည်)
                   </span>
+                ) : (
+                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <Check className="w-3 h-3" /> ရွေးချယ်ပြီးပါပြီ
+                  </span>
                 )}
               </label>
-              <select
-                className={`w-full border rounded-xl p-2.5 text-sm font-medium transition-all ${!poSupplierId
-                    ? "border-amber-400 bg-amber-50/20 text-slate-600 focus:border-amber-500"
-                    : "border-slate-200 bg-white text-slate-800 focus:border-[#2216a8]"
-                  }`}
-                value={poSupplierId}
-                onChange={(e) => handleSupplierChange(e.target.value)}
-              >
-                <option value="">-- Select Supplier --</option>
-                {suppliers.map((supplier) => (
-                  <option
-                    key={supplier.id || supplier._id}
-                    value={supplier.id || supplier._id}
-                  >
-                    {supplier.supplierName}
-                  </option>
-                ))}
-              </select>
+
+              <div className="relative" ref={supplierDropdownRef}>
+                <div className="relative flex items-center">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+                  <input
+                    type="text"
+                    className={`w-full border rounded-xl py-2.5 pl-9 pr-16 text-sm font-medium transition-all ${
+                      !poSupplierId
+                        ? "border-amber-400 bg-amber-50/20 text-slate-800 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10"
+                        : "border-slate-200 bg-white text-slate-800 focus:border-[#2216a8] focus:ring-2 focus:ring-[#2216a8]/10"
+                    }`}
+                    placeholder={isMy ? "Supplier အမည် သို့မဟုတ် ဖုန်းနံပါတ်ဖြင့် ရှာပါ..." : "Search supplier by name or phone..."}
+                    value={supplierSearchQuery}
+                    onChange={(e) => {
+                      setSupplierSearchQuery(e.target.value);
+                      setShowSupplierDropdown(true);
+                      if (!e.target.value && poSupplierId) {
+                        handleSupplierChange("");
+                      }
+                    }}
+                    onFocus={() => setShowSupplierDropdown(true)}
+                  />
+                  <div className="absolute right-2.5 flex items-center gap-1">
+                    {(supplierSearchQuery || poSupplierId) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSupplierSearchQuery("");
+                          handleSupplierChange("");
+                          setShowSupplierDropdown(false);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all cursor-pointer"
+                        title="Clear selection"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowSupplierDropdown((prev) => !prev)}
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all cursor-pointer"
+                    >
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          showSupplierDropdown ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dropdown Menu */}
+                {showSupplierDropdown && (
+                  <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-xl mt-1 max-h-60 overflow-y-auto shadow-xl">
+                    <div className="p-2 border-b border-gray-100 bg-slate-50/70 text-[11px] font-semibold text-slate-500 flex justify-between items-center">
+                      <span>{isMy ? "Supplier အားလုံး" : "All Suppliers"}</span>
+                      <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        {filteredSuppliers.length}
+                      </span>
+                    </div>
+
+                    {filteredSuppliers.length > 0 ? (
+                      filteredSuppliers.map((supplier) => {
+                        const sId = supplier.id || supplier._id || "";
+                        const isSelected = String(poSupplierId) === String(sId);
+                        return (
+                          <div
+                            key={sId}
+                            onClick={() => {
+                              handleSupplierChange(sId);
+                              setSupplierSearchQuery(supplier.supplierName);
+                              setShowSupplierDropdown(false);
+                            }}
+                            className={`px-3.5 py-2.5 hover:bg-indigo-50/80 cursor-pointer text-sm flex items-center justify-between transition-colors border-b border-gray-50 last:border-0 ${
+                              isSelected ? "bg-indigo-50/50 text-[#2216a8] font-bold" : "text-slate-700"
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-800">
+                                {supplier.supplierName}
+                              </span>
+                              {supplier.contactNumber && (
+                                <span className="text-xs text-slate-400">
+                                  📞 {supplier.contactNumber}
+                                </span>
+                              )}
+                            </div>
+                            {isSelected && (
+                              <span className="text-[#2216a8] text-xs font-bold flex items-center gap-1">
+                                <Check className="w-4 h-4" /> Selected
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-4 text-center text-xs text-slate-400">
+                        {isMy ? "ရှာဖွေမှုနှင့် ကိုက်ညီသော Supplier မရှိပါ" : "No suppliers match your search"}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="border-t pt-4 mt-4">

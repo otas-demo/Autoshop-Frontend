@@ -201,6 +201,7 @@ export const AccountManagement: React.FC = () => {
       case "warehouse":
         return "border border-amber-500 bg-amber-50/50 text-amber-700 font-semibold px-3.5 py-0.5 rounded-full text-xs";
       case "manager":
+      case "admin":
         return "border border-green-500 bg-green-50/50 text-green-700 font-semibold px-3.5 py-0.5 rounded-full text-xs";
       default:
         return "border border-gray-300 bg-gray-50 text-gray-600 font-semibold px-3.5 py-0.5 rounded-full text-xs";
@@ -258,7 +259,7 @@ export const AccountManagement: React.FC = () => {
   );
 
   // Available roles for selection
-  const availableRoles = ["owner", "cashier", "warehouse"];
+  const availableRoles = ["owner", "admin", "cashier", "warehouse"];
 
   const handleOpenEditModal = (account: AdminAccount) => {
     setSelectedAccount(account);
@@ -276,6 +277,39 @@ export const AccountManagement: React.FC = () => {
       name: "",
       role: "",
     });
+  };
+
+  const formatErrorMessage = (message: string) => {
+    if (!message) {
+      return language === "my"
+        ? "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်"
+        : "An error occurred";
+    }
+
+    // Handle MongoDB duplicate key error (E11000) or duplicate name message
+    if (
+      message.includes("E11000") ||
+      message.includes("duplicate key") ||
+      message.includes("already in use") ||
+      message.includes("already taken")
+    ) {
+      const match =
+        message.match(/dup key:\s*\{\s*[^:]+:\s*"([^"]+)"\s*\}/) ||
+        message.match(/["']([^"']+)["']\s+is already/i) ||
+        message.match(/name\s+"([^"]+)"/i);
+      const dupName = match ? match[1] : "";
+
+      if (language === "my") {
+        return dupName
+          ? `"${dupName}" အမည်ဖြင့် အကောင့်ရှိပြီးသား ဖြစ်ပါသည်။ အခြားအမည်တစ်ခု ရွေးချယ်ပေးပါ။`
+          : "ဤအမည်ဖြင့် အကောင့်ရှိပြီးသား ဖြစ်ပါသည်။ အခြားအမည်တစ်ခု ရွေးချယ်ပေးပါ။";
+      }
+      return dupName
+        ? `The account name "${dupName}" is already in use. Please choose another name.`
+        : "This account name is already in use. Please choose another name.";
+    }
+
+    return message;
   };
 
   const handleUpdateAccount = async (e: React.FormEvent) => {
@@ -301,15 +335,19 @@ export const AccountManagement: React.FC = () => {
       });
 
       if (response.success) {
-        toast.success("Account updated successfully!");
+        toast.success(
+          language === "my"
+            ? "အကောင့် အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ!"
+            : "Account updated successfully!"
+        );
         handleCloseEditModal();
         loadAccounts(); // Refresh the list
       } else {
-        toast.error(response.message || "Failed to update account");
+        toast.error(formatErrorMessage(response.message || "Failed to update account"));
       }
     } catch (error: any) {
       console.error("Error updating account:", error);
-      toast.error(error.message || "Failed to update account");
+      toast.error(formatErrorMessage(error.message || "Failed to update account"));
     } finally {
       setIsSubmitting(false);
     }
@@ -445,7 +483,11 @@ export const AccountManagement: React.FC = () => {
       const response = await createAdminAccount(payload);
 
       if (response.success) {
-        toast.success("Account created successfully!");
+        toast.success(
+          language === "my"
+            ? "အကောင့် အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ!"
+            : "Account created successfully!"
+        );
         setIsCreateModalOpen(false);
         setCreateFormData({
           name: "",
@@ -456,11 +498,11 @@ export const AccountManagement: React.FC = () => {
         });
         loadAccounts(); // Refresh the list
       } else {
-        toast.error(response.message || "Failed to create account");
+        toast.error(formatErrorMessage(response.message || "Failed to create account"));
       }
     } catch (error: any) {
       console.error("Error creating account:", error);
-      toast.error(error.message || "Failed to create account");
+      toast.error(formatErrorMessage(error.message || "Failed to create account"));
     } finally {
       setIsCreating(false);
     }
@@ -1143,6 +1185,7 @@ export const AccountManagement: React.FC = () => {
                     >
                       <option value="cashier">Cashier</option>
                       <option value="warehouse">Warehouse</option>
+                      <option value="admin">Admin</option>
                       <option value="owner">Owner</option>
                     </select>
                     <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

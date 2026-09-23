@@ -33,6 +33,13 @@ interface SidebarProps {
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
+const checkIsActive = (pathname: string, itemPath: string) => {
+  if (itemPath === "/") {
+    return pathname === "/";
+  }
+  return pathname === itemPath || pathname.startsWith(itemPath + "/");
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, setIsCollapsed }) => {
   const { currentUser } = useApp();
   const navigate = useNavigate();
@@ -141,7 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
   // Auto-expand group containing the active item on path change or mount
   useEffect(() => {
     visibleGroups.forEach((group) => {
-      const containsActive = group.items.some((item) => item.path === location.pathname);
+      const containsActive = group.items.some((item) => checkIsActive(location.pathname, item.path));
       if (containsActive) {
         setExpandedGroups((prev) => ({ ...prev, [group.id]: true }));
       }
@@ -206,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
               {visibleGroups.map((group) => {
                 const GroupIcon = group.icon;
                 const isExpanded = !!expandedGroups[group.id];
-                const hasActiveItem = group.items.some((item) => location.pathname === item.path);
+                const hasActiveItem = group.items.some((item) => checkIsActive(location.pathname, item.path));
 
                 if (isCollapsed) {
                   return (
@@ -244,7 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                           <div className="flex flex-col gap-1">
                             {group.items.map((item) => {
                               const ItemIcon = item.icon;
-                              const isActive = location.pathname === item.path;
+                              const isActive = checkIsActive(location.pathname, item.path);
                               return (
                                 <NavLink
                                   key={item.path}
@@ -297,7 +304,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, 
                       <div className="pl-4 space-y-1 border-l border-gray-100 ml-5">
                         {group.items.map((item) => {
                           const ItemIcon = item.icon;
-                          const isActive = location.pathname === item.path;
+                          const isActive = checkIsActive(location.pathname, item.path);
 
                           return (
                             <NavLink

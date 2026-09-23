@@ -67,6 +67,7 @@ interface CartItem {
   unit: string;
   factor: number;
   price: number;
+  uomConversions: DisplayUnit[];
 }
 
 export const POS: React.FC = () => {
@@ -75,7 +76,9 @@ export const POS: React.FC = () => {
 
   // Data State
   const [storefronts, setStorefronts] = useState<StorefrontProfile[]>([]);
-  const [selectedStorefrontId, setSelectedStorefrontId] = useState<string>("");
+  const [selectedStorefrontId, setSelectedStorefrontId] = useState<string>(
+    localStorage.getItem("pos_selected_store") || ""
+  );
   const [allStockItems, setAllStockItems] = useState<StorefrontStockItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +93,7 @@ export const POS: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [stockFilter, setStockFilter] = useState("all");
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [paymentType, setPaymentType] = useState<"paid" | "credit">("paid");
   const [creditPersonas, setCreditPersonas] = useState<CreditPersona[]>([]);
@@ -128,6 +132,13 @@ export const POS: React.FC = () => {
 
   const isInitialMount = useRef(true);
 
+  // Save selected storefront to localStorage
+  useEffect(() => {
+    if (selectedStorefrontId) {
+      localStorage.setItem("pos_selected_store", selectedStorefrontId);
+    }
+  }, [selectedStorefrontId]);
+
   // Load storefronts and stock on mount
   useEffect(() => {
     loadInitialData();
@@ -137,7 +148,7 @@ export const POS: React.FC = () => {
     setLoading(true);
     try {
       // Load storefronts
-      let initialStorefrontId = "";
+      let initialStorefrontId = localStorage.getItem("pos_selected_store") || "";
       const sfResponse = await fetchStorefrontProfiles();
       if (sfResponse.success && sfResponse.data) {
         const activeStorefronts = sfResponse.data.filter(
@@ -145,9 +156,15 @@ export const POS: React.FC = () => {
         );
         setStorefronts(activeStorefronts);
 
-        // Auto-select first storefront
-        if (activeStorefronts.length > 0) {
+        // Check if saved storefront is valid, else fallback to first available
+        const isSavedValid = activeStorefronts.some(
+          (sf) => sf._id === initialStorefrontId
+        );
+        
+        if (!isSavedValid && activeStorefronts.length > 0) {
           initialStorefrontId = activeStorefronts[0]._id;
+          setSelectedStorefrontId(initialStorefrontId);
+        } else if (isSavedValid) {
           setSelectedStorefrontId(initialStorefrontId);
         }
       }
@@ -272,7 +289,15 @@ export const POS: React.FC = () => {
   // Filter products by selected storefront (search and category handled by API)
   const filteredProducts = allStockItems.filter((item) => {
     const hideProduct = item.inventoryId?._id === "69a15d55218ec5ff9a3fe4a3";
-    return !hideProduct;
+    if (hideProduct) return false;
+
+    if (stockFilter !== "all") {
+      const availableQty = Number(item.availableQuantity ?? item.quantity ?? 0);
+      if (stockFilter === "in-stock" && availableQty <= 0) return false;
+      if (stockFilter === "out-of-stock" && availableQty > 0) return false;
+    }
+
+    return true;
   });
 
   const getEffectiveFactor = (
@@ -344,13 +369,15 @@ export const POS: React.FC = () => {
     return units;
   };
 
-  const explodedProducts = filteredProducts.flatMap(getDisplayUnits);
+  // Product grid now renders one card per product (no UOM explosion)
 
   // Get unique categories from current storefront products
   // (Categories are now fetched from API and stored in categories state)
 
   const addToCart = (displayUnit: DisplayUnit) => {
-    if (displayUnit.availableInThisUnit <= 0) {
+    // Strict zero-stock guard
+    const totalAvailable = Number(displayUnit.stockItem.availableQuantity ?? displayUnit.stockItem.quantity ?? 0);
+    if (totalAvailable <= 0 || displayUnit.availableInThisUnit <= 0) {
       toast.error(t("pos.outOfStock"));
       return;
     }
@@ -363,7 +390,7 @@ export const POS: React.FC = () => {
       
       const newTotalBaseQty = currentBaseQtyInCart + displayUnit.factor;
       
-      if (newTotalBaseQty > Number(displayUnit.stockItem.availableQuantity ?? displayUnit.stockItem.quantity ?? 0)) {
+      if (newTotalBaseQty > totalAvailable) {
         toast.error(t("pos.cannotExceedStock"));
         return prev;
       }
@@ -384,7 +411,8 @@ export const POS: React.FC = () => {
         qty: 1,
         unit: displayUnit.unit,
         factor: displayUnit.factor,
-        price: displayUnit.pricePerUnit
+        price: displayUnit.pricePerUnit,
+        uomConversions: getDisplayUnits(displayUnit.stockItem),
       }];
     });
   };
@@ -441,6 +469,34 @@ export const POS: React.FC = () => {
 
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleUomChange = (cartItemId: string, newUnit: string) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.id !== cartItemId) return item;
+        const newConv = item.uomConversions.find((c) => c.unit === newUnit);
+        if (!newConv) return item;
+
+        // Strict stock guard: block switching to a unit with 0 available stock
+        if (newConv.availableInThisUnit < 1) {
+          toast.error(t("pos.insufficientStockForUnit") || "Insufficient stock for this unit");
+          return item;
+        }
+
+        // Recalculate qty to respect stock limits
+        const newQty = Math.min(item.qty, newConv.availableInThisUnit);
+
+        return {
+          ...item,
+          id: newConv.id,
+          unit: newConv.unit,
+          factor: newConv.factor,
+          price: newConv.pricePerUnit,
+          qty: newQty,
+        };
+      })
+    );
   };
 
   // Handle barcode scanning from search input
@@ -567,15 +623,29 @@ export const POS: React.FC = () => {
         ? 0
         : Math.round(subtotal - totalAfterDiscount);
 
+      const extractGlobalId = (stockItem: any) => {
+        if (!stockItem) return null;
+        
+        const globalId = stockItem.inventoryId?._id ||
+          (typeof stockItem.inventoryId === "string" ? stockItem.inventoryId : null) ||
+          stockItem.productId ||
+          stockItem.product?._id ||
+          (typeof stockItem.product === "string" ? stockItem.product : null);
+          
+        return globalId || null;
+      };
+
       const orderPayload = {
         storefrontId: selectedStorefrontId,
         ordersProducts: cart.map((item) => ({
-          inventoryId: item.stockItem.inventoryId._id,
+          inventoryId: extractGlobalId(item.stockItem),
+          storefrontInventoryId: item.stockItem._id,
+          productId: extractGlobalId(item.stockItem),
           quantity: item.qty * item.factor,
-          unitPrice: item.price / item.qty,
+          unitPrice: item.price,
           saleUnit: item.unit,
           saleQuantity: item.qty,
-          salePrice: item.price / item.qty,
+          salePrice: item.price,
         })),
         subTotal: subtotal,
         discount: discountAmount,
@@ -778,6 +848,20 @@ export const POS: React.FC = () => {
               ))}
             </select>
 
+            {/* Stock Filter Selector */}
+            <select
+              className="w-full font-bold sm:w-auto border border-dark-200 rounded-3xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none shadow-sm"
+              value={stockFilter}
+              onChange={(e) => {
+                setStockFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="all">All Stock</option>
+              <option value="in-stock">In Stock</option>
+              <option value="out-of-stock">Out of Stock</option>
+            </select>
+
             {/* Storefront Settings Button */}
             <div className="relative">
               <button
@@ -958,41 +1042,46 @@ export const POS: React.FC = () => {
                 : t("pos.pleaseSelectStorefront")}
             </div>
           ) : (
-            explodedProducts.map((displayUnit) => (
-              <div
-                key={displayUnit.id}
-                onClick={() => addToCart(displayUnit)}
-                className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 cursor-pointer transition-all hover:shadow-lg hover:border-primary hover:scale-[1.02] flex flex-col relative ${displayUnit.availableInThisUnit === 0
-                  ? "opacity-50 grayscale pointer-events-none"
-                  : ""
-                  }`}
-              >
-                <div className="">
-                  <h3 className="font-bold text-gray-800 text-xs sm:text-[16px] line-clamp-2">
-                    <span>{displayUnit.stockItem.inventoryId.productName}</span>{" "}
-                    <span className="text-blue-700 font-normal text-sm">
-                      ({displayUnit.unit})
+            filteredProducts.map((stockItem) => {
+              const displayUnits = getDisplayUnits(stockItem);
+              const baseUnit = displayUnits[0];
+              const availableQty = Number(stockItem.availableQuantity ?? stockItem.quantity ?? 0);
+              return (
+                <div
+                  key={stockItem._id}
+                  onClick={() => {
+                    if (availableQty <= 0) return;
+                    addToCart(baseUnit);
+                  }}
+                  className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 transition-all flex flex-col relative ${availableQty <= 0
+                    ? "opacity-50 grayscale cursor-not-allowed"
+                    : "cursor-pointer hover:shadow-lg hover:border-primary hover:scale-[1.02]"
+                    }`}
+                >
+                  <div className="">
+                    <h3 className="font-bold text-gray-800 text-xs sm:text-[16px] line-clamp-2">
+                      {stockItem.inventoryId.productName}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs mt-1 font-mono">
+                      {stockItem.inventoryId.productCode}
+                    </p>
+                    <p className="text-[10px] sm:text-xs mt-1">
+                      {stockItem.inventoryId.category}
+                    </p>
+                  </div>
+                  <div className="mt-2 sm:mt-4 flex justify-between items-end">
+                    <span className="font-bold text-primary-600 text-xs sm:text-sm">
+                      {baseUnit.pricePerUnit.toLocaleString()} MMK
                     </span>
-                  </h3>
-                  <p className="text-[10px] sm:text-xs mt-1 font-mono">
-                    {displayUnit.stockItem.inventoryId.productCode}
-                  </p>
-                  <p className="text-[10px] sm:text-xs mt-1">
-                    {displayUnit.stockItem.inventoryId.category}
-                  </p>
+                  </div>
+                  <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4">
+                    <span className={`text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full ${availableQty > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      In stock: {availableQty}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-2 sm:mt-4 flex justify-between items-end">
-                  <span className="font-bold text-primary-600 text-xs sm:text-sm">
-                    {displayUnit.pricePerUnit.toLocaleString()} MMK
-                  </span>
-                </div>
-                <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4">
-                  <span className={`text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full ${displayUnit.availableInThisUnit > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    In stock: {displayUnit.availableInThisUnit}
-                  </span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -1027,12 +1116,30 @@ export const POS: React.FC = () => {
               >
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-800">
-                    <span>{item.stockItem.inventoryId.productName}</span>{" "}
-                    <span className="text-blue-700 font-normal text-sm">
-                      ({item.unit})
-                    </span>
+                    {item.stockItem.inventoryId.productName}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  {item.uomConversions.length > 1 ? (
+                    <select
+                      value={item.unit}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleUomChange(item.id, e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs border border-blue-200 rounded-lg px-1.5 py-0.5 bg-blue-50 text-blue-700 font-semibold outline-none focus:ring-1 focus:ring-blue-400 mt-1"
+                    >
+                      {item.uomConversions.map((conv) => (
+                        <option key={conv.unit} value={conv.unit}>
+                          {conv.unit} — {conv.pricePerUnit.toLocaleString()} MMK
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-xs text-blue-700 font-semibold">
+                      {item.unit}
+                    </span>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
                     {item.price.toLocaleString()}{" "}
                     MMK x {getSafeQty(item.qty)} ={" "}
                     {(item.price * getSafeQty(item.qty)).toLocaleString()}{" "}
@@ -1167,12 +1274,30 @@ export const POS: React.FC = () => {
                   >
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-800">
-                        <span>{item.stockItem.inventoryId.productName}</span>{" "}
-                        <span className="text-blue-700 font-normal text-sm">
-                          ({item.unit})
-                        </span>
+                        {item.stockItem.inventoryId.productName}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      {item.uomConversions.length > 1 ? (
+                        <select
+                          value={item.unit}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleUomChange(item.id, e.target.value);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs border border-blue-200 rounded-lg px-1.5 py-0.5 bg-blue-50 text-blue-700 font-semibold outline-none focus:ring-1 focus:ring-blue-400 mt-1"
+                        >
+                          {item.uomConversions.map((conv) => (
+                            <option key={conv.unit} value={conv.unit}>
+                              {conv.unit} — {conv.pricePerUnit.toLocaleString()} MMK
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-xs text-blue-700 font-semibold">
+                          {item.unit}
+                        </span>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
                         {item.price.toLocaleString()}{" "}
                         MMK x {getSafeQty(item.qty)} ={" "}
                         {(item.price * getSafeQty(item.qty)).toLocaleString()}{" "}

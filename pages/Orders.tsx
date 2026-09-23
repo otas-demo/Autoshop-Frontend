@@ -42,7 +42,7 @@ export const Orders: React.FC = () => {
   const [selectedOrderForCredit, setSelectedOrderForCredit] =
     useState<Order | null>(null);
   const [assigningCreditPerson, setAssigningCreditPerson] = useState(false);
-  const [dateRange, setDateRange] = useState(
+  const [dateRange, setDateRange] = useState<{ startDate: Date | null; endDate: Date | null }>(
     createDateRangeInitializer(DATE_RANGE_STORAGE_KEYS.orders),
   );
   const { startDate, endDate } = dateRange;
@@ -260,16 +260,19 @@ export const Orders: React.FC = () => {
               startDate={startDate}
               endDate={endDate}
               onChange={(newStartDate, newEndDate) => {
-                if (!newStartDate || !newEndDate) return;
                 setDateRange({
                   startDate: newStartDate,
                   endDate: newEndDate,
                 });
-                saveStoredDateRange(
-                  DATE_RANGE_STORAGE_KEYS.orders,
-                  newStartDate,
-                  newEndDate,
-                );
+                if (newStartDate && newEndDate) {
+                  saveStoredDateRange(
+                    DATE_RANGE_STORAGE_KEYS.orders,
+                    newStartDate,
+                    newEndDate,
+                  );
+                } else {
+                  sessionStorage.removeItem(DATE_RANGE_STORAGE_KEYS.orders);
+                }
               }}
               className="px-5 py-2 text-sm font-semibold rounded-full bg-[#2216a8] text-white hover:bg-[#2216a8]/90 transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2 cursor-pointer"
             />

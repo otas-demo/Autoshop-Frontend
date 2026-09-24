@@ -7,6 +7,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { Sidebar } from "./components/Sidebar";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { POS } from "./pages/POS";
+import { OrderEditPOS } from "./pages/OrderEditPOS";
 import { Warehouse } from "./pages/Warehouse";
 import { WarehouseDetail } from "./pages/WarehouseDetail";
 import { Storefront } from "./pages/Storefront";
@@ -117,6 +118,14 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PosRoute />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/edit/:id"
+            element={
+              <ProtectedRoute>
+                <OrderEditPOS />
               </ProtectedRoute>
             }
           />

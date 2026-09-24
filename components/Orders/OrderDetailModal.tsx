@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   X,
   RefreshCw,
@@ -9,9 +9,8 @@ import {
   Package,
   UserCircle,
   User,
-  Plus,
-  Minus,
   Printer,
+  Edit,
 } from "lucide-react";
 import { Order } from "../../services/Order/fetchOrders";
 import {
@@ -25,8 +24,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import { getSavedPrintPaperSize } from "../../utils/printPaperSize";
 import { detectDevice } from "../../utils/deviceDetect";
 import { useNavigate } from "react-router-dom";
-import { AddItemsToOrderModal } from "./AddItemsToOrderModal";
-import { RemoveItemsFromOrderModal } from "./RemoveItemsFromOrderModal";
 
 interface OrderDetailModalProps {
   isOpen: boolean;
@@ -48,8 +45,6 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const navigate = useNavigate();
   const adminData = JSON.parse(localStorage.getItem("adminData") || "{}");
   const userRole = adminData.role;
-  const [showAddItemsModal, setShowAddItemsModal] = useState(false);
-  const [showRemoveItemsModal, setShowRemoveItemsModal] = useState(false);
 
   const handlePrintOrder = () => {
     if (!order) return;
@@ -130,26 +125,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             )}
 
             {order && (userRole === "owner" || userRole === "admin" || userRole === "cashier") && (
-              <>
-                <button
-                  onClick={() => setShowRemoveItemsModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                >
-                  <Minus className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {t("orders.removeItems") || "Remove Items"}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setShowAddItemsModal(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {t("orders.addItems") || "Add Items"}
-                  </span>
-                </button>
-              </>
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate(`/orders/edit/${order._id}`);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium shadow-sm cursor-pointer"
+                title={t("orders.editOrder") || "Edit Order"}
+              >
+                <Edit className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {t("common.edit") || "Edit"}
+                </span>
+              </button>
             )}
 
             <button
@@ -399,31 +387,6 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </div>
       </div>
 
-      {/* Add Items Modal */}
-      <AddItemsToOrderModal
-        isOpen={showAddItemsModal}
-        order={order}
-        onClose={() => setShowAddItemsModal(false)}
-        onSuccess={() => {
-          setShowAddItemsModal(false);
-          if (onOrderUpdate) {
-            onOrderUpdate();
-          }
-        }}
-      />
-
-      {/* Remove Items Modal */}
-      <RemoveItemsFromOrderModal
-        isOpen={showRemoveItemsModal}
-        order={order}
-        onClose={() => setShowRemoveItemsModal(false)}
-        onSuccess={() => {
-          setShowRemoveItemsModal(false);
-          if (onOrderUpdate) {
-            onOrderUpdate();
-          }
-        }}
-      />
     </div>
   );
 };

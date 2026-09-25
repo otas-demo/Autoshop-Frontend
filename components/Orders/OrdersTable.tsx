@@ -160,7 +160,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                       onClick={() => onViewOrder(order._id)}
                       className="px-4 py-1.5 text-xs font-semibold rounded-full bg-[#2216a8] hover:bg-[#2216a8]/90 text-white shadow-sm flex items-center justify-center cursor-pointer transition-all whitespace-nowrap"
                     >
-                      {t("common.edit")}
+                      {t("common.view")}
                     </button>
                     {canDeleteOrder && (
                       <button

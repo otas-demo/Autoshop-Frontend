@@ -130,6 +130,14 @@ const AppLayout: React.FC = () => {
             }
           />
           <Route
+            path="/credit-orders/edit/:id"
+            element={
+              <ProtectedRoute>
+                <OrderEditPOS />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/inventory"
             element={
               <ProtectedRoute>

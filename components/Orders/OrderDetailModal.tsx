@@ -23,7 +23,7 @@ import {
 import { useLanguage } from "../../context/LanguageContext";
 import { getSavedPrintPaperSize } from "../../utils/printPaperSize";
 import { detectDevice } from "../../utils/deviceDetect";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface OrderDetailModalProps {
   isOpen: boolean;
@@ -43,6 +43,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const { t, language } = useLanguage();
   const isMy = language === "my";
   const navigate = useNavigate();
+  const location = useLocation();
   const adminData = JSON.parse(localStorage.getItem("adminData") || "{}");
   const userRole = adminData.role;
 
@@ -128,7 +129,14 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <button
                 onClick={() => {
                   onClose();
-                  navigate(`/orders/edit/${order._id}`);
+                  const isCredit =
+                    order.paymentType === "credit" ||
+                    location.pathname.startsWith("/credit");
+                  navigate(
+                    isCredit
+                      ? `/credit-orders/edit/${order._id}`
+                      : `/orders/edit/${order._id}`
+                  );
                 }}
                 className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium shadow-sm cursor-pointer"
                 title={t("orders.editOrder") || "Edit Order"}

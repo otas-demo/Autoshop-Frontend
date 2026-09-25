@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Search,
@@ -56,6 +56,7 @@ export const OrderEditPOS: React.FC = () => {
   const { t, language } = useLanguage();
   const isMy = language === "my";
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Order & Storefront State
   const [order, setOrder] = useState<Order | null>(null);
@@ -133,6 +134,10 @@ export const OrderEditPOS: React.FC = () => {
 
       const ord = orderRes.data;
       setOrder(ord);
+
+      if (ord.paymentType === "credit" && location.pathname.startsWith("/orders/edit")) {
+        navigate(`/credit-orders/edit/${targetOrderId}`, { replace: true });
+      }
 
       const sfId =
         typeof ord.storefrontId === "object" && ord.storefrontId?._id
@@ -308,6 +313,46 @@ export const OrderEditPOS: React.FC = () => {
     }
   };
 
+  // Wholesale Popover outside click and escape
+  useEffect(() => {
+    const handleClickOutsideWholesalePopover = (event: MouseEvent) => {
+      if (!activeWholesalePopoverId) return;
+
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      const container = target.closest(
+        `[data-wholesale-container="${activeWholesalePopoverId}"]`
+      );
+
+      if (!container) {
+        setActiveWholesalePopoverId(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveWholesalePopoverId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutsideWholesalePopover);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutsideWholesalePopover
+      );
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [activeWholesalePopoverId]);
+
+  const filteredProducts = allStockItems.filter((item) => {
+    const hideProduct = item.inventoryId?._id === "69a15d55218ec5ff9a3fe4a3";
+    return !hideProduct;
+  });
+
   // Update shelf stock lookup map
   useEffect(() => {
     if (allStockItems && allStockItems.length > 0) {
@@ -463,7 +508,7 @@ export const OrderEditPOS: React.FC = () => {
   };
 
   // Wholesale Price Tier Helper
-  const getItemPrice = (stockItem: StorefrontStockItem, qty: number): number => {
+  const getItemPrice = (stockItem: StorefrontStockItem, qty: number = 1): number => {
     const wholesalePrices = stockItem.inventoryId?.wholesalePrices;
     if (wholesalePrices && wholesalePrices.length > 0) {
       const sorted = [...wholesalePrices].sort((a, b) => b.quantity - a.quantity);
@@ -471,6 +516,12 @@ export const OrderEditPOS: React.FC = () => {
       if (tier) return tier.price;
     }
     return stockItem.inventoryId?.sellingPrice || 0;
+  };
+
+  const getSortedWholesaleTiers = (stockItem: StorefrontStockItem) => {
+    const wholesalePrices = stockItem.inventoryId?.wholesalePrices;
+    if (!wholesalePrices || wholesalePrices.length === 0) return [];
+    return [...wholesalePrices].sort((a, b) => a.quantity - b.quantity);
   };
 
   const getActiveWholesaleTier = (stockItem: StorefrontStockItem, qty: number) => {
@@ -669,7 +720,11 @@ export const OrderEditPOS: React.FC = () => {
         localStorage.setItem(receiptId, JSON.stringify(receiptData));
 
         setShowCheckoutModal(false);
-        navigate("/orders");
+        const isCreditOrder =
+          location.pathname.startsWith("/credit-orders") ||
+          paymentType === "credit" ||
+          order?.paymentType === "credit";
+        navigate(isCreditOrder ? "/credit-orders" : "/orders");
       } else {
         toast.error(result.message || "Failed to update order");
       }
@@ -695,99 +750,183 @@ export const OrderEditPOS: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#f5f5f3] p-2 sm:p-4 gap-4 overflow-hidden select-none">
-      {/* Left Section: Catalog & Filter */}
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-2rem)] overflow-hidden gap-4 bg-transparent select-none">
+      {/* Product Grid / Catalog (Left Section) */}
       <div className="flex-1 bg-white border border-gray-200/50 rounded-3xl p-4 lg:p-6 shadow-sm flex flex-col overflow-hidden">
-        {/* Top Header: Back button, Order info, Storefront, Date */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-100 pb-4 mb-4">
+        {/* Title and Subtitle */}
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/orders")}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full transition-colors cursor-pointer"
-              title="Back to Orders"
+              onClick={() => {
+                const isCreditOrder =
+                  location.pathname.startsWith("/credit-orders") ||
+                  order?.paymentType === "credit";
+                navigate(isCreditOrder ? "/credit-orders" : "/orders");
+              }}
+              className="p-2 -ml-1 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+              title={
+                location.pathname.startsWith("/credit-orders") || order?.paymentType === "credit"
+                  ? "Back to Credit Orders"
+                  : "Back to Orders"
+              }
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold text-slate-800">
-                  {isMy ? "ဘောင်ချာ ပြင်ဆင်ခြင်း" : "Edit Order"}
+                <h1 className="text-2xl font-bold text-[#1f2937] tracking-tight">
+                  {isMy ? "ဘောင်ချာ ပြင်ဆင်ခြင်း" : "Voucher Edit"}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#2216a8]/10 text-[#2216a8]">
-                  {order?.orderNumber}
-                </span>
+                {order?.orderNumber && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#2216a8]/10 text-[#2216a8]">
+                    {order.orderNumber}
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {isMy ? "ပစ္စည်း အရေအတွက်၊ ဈေးနှုန်းနှင့် အချက်အလက်များ အသစ်ပြန်ပြင်ပါ" : "Modify products, quantities, prices, or payment details"}
+              <p className="text-xs text-gray-400 mt-1">
+                {isMy
+                  ? "ပစ္စည်း အရေအတွက်၊ ဈေးနှုန်းနှင့် အချက်အလက်များ အသစ်ပြန်ပြင်ပါ"
+                  : "Modify products, quantities, and update voucher for the customer"}
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-semibold text-[#2216a8]">
-              <Store className="w-3.5 h-3.5" />
-              <span>{storefrontName}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full text-xs text-slate-600">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+        {/* Search Bar with Category and Storefront */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            {/* Combined Search/Barcode Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-[13px] h-5 w-5 text-gray-400 pointer-events-none" />
+              <Scan className="absolute right-3 top-[13px] h-5 w-5 text-gray-400 pointer-events-none opacity-50" />
               <input
-                type="date"
-                value={createdAt}
-                onChange={(e) => setCreatedAt(e.target.value)}
-                className="bg-transparent outline-none cursor-pointer text-xs"
+                type="text"
+                placeholder={t("pos.searchProducts") || "Search products"}
+                className="search-input w-full pl-10 pr-10 py-2.5 border border-dark-200 rounded-3xl focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white shadow-sm text-sm"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                autoFocus
               />
             </div>
-          </div>
-        </div>
 
-        {/* Search & Category Filter */}
-        <div className="space-y-3 mb-4">
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={t("pos.searchPlaceholder") || "Search products by code or name..."}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            <button
-              onClick={() => setSelectedCategory("All")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
-                selectedCategory === "All"
-                  ? "bg-[#2216a8] text-white shadow-sm"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+            {/* Category Selector */}
+            <select
+              className="w-full font-bold sm:w-auto border border-dark-200 rounded-3xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none shadow-sm text-sm cursor-pointer"
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
             >
-              {t("pos.all") || "All"}
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
-                  selectedCategory === cat
-                    ? "bg-[#2216a8] text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+              <option value="All">{t("pos.allCategories") || "All Categories"}</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            {/* Storefront Display */}
+            <div className="relative">
+              <div className="w-full sm:w-auto flex items-center border border-dark-200 justify-center gap-2 px-3 py-2.5 rounded-3xl transition-all shadow-sm bg-white">
+                <Store className="w-4 h-4 text-slate-700" />
+                <span className="text-sm font-bold max-w-[120px] truncate text-slate-800">
+                  {storefrontName || "Main Store"}
+                </span>
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Product Count */}
+        <div className="mb-2 text-sm text-gray-600">
+          {t("pos.showingProducts")
+            ? t("pos.showingProducts").replace(
+                "{count}",
+                (totalItems || filteredProducts.length).toString()
+              )
+            : `Showing ${totalItems || filteredProducts.length} products`}
+        </div>
+
+        {/* Pagination Controls */}
+        {!stockLoading && totalPages > 1 && (
+          <div className="mt-1 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-2 sm:p-3 rounded-xl border border-gray-200 shadow-sm">
+            <div className="text-xs text-gray-600">
+              {t("pos.showingProducts")
+                ? t("pos.showingProducts").replace(
+                    "{count}",
+                    ((currentPage - 1) * itemsPerPage + 1).toString()
+                  )
+                : `Showing ${(currentPage - 1) * itemsPerPage + 1}`}{" "}
+              to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="p-1.5 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="First Page"
+              >
+                <ChevronDown className="w-3.5 h-3.5 rotate-90" />
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-2.5 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs"
+              >
+                {t("common.previous") || "Prev"}
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) pageNum = i + 1;
+                  else if (currentPage <= 3) pageNum = i + 1;
+                  else if (currentPage >= totalPages - 2)
+                    pageNum = totalPages - 4 + i;
+                  else pageNum = currentPage - 2 + i;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-colors text-xs ${
+                        currentPage === pageNum
+                          ? "bg-[#2216a8] text-white border-[#2216a8]"
+                          : "hover:bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-2.5 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs"
+              >
+                {t("common.next") || "Next"}
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="p-1.5 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Last Page"
+              >
+                <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Product Grid */}
         <div className="flex-1 overflow-y-auto pr-1">
@@ -796,102 +935,122 @@ export const OrderEditPOS: React.FC = () => {
               <RefreshCw className="w-8 h-8 animate-spin text-[#2216a8] mb-2" />
               <p className="text-xs text-slate-400 font-medium">Loading products...</p>
             </div>
-          ) : allStockItems.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-sm text-slate-400 font-medium">No products found</p>
+              <p className="text-sm text-slate-400 font-medium">
+                {t("pos.noProductsInStorefront") || "No products found"}
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-              {allStockItems.map((item) => {
-                const shelfStock = getShelfStock(item);
-                const maxAllowed = getMaxAllowedQty(item);
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 pb-20">
+              {filteredProducts.map((stockItem) => {
+                const shelfStock = getShelfStock(stockItem);
+                const maxAllowed = getMaxAllowedQty(stockItem);
                 const isOutOfStock = maxAllowed <= 0;
-                const wholesaleTiers = item.inventoryId?.wholesalePrices || [];
 
                 return (
                   <div
-                    key={item._id}
-                    onClick={() => !isOutOfStock && addToCart(item)}
-                    className={`bg-white border rounded-2xl p-3 flex flex-col justify-between transition-all cursor-pointer relative group ${
+                    key={stockItem._id}
+                    onClick={() => !isOutOfStock && addToCart(stockItem)}
+                    className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 cursor-pointer transition-all hover:shadow-lg hover:border-primary hover:scale-[1.02] flex flex-col justify-between ${
                       isOutOfStock
-                        ? "opacity-60 border-slate-200 bg-slate-50/50 cursor-not-allowed"
-                        : "border-slate-200/80 hover:border-[#2216a8] hover:shadow-md hover:-translate-y-0.5"
+                        ? "opacity-50 grayscale pointer-events-none"
+                        : ""
                     }`}
                   >
                     <div>
-                      <div className="flex items-start justify-between gap-1 mb-1">
-                        <span className="text-[11px] font-bold text-[#2216a8] truncate">
-                          {item.inventoryId?.productCode}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            shelfStock > 0
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-rose-50 text-rose-700"
-                          }`}
-                        >
-                          {shelfStock > 0 ? `Stock: ${shelfStock}` : "Out"}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-semibold text-slate-800 line-clamp-2 mb-2">
-                        {item.inventoryId?.productName}
-                      </h4>
+                      <h3 className="font-bold text-gray-800 text-xs sm:text-[16px] line-clamp-2">
+                        {stockItem.inventoryId?.productName}
+                      </h3>
+                      <p className="text-[10px] sm:text-xs mt-1 font-mono text-gray-500">
+                        {stockItem.inventoryId?.productCode}
+                      </p>
+                      <p className="text-[10px] sm:text-xs mt-1 text-gray-500">
+                        {stockItem.inventoryId?.category}
+                      </p>
+                      <span
+                        className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          shelfStock <= 0
+                            ? "bg-red-100 text-red-600"
+                            : shelfStock <= 5
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {shelfStock <= 0
+                          ? "Out of stock"
+                          : `Qty: ${shelfStock}`}
+                      </span>
                     </div>
 
-                    <div>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                        <span className="text-xs font-bold text-slate-900">
-                          {item.inventoryId?.sellingPrice?.toLocaleString()} MMK
-                        </span>
-                        {wholesaleTiers.length > 0 && (
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveWholesalePopoverId(
-                                activeWholesalePopoverId === item._id ? null : item._id
-                              );
-                            }}
-                            className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-amber-100"
+                    <div className="mt-2 sm:mt-4 flex justify-between items-end">
+                      <span className="font-bold text-primary-600 text-xs sm:text-sm">
+                        {getItemPrice(stockItem, 1).toLocaleString()} MMK
+                      </span>
+                      {stockItem.inventoryId?.wholesalePrices &&
+                        stockItem.inventoryId.wholesalePrices.length > 0 && (
+                          <div
+                            className="relative"
+                            data-wholesale-container={stockItem._id}
                           >
-                            Wholesale
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Wholesale Popover */}
-                      {activeWholesalePopoverId === item._id && (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          className="absolute bottom-full left-0 mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-30 animate-in fade-in"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-slate-800">Wholesale Tiers</span>
                             <button
-                              onClick={() => setActiveWholesalePopoverId(null)}
-                              className="text-slate-400 hover:text-slate-600"
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveWholesalePopoverId((prev) =>
+                                  prev === stockItem._id ? null : stockItem._id
+                                );
+                              }}
+                              className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 hover:bg-amber-100 transition-colors"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              Wholesale
                             </button>
-                          </div>
-                          <div className="space-y-1.5">
-                            {wholesaleTiers.map((tier, idx) => (
+
+                            {activeWholesalePopoverId === stockItem._id && (
                               <div
-                                key={idx}
-                                onClick={() => {
-                                  applyWholesaleTierQuantity(item, tier.quantity);
-                                  setActiveWholesalePopoverId(null);
-                                }}
-                                className="flex items-center justify-between p-1.5 text-xs rounded hover:bg-slate-50 cursor-pointer font-medium"
+                                className="absolute right-0 top-7 z-20 w-52 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                <span className="text-slate-600">≥ {tier.quantity} pcs</span>
-                                <span className="text-[#2216a8] font-bold">
-                                  {tier.price.toLocaleString()} MMK
-                                </span>
+                                <div className="text-[11px] font-semibold text-slate-600 mb-2">
+                                  Wholesale prices
+                                </div>
+                                <div className="grid grid-cols-2 text-[11px] font-semibold text-slate-500 pb-1">
+                                  <span>Quantity</span>
+                                  <span className="text-right">Price</span>
+                                </div>
+                                <div className="border-t border-slate-200">
+                                  {getSortedWholesaleTiers(stockItem).map(
+                                    (tier) => (
+                                      <button
+                                        type="button"
+                                        key={
+                                          tier._id ||
+                                          `${tier.quantity}-${tier.price}`
+                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          applyWholesaleTierQuantity(
+                                            stockItem,
+                                            Number(tier.quantity)
+                                          );
+                                          setActiveWholesalePopoverId(null);
+                                        }}
+                                        className="w-full grid grid-cols-2 py-1.5 px-1 border-b border-slate-100 last:border-b-0 text-[11px] rounded hover:bg-amber-50 hover:text-amber-900 transition-colors cursor-pointer"
+                                      >
+                                        <span className="text-slate-700">
+                                          {tier.quantity}+
+                                        </span>
+                                        <span className="text-right text-slate-800 font-medium">
+                                          {tier.price.toLocaleString()}
+                                        </span>
+                                      </button>
+                                    )
+                                  )}
+                                </div>
                               </div>
-                            ))}
+                            )}
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
                   </div>
                 );
@@ -899,119 +1058,85 @@ export const OrderEditPOS: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Catalog Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
-            <span>
-              Showing Page {currentPage} of {totalPages} ({totalItems} items)
-            </span>
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-2.5 py-1 rounded border hover:bg-slate-50 disabled:opacity-40"
-              >
-                Prev
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-2.5 py-1 rounded border hover:bg-slate-50 disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Right Section: Order Cart (Desktop) */}
-      <div className="hidden lg:flex w-[420px] bg-white border border-gray-200/50 rounded-3xl p-5 shadow-sm flex-col justify-between overflow-hidden">
-        {/* Cart Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-[#2216a8]" />
-            <h3 className="font-bold text-slate-800 text-base">
-              {isMy ? "အော်ဒါ ပစ္စည်းများ" : "Order Cart"}
-            </h3>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#2216a8]/10 text-[#2216a8]">
-              {cart.reduce((s, i) => s + i.qty, 0)} pcs
+      {/* Right Section: Current Sale Cart (Desktop) */}
+      <div className="hidden lg:flex lg:w-96 bg-white flex-col border border-gray-200/50 rounded-3xl shadow-sm h-full overflow-hidden p-6 justify-between">
+        <div className="mb-4">
+          <h2 className="font-bold text-xl text-gray-800 tracking-tight">
+            {t("pos.currentSale") || "Current Sale"}
+          </h2>
+          {storefrontName && (
+            <span className="inline-block mt-2 bg-[#fdf2e9] text-[#b06f2e] border border-[#f5d7bc] px-2.5 py-0.5 rounded-full text-xs font-semibold">
+              {storefrontName}
             </span>
-          </div>
-          {cart.length > 0 && (
-            <button
-              onClick={() => setCart([])}
-              className="text-xs font-semibold text-rose-600 hover:text-rose-700 cursor-pointer"
-            >
-              {isMy ? "အားလုံး ဖျက်မည်" : "Clear All"}
-            </button>
           )}
         </div>
 
-        {/* Cart Items List */}
-        <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
+        <div
+          className={`flex-1 overflow-y-auto p-0 space-y-4 ${
+            cart.length === 0 ? "flex flex-col justify-center" : ""
+          }`}
+        >
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs font-medium">
-              <ShoppingCart className="w-10 h-10 text-slate-200 mb-2" />
-              <span>{isMy ? "Cart ထဲတွင် ပစ္စည်းမရှိသေးပါ" : "No items in cart"}</span>
+            <div className="flex flex-col items-center justify-center bg-indigo-50/60 border border-indigo-100/40 rounded-3xl p-8 my-auto text-center shadow-sm">
+              <ShoppingCart className="w-10 h-10 text-[#2216a8] mb-4 flex-shrink-0" />
+              <p className="text-sm font-semibold text-[#2216a8] whitespace-pre-line leading-relaxed">
+                {t("pos.emptyCart") || "Cart is empty"}
+              </p>
             </div>
           ) : (
             cart.map((item) => {
               const itemPrice = getItemPrice(item.stockItem, item.qty);
-              const wholesaleTier = getActiveWholesaleTier(item.stockItem, item.qty);
               const maxAvail = getMaxAllowedQty(item.stockItem);
-
               return (
                 <div
                   key={item.stockItem._id}
-                  className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 flex items-center justify-between gap-2"
+                  className="flex justify-between items-start border-b border-gray-200 pb-4"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold text-[#2216a8]">
-                        {item.stockItem.inventoryId?.productCode}
-                      </span>
-                      {wholesaleTier && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded">
-                          Wholesale
-                        </span>
-                      )}
-                    </div>
-                    <h5 className="text-xs font-semibold text-slate-800 truncate">
+                  <div className="flex-1 pr-2">
+                    <p className="text-sm font-medium text-gray-800 line-clamp-1">
                       {item.stockItem.inventoryId?.productName}
-                    </h5>
-                    <div className="text-[11px] text-slate-500 font-medium">
-                      {itemPrice.toLocaleString()} MMK
-                    </div>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
+                      {(itemPrice * item.qty).toLocaleString()} MMK
+                    </p>
                   </div>
-
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-1">
+                  <div className="cart-item-controls flex items-center gap-2 ml-2 flex-shrink-0">
                     <button
-                      onClick={() => updateQuantity(item.stockItem._id, item.qty - 1)}
-                      className="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                      onClick={() =>
+                        updateQuantity(item.stockItem._id, item.qty - 1)
+                      }
+                      className="p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors cursor-pointer"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
                     <input
                       type="number"
+                      min="1"
+                      max={maxAvail}
                       value={item.qty}
-                      onChange={(e) => updateQuantity(item.stockItem._id, Number(e.target.value))}
-                      className="w-10 text-center font-bold text-xs bg-white border border-slate-200 rounded py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1;
+                        updateQuantity(item.stockItem._id, value);
+                      }}
+                      className="text-sm font-medium w-12 text-center border border-gray-300 rounded px-1 py-1 focus:ring-2 focus:ring-primary focus:border-primary outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
-                      onClick={() => updateQuantity(item.stockItem._id, item.qty + 1)}
+                      onClick={() =>
+                        updateQuantity(item.stockItem._id, item.qty + 1)
+                      }
                       disabled={item.qty >= maxAvail}
-                      className="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer"
+                      className="p-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors disabled:opacity-40 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => removeFromCart(item.stockItem._id)}
-                      className="p-1 text-slate-400 hover:text-rose-600 rounded ml-1 cursor-pointer"
+                      className="p-1 text-red-500 hover:bg-red-50 rounded ml-2 transition-colors cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1024,15 +1149,19 @@ export const OrderEditPOS: React.FC = () => {
         <div className="mt-auto pt-4 border-t border-gray-100 bg-white space-y-4">
           <div className="border border-gray-200/80 rounded-2xl p-4 bg-white space-y-2.5">
             <div className="flex justify-between text-sm text-gray-500 font-medium">
-              <span>{t("pos.items") || (isMy ? "ပစ္စည်း အရေအတွက်" : "Items")}</span>
+              <span>{t("pos.items") || "Items"}</span>
               <span>
                 {cart.reduce((sum, item) => sum + (Number(item.qty) || 0), 0)}{" "}
                 {t("pos.itemsLower") || "items"}
               </span>
             </div>
             <div className="flex justify-between items-baseline">
-              <span className="text-base font-bold text-gray-700">{t("common.total") || (isMy ? "စုစုပေါင်း" : "Total")}</span>
-              <span className="text-lg font-black text-[#2216a8]">{subtotal.toLocaleString()} MMK</span>
+              <span className="text-base font-bold text-gray-700">
+                {t("common.total") || "Total"}
+              </span>
+              <span className="text-lg font-black text-[#2216a8]">
+                {subtotal.toLocaleString()} MMK
+              </span>
             </div>
             {selectedCreditPersonId && (
               <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
@@ -1041,8 +1170,12 @@ export const OrderEditPOS: React.FC = () => {
                   {isMy ? "ဝယ်သူ" : "Customer"}:
                 </span>
                 <span className="font-bold text-slate-800 truncate max-w-[180px]">
-                  {creditPersonas.find((cp) => cp._id === selectedCreditPersonId)?.name ||
-                    (typeof order?.creditPersonId === "object" ? order.creditPersonId?.name : "") ||
+                  {creditPersonas.find(
+                    (cp) => cp._id === selectedCreditPersonId
+                  )?.name ||
+                    (typeof order?.creditPersonId === "object"
+                      ? order.creditPersonId?.name
+                      : "") ||
                     "Selected"}
                 </span>
               </div>
@@ -1055,7 +1188,7 @@ export const OrderEditPOS: React.FC = () => {
             className="w-full bg-[#2216a8] hover:bg-indigo-900 text-white py-3.5 rounded-2xl font-bold transition-all shadow-md hover:shadow-lg hover:shadow-indigo-600/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShoppingCart className="w-5 h-5" />
-            <span>{t("pos.proceedToCheckout") || (isMy ? "ငွေရှင်းရန် / ပြင်ဆင်ရန် ဆက်သွားမည်" : "Proceed to Checkout")}</span>
+            <span>{t("pos.proceedToCheckout") || "Proceed to Checkout"}</span>
           </button>
         </div>
       </div>
@@ -1084,7 +1217,7 @@ export const OrderEditPOS: React.FC = () => {
               <div className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5 text-[#2216a8]" />
                 <h3 className="font-bold text-slate-800 text-base">
-                  {isMy ? "အော်ဒါ ပစ္စည်းများ" : "Order Cart"}
+                  {t("pos.currentSale") || "Current Sale"}
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#2216a8]/10 text-[#2216a8]">
                   {cart.reduce((s, i) => s + i.qty, 0)} pcs
@@ -1098,53 +1231,51 @@ export const OrderEditPOS: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {cart.map((item) => {
                 const itemPrice = getItemPrice(item.stockItem, item.qty);
-                const wholesaleTier = getActiveWholesaleTier(item.stockItem, item.qty);
                 const maxAvail = getMaxAllowedQty(item.stockItem);
 
                 return (
                   <div
                     key={item.stockItem._id}
-                    className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 flex items-center justify-between gap-2"
+                    className="flex justify-between items-start border-b border-gray-200 pb-3"
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-[#2216a8]">
-                          {item.stockItem.inventoryId?.productCode}
-                        </span>
-                        {wholesaleTier && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded">
-                            Wholesale
-                          </span>
-                        )}
-                      </div>
-                      <h5 className="text-xs font-semibold text-slate-800 truncate">
+                    <div className="flex-1 pr-2">
+                      <p className="text-sm font-medium text-gray-800 line-clamp-1">
                         {item.stockItem.inventoryId?.productName}
-                      </h5>
-                      <div className="text-[11px] text-slate-500 font-medium">
-                        {itemPrice.toLocaleString()} MMK
-                      </div>
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
+                        {(itemPrice * item.qty).toLocaleString()} MMK
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
-                        onClick={() => updateQuantity(item.stockItem._id, item.qty - 1)}
-                        className="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                        onClick={() =>
+                          updateQuantity(item.stockItem._id, item.qty - 1)
+                        }
+                        className="p-1 rounded bg-gray-100 hover:bg-gray-200 text-slate-700 cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
                       <input
                         type="number"
+                        min="1"
+                        max={maxAvail}
                         value={item.qty}
-                        onChange={(e) => updateQuantity(item.stockItem._id, Number(e.target.value))}
+                        onChange={(e) =>
+                          updateQuantity(item.stockItem._id, Number(e.target.value))
+                        }
                         className="w-10 text-center font-bold text-xs bg-white border border-slate-200 rounded py-0.5 outline-none"
                       />
                       <button
-                        onClick={() => updateQuantity(item.stockItem._id, item.qty + 1)}
+                        onClick={() =>
+                          updateQuantity(item.stockItem._id, item.qty + 1)
+                        }
                         disabled={item.qty >= maxAvail}
-                        className="p-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer"
+                        className="p-1 rounded bg-gray-100 hover:bg-gray-200 text-slate-700 disabled:opacity-40 cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -1162,8 +1293,12 @@ export const OrderEditPOS: React.FC = () => {
 
             <div className="p-4 border-t border-gray-100 bg-white space-y-3">
               <div className="flex justify-between items-baseline">
-                <span className="text-base font-bold text-gray-700">{t("common.total") || "Total"}</span>
-                <span className="text-lg font-black text-[#2216a8]">{subtotal.toLocaleString()} MMK</span>
+                <span className="text-base font-bold text-gray-700">
+                  {t("common.total") || "Total"}
+                </span>
+                <span className="text-lg font-black text-[#2216a8]">
+                  {subtotal.toLocaleString()} MMK
+                </span>
               </div>
               {selectedCreditPersonId && (
                 <div className="flex justify-between items-center text-xs py-1 px-2.5 bg-indigo-50/50 border border-indigo-100 rounded-lg">
@@ -1172,8 +1307,12 @@ export const OrderEditPOS: React.FC = () => {
                     {isMy ? "ဝယ်သူ" : "Customer"}:
                   </span>
                   <span className="font-bold text-slate-800">
-                    {creditPersonas.find((cp) => cp._id === selectedCreditPersonId)?.name ||
-                      (typeof order?.creditPersonId === "object" ? order.creditPersonId?.name : "") ||
+                    {creditPersonas.find(
+                      (cp) => cp._id === selectedCreditPersonId
+                    )?.name ||
+                      (typeof order?.creditPersonId === "object"
+                        ? order.creditPersonId?.name
+                        : "") ||
                       "Selected"}
                   </span>
                 </div>
@@ -1187,7 +1326,12 @@ export const OrderEditPOS: React.FC = () => {
                 className="w-full bg-[#2216a8] hover:bg-[#1b1187] text-white py-3.5 rounded-2xl font-bold transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ShoppingCart className="w-5 h-5" />
-                <span>{t("pos.proceedToCheckout") || (isMy ? "ငွေရှင်းရန် / ပြင်ဆင်ရန် ဆက်သွားမည်" : "Proceed to Checkout")}</span>
+                <span>
+                  {t("pos.proceedToCheckout") ||
+                    (isMy
+                      ? "ငွေရှင်းရန် / ပြင်ဆင်ရန် ဆက်သွားမည်"
+                      : "Proceed to Checkout")}
+                </span>
               </button>
             </div>
           </div>

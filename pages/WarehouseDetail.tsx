@@ -663,10 +663,10 @@ export const WarehouseDetail: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-2rem)]">
-      <div className="bg-white h-full border border-gray-200/70 rounded-3xl p-6 shadow-md flex flex-col gap-6 overflow-hidden">
+    <div className="w-full lg:h-[calc(100vh-2rem)]">
+      <div className="bg-white border border-gray-200/70 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-md flex flex-col gap-4 sm:gap-6 lg:h-full lg:overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigate("/warehouse")}
@@ -747,7 +747,7 @@ export const WarehouseDetail: React.FC = () => {
         </div>
 
         {/* Search and Filter Section */}
-        <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Bar */}
             <div className="flex-1">
@@ -831,7 +831,7 @@ export const WarehouseDetail: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-primary/20 rounded-lg">
@@ -883,17 +883,17 @@ export const WarehouseDetail: React.FC = () => {
         </div>
 
         {/* Stock Items Table */}
-        <div className="bg-white rounded-xl shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border flex flex-col lg:flex-1 lg:min-h-0 overflow-hidden">
           <div className="p-4 border-b bg-slate-50 flex-shrink-0">
             <h2 className="font-semibold text-slate-800">Stock Items</h2>
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
+            <div className="p-8 text-center text-slate-500 lg:flex-1 lg:overflow-y-auto">
               Loading stock items...
             </div>
           ) : stockItems.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 flex-1 overflow-y-auto">
+            <div className="p-8 text-center text-slate-500 lg:flex-1 lg:overflow-y-auto">
               {searchTerm || selectedCategory !== "all" ? (
                 <div>
                   <p className="font-medium mb-2">
@@ -914,9 +914,9 @@ export const WarehouseDetail: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="lg:flex-1 lg:overflow-y-auto lg:min-h-0">
               {/* Mobile scroll indicator */}
-              <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center">
+              <div className="sm:hidden px-4 py-2 bg-slate-50 text-xs text-slate-500 text-center border-b">
                 ← Swipe to see more →
               </div>
 

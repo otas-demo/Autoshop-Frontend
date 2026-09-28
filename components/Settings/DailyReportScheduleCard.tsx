@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updateCronTime } from "../../services/ShopSettings/updateCronTime";
 
 interface DailyReportScheduleCardProps {
-  currentTime: string;
-  currentEnabled: boolean;
+  currentTime?: string;
+  currentEnabled?: boolean;
   onSuccess: () => void;
 }
 
@@ -15,8 +15,13 @@ export const DailyReportScheduleCard: React.FC<DailyReportScheduleCardProps> = (
   onSuccess,
 }) => {
   const [time, setTime] = useState(currentTime || "21:00");
-  const [enabled, setEnabled] = useState(currentEnabled !== false);
+  const [enabled, setEnabled] = useState(Boolean(currentEnabled));
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (currentTime) setTime(currentTime);
+    setEnabled(Boolean(currentEnabled));
+  }, [currentTime, currentEnabled]);
 
   const formatDisplayTime = (t: string) => {
     const [h, m] = t.split(":");

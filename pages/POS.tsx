@@ -926,110 +926,146 @@ export const POS: React.FC = () => {
                 : t("pos.pleaseSelectStorefront")}
             </div>
           ) : (
-            filteredProducts.map((stockItem) => (
-              <div
-                key={stockItem._id}
-                onClick={() => addToCart(stockItem)}
-                className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 cursor-pointer transition-all hover:shadow-lg hover:border-primary hover:scale-[1.02] flex flex-col ${stockItem.quantity === 0
-                  ? "opacity-50 grayscale pointer-events-none"
-                  : ""
+            filteredProducts.map((stockItem) => {
+              const isWholesaleOpen = activeWholesalePopoverId === stockItem._id;
+              return (
+                <div
+                  key={stockItem._id}
+                  onClick={() => addToCart(stockItem)}
+                  className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border cursor-pointer transition-all flex flex-col ${
+                    isWholesaleOpen
+                      ? "relative z-30 border-primary shadow-lg ring-2 ring-primary/20 scale-[1.01]"
+                      : "relative z-0 border-dark-200 hover:shadow-lg hover:border-primary hover:scale-[1.02]"
+                  } ${
+                    stockItem.quantity === 0
+                      ? "opacity-50 grayscale pointer-events-none"
+                      : ""
                   }`}
-              >
-                <div className="">
-                  <h3 className="font-bold text-gray-800 text-xs sm:text-[16px] line-clamp-2">
-                    {stockItem.inventoryId.productName}
-                  </h3>
-                  <p className="text-[10px] sm:text-xs mt-1 font-mono">
-                    {stockItem.inventoryId.productCode}
-                  </p>
-                  <p className="text-[10px] sm:text-xs mt-1">
-                    {stockItem.inventoryId.category}
-                  </p>
-                  <span
-                    className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      (stockItem.availableQuantity ?? stockItem.quantity) <= 0
-                        ? "bg-red-100 text-red-600"
-                        : (stockItem.availableQuantity ?? stockItem.quantity) <= 5
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {(stockItem.availableQuantity ?? stockItem.quantity) <= 0
-                      ? "Out of stock"
-                      : `Qty: ${stockItem.availableQuantity ?? stockItem.quantity}`}
-                  </span>
-                </div>
-                <div className="mt-2 sm:mt-4 flex justify-between items-end">
-                  <span className="font-bold text-primary-600 text-xs sm:text-sm">
-                    {getItemPrice(stockItem).toLocaleString()} MMK
-                  </span>
-                  {stockItem.inventoryId.wholesalePrices &&
-                    stockItem.inventoryId.wholesalePrices.length > 0 && (
-                      <div
-                        className="relative"
-                        data-wholesale-container={stockItem._id}
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveWholesalePopoverId((prev) =>
-                              prev === stockItem._id ? null : stockItem._id,
-                            );
-                          }}
-                          className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 hover:bg-amber-100 transition-colors"
+                >
+                  <div className="">
+                    <h3 className="font-bold text-gray-800 text-xs sm:text-[16px] line-clamp-2">
+                      {stockItem.inventoryId.productName}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs mt-1 font-mono">
+                      {stockItem.inventoryId.productCode}
+                    </p>
+                    <p className="text-[10px] sm:text-xs mt-1">
+                      {stockItem.inventoryId.category}
+                    </p>
+                    <span
+                      className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        (stockItem.availableQuantity ?? stockItem.quantity) <= 0
+                          ? "bg-red-100 text-red-600"
+                          : (stockItem.availableQuantity ?? stockItem.quantity) <= 5
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {(stockItem.availableQuantity ?? stockItem.quantity) <= 0
+                        ? "Out of stock"
+                        : `Qty: ${stockItem.availableQuantity ?? stockItem.quantity}`}
+                    </span>
+                  </div>
+                  <div className="mt-2 sm:mt-4 flex justify-between items-end">
+                    <span className="font-bold text-primary-600 text-xs sm:text-sm">
+                      {getItemPrice(stockItem).toLocaleString()} MMK
+                    </span>
+                    {stockItem.inventoryId.wholesalePrices &&
+                      stockItem.inventoryId.wholesalePrices.length > 0 && (
+                        <div
+                          className="relative z-30"
+                          data-wholesale-container={stockItem._id}
                         >
-                          Wholesale
-                        </button>
-
-                        {activeWholesalePopoverId === stockItem._id && (
-                          <div
-                            className="absolute right-0 top-7 z-20 w-52 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
-                            onClick={(e) => e.stopPropagation()}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveWholesalePopoverId((prev) =>
+                                prev === stockItem._id ? null : stockItem._id,
+                              );
+                            }}
+                            className={`text-[10px] font-bold rounded-full px-2.5 py-0.5 transition-all cursor-pointer border ${
+                              isWholesaleOpen
+                                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                                : "text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100"
+                            }`}
                           >
-                            <div className="text-[11px] font-semibold text-slate-600 mb-2">
-                              Wholesale prices
+                            Wholesale
+                          </button>
+
+                          {isWholesaleOpen && (
+                            <div
+                              className="absolute right-0 top-8 z-50 w-60 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3.5"
+                              style={{ backgroundColor: "#ffffff" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                  Wholesale Prices
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveWholesalePopoverId(null);
+                                  }}
+                                  className="text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-2 text-[11px] font-bold text-slate-400 pb-1.5 px-1 uppercase tracking-wider">
+                                <span>Min Qty</span>
+                                <span className="text-right">Price</span>
+                              </div>
+
+                              <div className="space-y-1">
+                                {getSortedWholesaleTiers(stockItem).map(
+                                  (tier) => (
+                                    <button
+                                      type="button"
+                                      key={
+                                        tier._id ||
+                                        `${tier.quantity}-${tier.price}`
+                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        applyWholesaleTierQuantity(
+                                          stockItem,
+                                          Number(tier.quantity),
+                                        );
+                                        setActiveWholesalePopoverId(null);
+                                      }}
+                                      className="w-full flex items-center justify-between py-2 px-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-amber-50 hover:border-amber-200 text-xs transition-all cursor-pointer group"
+                                    >
+                                      <span className="font-bold text-slate-700 group-hover:text-amber-900 flex items-center gap-1">
+                                        <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-amber-700 text-[10px] font-extrabold group-hover:border-amber-300">
+                                          ≥ {tier.quantity}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-normal">
+                                          {stockItem.inventoryId.unitOfMeasure || "pcs"}
+                                        </span>
+                                      </span>
+                                      <span className="text-right font-extrabold text-slate-800 group-hover:text-amber-900">
+                                        {tier.price.toLocaleString()} <span className="text-[9px] text-slate-400 font-normal">MMK</span>
+                                      </span>
+                                    </button>
+                                  ),
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-400 text-center mt-2 pt-1.5 border-t border-slate-100">
+                                Click tier to set quantity
+                              </p>
                             </div>
-                            <div className="grid grid-cols-2 text-[11px] font-semibold text-slate-500 pb-1">
-                              <span>Quantity</span>
-                              <span className="text-right">Price</span>
-                            </div>
-                            <div className="border-t border-slate-200">
-                              {getSortedWholesaleTiers(stockItem).map(
-                                (tier) => (
-                                  <button
-                                    type="button"
-                                    key={
-                                      tier._id ||
-                                      `${tier.quantity}-${tier.price}`
-                                    }
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      applyWholesaleTierQuantity(
-                                        stockItem,
-                                        Number(tier.quantity),
-                                      );
-                                      setActiveWholesalePopoverId(null);
-                                    }}
-                                    className="w-full grid grid-cols-2 py-1.5 px-1 border-b border-slate-100 last:border-b-0 text-[11px] rounded hover:bg-amber-50 hover:text-amber-900 transition-colors cursor-pointer"
-                                  >
-                                    <span className="text-slate-700">
-                                      {tier.quantity}+
-                                    </span>
-                                    <span className="text-right text-slate-800 font-medium">
-                                      {tier.price.toLocaleString()}
-                                    </span>
-                                  </button>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

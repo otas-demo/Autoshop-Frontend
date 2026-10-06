@@ -164,9 +164,13 @@ export const OrderEditPOS: React.FC = () => {
 
       // Pre-fill Cart
       const initialCart: CartItem[] = (ord.ordersProducts || []).map((p: any) => {
-        const inv = p.inventoryId;
+        const inv = p.inventoryId || {};
+        const baseSellingPrice = inv.sellingPrice ?? p.unitPrice ?? 0;
+        const wholesalePrices = Array.isArray(inv.wholesalePrices)
+          ? inv.wholesalePrices
+          : [];
         const stockItem: StorefrontStockItem = {
-          _id: `edit_${inv._id}_${Date.now()}_${Math.random()}`,
+          _id: `edit_${inv._id || Date.now()}_${Math.random()}`,
           storefrontId: {
             _id: sfId,
             locationCode: "",
@@ -174,14 +178,14 @@ export const OrderEditPOS: React.FC = () => {
           },
           inventoryId: {
             _id: inv._id,
-            productName: inv.productName,
-            productCode: inv.productCode,
-            SKU: inv.SKU,
+            productName: inv.productName || "Product",
+            productCode: inv.productCode || "",
+            SKU: inv.SKU || "",
             category: inv.category || "",
             profitMargin: inv.profitMargin ?? null,
             profitAmount: inv.profitAmount ?? null,
-            sellingPrice: p.unitPrice || inv.sellingPrice || 0,
-            wholesalePrices: inv.wholesalePrices || [],
+            sellingPrice: baseSellingPrice,
+            wholesalePrices: wholesalePrices,
           },
           quantity: p.quantity,
           isLowStock: false,
@@ -372,6 +376,56 @@ export const OrderEditPOS: React.FC = () => {
     }
   }, [allStockItems]);
 
+  // Enrich cart items with latest catalog stock (wholesalePrices, sellingPrice) when allStockItems loads
+  useEffect(() => {
+    if (allStockItems && allStockItems.length > 0) {
+      setCart((prevCart) =>
+        prevCart.map((cartItem) => {
+          const invId = getInventoryIdStr(cartItem.stockItem);
+          const matched = allStockItems.find(
+            (s) => getInventoryIdStr(s) === invId
+          );
+          if (matched && matched.inventoryId) {
+            const catalogWholesale = matched.inventoryId.wholesalePrices || [];
+            const catalogSellingPrice = matched.inventoryId.sellingPrice;
+            const currentWholesale =
+              cartItem.stockItem.inventoryId?.wholesalePrices || [];
+
+            const shouldEnrichWholesale =
+              currentWholesale.length === 0 && catalogWholesale.length > 0;
+            const shouldEnrichPrice =
+              catalogSellingPrice !== undefined &&
+              (!cartItem.stockItem.inventoryId?.sellingPrice ||
+                cartItem.stockItem.inventoryId.sellingPrice === 0);
+
+            if (shouldEnrichWholesale || shouldEnrichPrice) {
+              return {
+                ...cartItem,
+                stockItem: {
+                  ...cartItem.stockItem,
+                  inventoryId: {
+                    ...cartItem.stockItem.inventoryId,
+                    sellingPrice:
+                      catalogSellingPrice ??
+                      cartItem.stockItem.inventoryId.sellingPrice,
+                    wholesalePrices:
+                      catalogWholesale.length > 0
+                        ? catalogWholesale
+                        : currentWholesale,
+                    category:
+                      matched.inventoryId.category ||
+                      cartItem.stockItem.inventoryId.category,
+                  },
+                },
+              };
+            }
+          }
+          return cartItem;
+        })
+      );
+    }
+  }, [allStockItems]);
+
   // Cart operations & stock limit helpers
   const getInventoryIdStr = (item: StorefrontStockItem | string): string => {
     if (typeof item === "string") return item;
@@ -440,7 +494,26 @@ export const OrderEditPOS: React.FC = () => {
     setCart((prev) => {
       if (existing) {
         return prev.map((item) =>
-          isSameItem(item.stockItem, stockItem) ? { ...item, qty: item.qty + 1 } : item
+          isSameItem(item.stockItem, stockItem)
+            ? {
+                ...item,
+                qty: item.qty + 1,
+                stockItem: {
+                  ...item.stockItem,
+                  inventoryId: {
+                    ...item.stockItem.inventoryId,
+                    sellingPrice:
+                      stockItem.inventoryId?.sellingPrice ??
+                      item.stockItem.inventoryId?.sellingPrice,
+                    wholesalePrices:
+                      stockItem.inventoryId?.wholesalePrices &&
+                      stockItem.inventoryId.wholesalePrices.length > 0
+                        ? stockItem.inventoryId.wholesalePrices
+                        : item.stockItem.inventoryId?.wholesalePrices,
+                  },
+                },
+              }
+            : item
         );
       }
       return [...prev, { stockItem, qty: 1 }];
@@ -473,7 +546,26 @@ export const OrderEditPOS: React.FC = () => {
       const existing = prev.find((item) => isSameItem(item.stockItem, stockItem));
       if (existing) {
         return prev.map((item) =>
-          isSameItem(item.stockItem, stockItem) ? { ...item, qty: finalQty } : item
+          isSameItem(item.stockItem, stockItem)
+            ? {
+                ...item,
+                qty: finalQty,
+                stockItem: {
+                  ...item.stockItem,
+                  inventoryId: {
+                    ...item.stockItem.inventoryId,
+                    sellingPrice:
+                      stockItem.inventoryId?.sellingPrice ??
+                      item.stockItem.inventoryId?.sellingPrice,
+                    wholesalePrices:
+                      stockItem.inventoryId?.wholesalePrices &&
+                      stockItem.inventoryId.wholesalePrices.length > 0
+                        ? stockItem.inventoryId.wholesalePrices
+                        : item.stockItem.inventoryId?.wholesalePrices,
+                  },
+                },
+              }
+            : item
         );
       }
       return [...prev, { stockItem, qty: finalQty }];
@@ -948,11 +1040,16 @@ export const OrderEditPOS: React.FC = () => {
                 const maxAllowed = getMaxAllowedQty(stockItem);
                 const isOutOfStock = maxAllowed <= 0;
 
+                const isWholesaleOpen = activeWholesalePopoverId === stockItem._id;
                 return (
                   <div
                     key={stockItem._id}
                     onClick={() => !isOutOfStock && addToCart(stockItem)}
-                    className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border border-dark-200 cursor-pointer transition-all hover:shadow-lg hover:border-primary hover:scale-[1.02] flex flex-col justify-between ${
+                    className={`bg-white p-2 sm:p-4 rounded-xl shadow-sm border cursor-pointer transition-all flex flex-col justify-between ${
+                      isWholesaleOpen
+                        ? "relative z-30 border-primary shadow-lg ring-2 ring-primary/20 scale-[1.01]"
+                        : "relative z-0 border-dark-200 hover:shadow-lg hover:border-primary hover:scale-[1.02]"
+                    } ${
                       isOutOfStock
                         ? "opacity-50 grayscale pointer-events-none"
                         : ""
@@ -990,7 +1087,7 @@ export const OrderEditPOS: React.FC = () => {
                       {stockItem.inventoryId?.wholesalePrices &&
                         stockItem.inventoryId.wholesalePrices.length > 0 && (
                           <div
-                            className="relative"
+                            className="relative z-30"
                             data-wholesale-container={stockItem._id}
                           >
                             <button
@@ -1001,24 +1098,44 @@ export const OrderEditPOS: React.FC = () => {
                                   prev === stockItem._id ? null : stockItem._id
                                 );
                               }}
-                              className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 hover:bg-amber-100 transition-colors"
+                              className={`text-[10px] font-bold rounded-full px-2.5 py-0.5 transition-all cursor-pointer border ${
+                                isWholesaleOpen
+                                  ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                                  : "text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100"
+                              }`}
                             >
                               Wholesale
                             </button>
 
-                            {activeWholesalePopoverId === stockItem._id && (
+                            {isWholesaleOpen && (
                               <div
-                                className="absolute right-0 top-7 z-20 w-52 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
+                                className="absolute right-0 top-8 z-50 w-60 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3.5"
+                                style={{ backgroundColor: "#ffffff" }}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="text-[11px] font-semibold text-slate-600 mb-2">
-                                  Wholesale prices
+                                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                    Wholesale Prices
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveWholesalePopoverId(null);
+                                    }}
+                                    className="text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
-                                <div className="grid grid-cols-2 text-[11px] font-semibold text-slate-500 pb-1">
-                                  <span>Quantity</span>
+
+                                <div className="grid grid-cols-2 text-[11px] font-bold text-slate-400 pb-1.5 px-1 uppercase tracking-wider">
+                                  <span>Min Qty</span>
                                   <span className="text-right">Price</span>
                                 </div>
-                                <div className="border-t border-slate-200">
+
+                                <div className="space-y-1">
                                   {getSortedWholesaleTiers(stockItem).map(
                                     (tier) => (
                                       <button
@@ -1035,18 +1152,26 @@ export const OrderEditPOS: React.FC = () => {
                                           );
                                           setActiveWholesalePopoverId(null);
                                         }}
-                                        className="w-full grid grid-cols-2 py-1.5 px-1 border-b border-slate-100 last:border-b-0 text-[11px] rounded hover:bg-amber-50 hover:text-amber-900 transition-colors cursor-pointer"
+                                        className="w-full flex items-center justify-between py-2 px-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-amber-50 hover:border-amber-200 text-xs transition-all cursor-pointer group"
                                       >
-                                        <span className="text-slate-700">
-                                          {tier.quantity}+
+                                        <span className="font-bold text-slate-700 group-hover:text-amber-900 flex items-center gap-1">
+                                          <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-amber-700 text-[10px] font-extrabold group-hover:border-amber-300">
+                                            ≥ {tier.quantity}
+                                          </span>
+                                          <span className="text-[10px] text-slate-400 font-normal">
+                                            {stockItem.inventoryId?.unitOfMeasure || "pcs"}
+                                          </span>
                                         </span>
-                                        <span className="text-right text-slate-800 font-medium">
-                                          {tier.price.toLocaleString()}
+                                        <span className="text-right font-extrabold text-slate-800 group-hover:text-amber-900">
+                                          {tier.price.toLocaleString()} <span className="text-[9px] text-slate-400 font-normal">MMK</span>
                                         </span>
                                       </button>
                                     )
                                   )}
                                 </div>
+                                <p className="text-[10px] text-slate-400 text-center mt-2 pt-1.5 border-t border-slate-100">
+                                  Click tier to set quantity
+                                </p>
                               </div>
                             )}
                           </div>
@@ -1089,6 +1214,7 @@ export const OrderEditPOS: React.FC = () => {
             cart.map((item) => {
               const itemPrice = getItemPrice(item.stockItem, item.qty);
               const maxAvail = getMaxAllowedQty(item.stockItem);
+              const activeTier = getActiveWholesaleTier(item.stockItem, item.qty);
               return (
                 <div
                   key={item.stockItem._id}
@@ -1098,10 +1224,17 @@ export const OrderEditPOS: React.FC = () => {
                     <p className="text-sm font-medium text-gray-800 line-clamp-1">
                       {item.stockItem.inventoryId?.productName}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
-                      {(itemPrice * item.qty).toLocaleString()} MMK
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span className="text-xs text-gray-500">
+                        {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
+                        {(itemPrice * item.qty).toLocaleString()} MMK
+                      </span>
+                      {activeTier && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                          Wholesale (≥{activeTier.quantity})
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="cart-item-controls flex items-center gap-2 ml-2 flex-shrink-0">
                     <button
@@ -1235,6 +1368,7 @@ export const OrderEditPOS: React.FC = () => {
               {cart.map((item) => {
                 const itemPrice = getItemPrice(item.stockItem, item.qty);
                 const maxAvail = getMaxAllowedQty(item.stockItem);
+                const activeTier = getActiveWholesaleTier(item.stockItem, item.qty);
 
                 return (
                   <div
@@ -1245,10 +1379,17 @@ export const OrderEditPOS: React.FC = () => {
                       <p className="text-sm font-medium text-gray-800 line-clamp-1">
                         {item.stockItem.inventoryId?.productName}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
-                        {(itemPrice * item.qty).toLocaleString()} MMK
-                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span className="text-xs text-gray-500">
+                          {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
+                          {(itemPrice * item.qty).toLocaleString()} MMK
+                        </span>
+                        {activeTier && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                            Wholesale (≥{activeTier.quantity})
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-shrink-0">

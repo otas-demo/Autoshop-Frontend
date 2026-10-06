@@ -326,6 +326,28 @@ export const Inventory: React.FC = () => {
       return;
     }
 
+    // Validate wholesalePrices if provided
+    if (formData.wholesalePrices && formData.wholesalePrices.length > 0) {
+      for (const tier of formData.wholesalePrices) {
+        if (!tier.quantity || tier.quantity < 2) {
+          const errorMsg =
+            t("inventory.wholesaleValidationQty") ||
+            "Wholesale quantity must be at least 2 (လက်ကားအရေအတွက် အနည်းဆုံး ၂ ခု ဖြစ်ရမည်)";
+          toast.error(errorMsg);
+          setError(errorMsg);
+          return;
+        }
+        if (tier.price === undefined || tier.price === null || tier.price < 0) {
+          const errorMsg =
+            t("inventory.wholesaleValidationPrice") ||
+            "Wholesale price cannot be negative (လက်ကားဈေးနှုန်း မမှန်ကန်ပါ)";
+          toast.error(errorMsg);
+          setError(errorMsg);
+          return;
+        }
+      }
+    }
+
     if (editingId) {
       // Update existing product via API
       setIsLoading(true);
@@ -363,7 +385,7 @@ export const Inventory: React.FC = () => {
           apiPayload.tags = formData.tags;
         if (formData.note) apiPayload.note = formData.note;
         if (formData.supplierIds) apiPayload.supplierIds = formData.supplierIds;
-        if (formData.wholesalePrices && formData.wholesalePrices.length > 0) {
+        if (formData.wholesalePrices !== undefined) {
           apiPayload.wholesalePrices = formData.wholesalePrices.map(
             ({ quantity, price }) => ({ quantity, price }),
           );

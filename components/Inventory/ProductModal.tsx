@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, X, ChevronDown, Truck } from "lucide-react";
+import { Plus, Trash2, X, ChevronDown, Truck, TrendingDown } from "lucide-react";
 import { Product, Supplier } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 import { fetchSuppliers } from "../../services/Supplier/fetchSuppliers";
@@ -194,14 +194,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     const nextQuantity =
       wholesalePrices.length > 0
         ? Math.max(...wholesalePrices.map((t) => t.quantity || 0)) + 1
-        : 1;
+        : 2;
 
     updateFormData({
       wholesalePrices: [
         ...wholesalePrices,
         {
           id: `tier-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-          quantity: nextQuantity,
+          quantity: Math.max(nextQuantity, 2),
           price: formData.sellingPrice || 0,
         },
       ],
@@ -260,6 +260,22 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         return isMm ? "ရောင်းချ ဈေးနှုန်း:" : "Selling Price";
       case "sellingPricePlaceholder":
         return isMm ? "ရောင်းချဈေးနှုန်း ရိုက်ထည့်ပါ" : "Enter selling price";
+      case "wholesalePricing":
+        return isMm ? "လက်ကားဈေးနှုန်း သတ်မှတ်ချက်များ" : "Wholesale Pricing Tiers";
+      case "wholesalePricingDesc":
+        return isMm
+          ? "အရေအတွက်အလိုက် လက်ကားဈေးနှုန်းများ သတ်မှတ်နိုင်ပါသည်"
+          : "Set volume-based pricing for bulk purchases";
+      case "addTier":
+        return isMm ? "လက်ကားစျေးထည့်မည်" : "Add Tier";
+      case "minQuantity":
+        return isMm ? "အနည်းဆုံး အရေအတွက်" : "Min Quantity";
+      case "wholesalePrice":
+        return isMm ? "လက်ကားဈေးနှုန်း (MMK)" : "Wholesale Price (MMK)";
+      case "noWholesaleTiers":
+        return isMm
+          ? "လက်ကားဈေး သတ်မှတ်ထားခြင်း မရှိသေးပါ (မဖြစ်မနေ မဟုတ်ပါ)"
+          : "No wholesale tiers configured (Optional)";
       case "note":
         return isMm ? "ပစ္စည်း မှတ်ချက် (မထည့်လည်းရ)" : "Product Remark (Optional)";
       case "notePlaceholder":
@@ -452,6 +468,112 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               }
               placeholder={getLabel("sellingPricePlaceholder")}
             />
+          </div>
+
+          {/* Wholesale Pricing Tiers Section */}
+          <div className="col-span-2 bg-slate-50/80 border border-slate-200/80 p-4 rounded-2xl">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <TrendingDown className="w-4 h-4 text-[#2216a8]" />
+                  <span>{getLabel("wholesalePricing")}</span>
+                </label>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {getLabel("wholesalePricingDesc")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addWholesaleTier}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#2216a8] bg-[#f0effb] hover:bg-[#e4e1f9] border border-indigo-100 rounded-xl transition-all cursor-pointer shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{getLabel("addTier")}</span>
+              </button>
+            </div>
+
+            {wholesalePrices.length > 0 ? (
+              <div className="space-y-2.5 mt-3">
+                {wholesalePrices.map((tier, idx) => {
+                  const key = getTierKey(tier, idx);
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-400 pl-1">
+                        <span>#{idx + 1}</span>
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                          {getLabel("minQuantity")} (≥)
+                        </label>
+                        <input
+                          type="number"
+                          min="2"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                          value={getTierQuantityValue(key, tier)}
+                          placeholder="2"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setTierDrafts((prev) => ({
+                              ...prev,
+                              [key]: { ...prev[key], quantity: val },
+                            }));
+                            const num = Number(val);
+                            if (!isNaN(num) && num >= 0) {
+                              updateWholesaleTier(idx, { quantity: num });
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                          {getLabel("wholesalePrice")}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2216a8]/20 focus:border-[#2216a8] transition-all bg-white"
+                          value={getTierPriceValue(key, tier)}
+                          placeholder="0"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setTierDrafts((prev) => ({
+                              ...prev,
+                              [key]: { ...prev[key], price: val },
+                            }));
+                            const num = Number(val);
+                            if (!isNaN(num) && num >= 0) {
+                              updateWholesaleTier(idx, { price: num });
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <div className="pt-4">
+                        <button
+                          type="button"
+                          onClick={() => removeWholesaleTier(idx)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Remove tier"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-3 bg-white/60 rounded-xl border border-dashed border-slate-200 mt-2">
+                <p className="text-xs text-slate-400 font-medium">
+                  {getLabel("noWholesaleTiers")}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Suppliers Selection */}

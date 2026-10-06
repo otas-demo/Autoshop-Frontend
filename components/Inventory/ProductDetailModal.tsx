@@ -205,45 +205,61 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    {product.wholesalePrices &&
-                      product.wholesalePrices.length > 0 && (
-                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                          <div className="flex items-center gap-2 mb-4">
-                            <DollarSign className="w-4 h-4 text-slate-500" />
-                            <p className="text-sm text-slate-600 font-semibold">
-                              Wholesale prices
-                            </p>
-                          </div>
-
-                          <div className="grid grid-cols-2 text-sm font-semibold text-slate-600 pb-2">
-                            <span>Quantity</span>
-                            <span className="text-right">Price (MMK)</span>
-                          </div>
-
-                          <div className="border-t border-slate-200">
-                            {product.wholesalePrices
-                              .slice()
-                              .sort((a, b) => a.quantity - b.quantity)
-                              .map((tier) => (
-                                <div
-                                  key={
-                                    tier.id ||
-                                    tier._id ||
-                                    `${tier.quantity}-${tier.price}`
-                                  }
-                                  className="grid grid-cols-2 py-2 border-b border-slate-200 last:border-b-0"
-                                >
-                                  <span className="text-slate-800">
-                                    {tier.quantity}
-                                  </span>
-                                  <span className="text-right text-slate-800 font-medium">
-                                    {tier.price.toLocaleString()}
-                                  </span>
-                                </div>
-                              ))}
-                          </div>
+                    {product.wholesalePrices && product.wholesalePrices.length > 0 ? (
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <DollarSign className="w-4 h-4 text-[#2216a8]" />
+                          <p className="text-xs text-slate-600 font-bold uppercase tracking-wider">
+                            {t("inventory.wholesalePricesTitle") || "Wholesale Prices (လက်ကားဈေးနှုန်းများ)"}
+                          </p>
                         </div>
-                      )}
+
+                        <div className="grid grid-cols-2 text-xs font-bold text-slate-500 pb-2 border-b border-slate-200">
+                          <span>{t("inventory.wholesaleQty") || "Quantity"}</span>
+                          <span className="text-right">{t("inventory.wholesalePrice") || "Price (MMK)"}</span>
+                        </div>
+
+                        <div className="divide-y divide-slate-100">
+                          {product.wholesalePrices
+                            .slice()
+                            .sort((a, b) => a.quantity - b.quantity)
+                            .map((tier) => (
+                              <div
+                                key={
+                                  tier.id ||
+                                  tier._id ||
+                                  `${tier.quantity}-${tier.price}`
+                                }
+                                className="grid grid-cols-2 py-2.5 items-center"
+                              >
+                                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-[#2216a8] border border-indigo-100 font-bold">
+                                    ≥ {tier.quantity}
+                                  </span>
+                                  <span className="text-slate-500 font-normal">
+                                    {product.unitOfMeasure || "piece"}
+                                  </span>
+                                </span>
+                                <span className="text-right text-xs font-bold text-slate-800">
+                                  {tier.price.toLocaleString()} <span className="text-[10px] text-slate-400 font-medium ml-0.5">MMK</span>
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50/60 border border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-slate-400">
+                          <DollarSign className="w-4 h-4" />
+                          <span className="text-xs font-medium">
+                            {t("inventory.wholesalePricesTitle") || "Wholesale Prices"}
+                          </span>
+                        </div>
+                        <span className="text-xs text-slate-400 italic">
+                          {t("inventory.noWholesalePrices") || "No wholesale prices configured"}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Product Details Grid */}

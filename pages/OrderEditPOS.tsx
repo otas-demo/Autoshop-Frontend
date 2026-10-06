@@ -164,9 +164,13 @@ export const OrderEditPOS: React.FC = () => {
 
       // Pre-fill Cart
       const initialCart: CartItem[] = (ord.ordersProducts || []).map((p: any) => {
-        const inv = p.inventoryId;
+        const inv = p.inventoryId || {};
+        const baseSellingPrice = inv.sellingPrice ?? p.unitPrice ?? 0;
+        const wholesalePrices = Array.isArray(inv.wholesalePrices)
+          ? inv.wholesalePrices
+          : [];
         const stockItem: StorefrontStockItem = {
-          _id: `edit_${inv._id}_${Date.now()}_${Math.random()}`,
+          _id: `edit_${inv._id || Date.now()}_${Math.random()}`,
           storefrontId: {
             _id: sfId,
             locationCode: "",
@@ -174,14 +178,14 @@ export const OrderEditPOS: React.FC = () => {
           },
           inventoryId: {
             _id: inv._id,
-            productName: inv.productName,
-            productCode: inv.productCode,
-            SKU: inv.SKU,
+            productName: inv.productName || "Product",
+            productCode: inv.productCode || "",
+            SKU: inv.SKU || "",
             category: inv.category || "",
             profitMargin: inv.profitMargin ?? null,
             profitAmount: inv.profitAmount ?? null,
-            sellingPrice: p.unitPrice || inv.sellingPrice || 0,
-            wholesalePrices: inv.wholesalePrices || [],
+            sellingPrice: baseSellingPrice,
+            wholesalePrices: wholesalePrices,
           },
           quantity: p.quantity,
           isLowStock: false,
@@ -372,6 +376,56 @@ export const OrderEditPOS: React.FC = () => {
     }
   }, [allStockItems]);
 
+  // Enrich cart items with latest catalog stock (wholesalePrices, sellingPrice) when allStockItems loads
+  useEffect(() => {
+    if (allStockItems && allStockItems.length > 0) {
+      setCart((prevCart) =>
+        prevCart.map((cartItem) => {
+          const invId = getInventoryIdStr(cartItem.stockItem);
+          const matched = allStockItems.find(
+            (s) => getInventoryIdStr(s) === invId
+          );
+          if (matched && matched.inventoryId) {
+            const catalogWholesale = matched.inventoryId.wholesalePrices || [];
+            const catalogSellingPrice = matched.inventoryId.sellingPrice;
+            const currentWholesale =
+              cartItem.stockItem.inventoryId?.wholesalePrices || [];
+
+            const shouldEnrichWholesale =
+              currentWholesale.length === 0 && catalogWholesale.length > 0;
+            const shouldEnrichPrice =
+              catalogSellingPrice !== undefined &&
+              (!cartItem.stockItem.inventoryId?.sellingPrice ||
+                cartItem.stockItem.inventoryId.sellingPrice === 0);
+
+            if (shouldEnrichWholesale || shouldEnrichPrice) {
+              return {
+                ...cartItem,
+                stockItem: {
+                  ...cartItem.stockItem,
+                  inventoryId: {
+                    ...cartItem.stockItem.inventoryId,
+                    sellingPrice:
+                      catalogSellingPrice ??
+                      cartItem.stockItem.inventoryId.sellingPrice,
+                    wholesalePrices:
+                      catalogWholesale.length > 0
+                        ? catalogWholesale
+                        : currentWholesale,
+                    category:
+                      matched.inventoryId.category ||
+                      cartItem.stockItem.inventoryId.category,
+                  },
+                },
+              };
+            }
+          }
+          return cartItem;
+        })
+      );
+    }
+  }, [allStockItems]);
+
   // Cart operations & stock limit helpers
   const getInventoryIdStr = (item: StorefrontStockItem | string): string => {
     if (typeof item === "string") return item;
@@ -440,7 +494,26 @@ export const OrderEditPOS: React.FC = () => {
     setCart((prev) => {
       if (existing) {
         return prev.map((item) =>
-          isSameItem(item.stockItem, stockItem) ? { ...item, qty: item.qty + 1 } : item
+          isSameItem(item.stockItem, stockItem)
+            ? {
+                ...item,
+                qty: item.qty + 1,
+                stockItem: {
+                  ...item.stockItem,
+                  inventoryId: {
+                    ...item.stockItem.inventoryId,
+                    sellingPrice:
+                      stockItem.inventoryId?.sellingPrice ??
+                      item.stockItem.inventoryId?.sellingPrice,
+                    wholesalePrices:
+                      stockItem.inventoryId?.wholesalePrices &&
+                      stockItem.inventoryId.wholesalePrices.length > 0
+                        ? stockItem.inventoryId.wholesalePrices
+                        : item.stockItem.inventoryId?.wholesalePrices,
+                  },
+                },
+              }
+            : item
         );
       }
       return [...prev, { stockItem, qty: 1 }];
@@ -473,7 +546,26 @@ export const OrderEditPOS: React.FC = () => {
       const existing = prev.find((item) => isSameItem(item.stockItem, stockItem));
       if (existing) {
         return prev.map((item) =>
-          isSameItem(item.stockItem, stockItem) ? { ...item, qty: finalQty } : item
+          isSameItem(item.stockItem, stockItem)
+            ? {
+                ...item,
+                qty: finalQty,
+                stockItem: {
+                  ...item.stockItem,
+                  inventoryId: {
+                    ...item.stockItem.inventoryId,
+                    sellingPrice:
+                      stockItem.inventoryId?.sellingPrice ??
+                      item.stockItem.inventoryId?.sellingPrice,
+                    wholesalePrices:
+                      stockItem.inventoryId?.wholesalePrices &&
+                      stockItem.inventoryId.wholesalePrices.length > 0
+                        ? stockItem.inventoryId.wholesalePrices
+                        : item.stockItem.inventoryId?.wholesalePrices,
+                  },
+                },
+              }
+            : item
         );
       }
       return [...prev, { stockItem, qty: finalQty }];
@@ -1122,6 +1214,7 @@ export const OrderEditPOS: React.FC = () => {
             cart.map((item) => {
               const itemPrice = getItemPrice(item.stockItem, item.qty);
               const maxAvail = getMaxAllowedQty(item.stockItem);
+              const activeTier = getActiveWholesaleTier(item.stockItem, item.qty);
               return (
                 <div
                   key={item.stockItem._id}
@@ -1131,10 +1224,17 @@ export const OrderEditPOS: React.FC = () => {
                     <p className="text-sm font-medium text-gray-800 line-clamp-1">
                       {item.stockItem.inventoryId?.productName}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
-                      {(itemPrice * item.qty).toLocaleString()} MMK
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span className="text-xs text-gray-500">
+                        {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
+                        {(itemPrice * item.qty).toLocaleString()} MMK
+                      </span>
+                      {activeTier && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                          Wholesale (≥{activeTier.quantity})
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="cart-item-controls flex items-center gap-2 ml-2 flex-shrink-0">
                     <button
@@ -1268,6 +1368,7 @@ export const OrderEditPOS: React.FC = () => {
               {cart.map((item) => {
                 const itemPrice = getItemPrice(item.stockItem, item.qty);
                 const maxAvail = getMaxAllowedQty(item.stockItem);
+                const activeTier = getActiveWholesaleTier(item.stockItem, item.qty);
 
                 return (
                   <div
@@ -1278,10 +1379,17 @@ export const OrderEditPOS: React.FC = () => {
                       <p className="text-sm font-medium text-gray-800 line-clamp-1">
                         {item.stockItem.inventoryId?.productName}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
-                        {(itemPrice * item.qty).toLocaleString()} MMK
-                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span className="text-xs text-gray-500">
+                          {itemPrice.toLocaleString()} MMK x {item.qty} ={" "}
+                          {(itemPrice * item.qty).toLocaleString()} MMK
+                        </span>
+                        {activeTier && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                            Wholesale (≥{activeTier.quantity})
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-shrink-0">

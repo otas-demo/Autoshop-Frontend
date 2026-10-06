@@ -6,6 +6,14 @@ export interface OrderProduct {
     productName: string;
     productCode: string;
     SKU: string;
+    category?: string;
+    sellingPrice?: number;
+    wholesalePrices?: {
+      _id?: string;
+      quantity: number;
+      price: number;
+    }[];
+    unitOfMeasure?: string;
     profitMargin: number | null;
     profitAmount: number | null;
     id: string;

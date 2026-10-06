@@ -267,7 +267,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           ? "အရေအတွက်အလိုက် လက်ကားဈေးနှုန်းများ သတ်မှတ်နိုင်ပါသည်"
           : "Set volume-based pricing for bulk purchases";
       case "addTier":
-        return isMm ? "+ အဆင့်သစ်ထည့်မည်" : "+ Add Tier";
+        return isMm ? "လက်ကားစျေးထည့်မည်" : "Add Tier";
       case "minQuantity":
         return isMm ? "အနည်းဆုံး အရေအတွက်" : "Min Quantity";
       case "wholesalePrice":
